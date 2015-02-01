@@ -1,0 +1,10 @@
+*.suo
+*.sdf
+*.opensdf
+*Generated*
+# Excluded most executables, but include a few specific ones.
+*.exe
+!devenvwrapper.exe
+
+*.ilk
+*.pdb
