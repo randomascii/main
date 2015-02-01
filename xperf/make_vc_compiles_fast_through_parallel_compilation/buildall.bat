@@ -1,0 +1,3 @@
+call ETWTimeBuild_lowrate CompileParallel.sln CompileNonParallel
+call ETWTimeBuild_lowrate CompileParallel.sln CompileMoreParallel
+call ETWTimeBuild_lowrate CompileParallel.sln CompileMostParallel
