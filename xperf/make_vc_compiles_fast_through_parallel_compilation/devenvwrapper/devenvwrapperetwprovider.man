@@ -1,0 +1,76 @@
+﻿<?xml version='1.0' encoding='utf-8' standalone='yes'?>
+<!-- 
+This files defines an ETW (Event Tracing for Windows) provider that is
+used to emit events into an ETW stream for recording with xperf or logman.
+The events are used to help understand the performance of the VC++ compiler.
+
+Ideally the compiler itself would emit these events, but it doesn't, so
+here we are.
+
+This file is built using the following custom build tool command line:
+  mc.exe -um %(Filename)%(Extension) -z %(Filename)Generated 
+The main outputs are:
+  %(Filename)Generated.h;%(Filename)Generated.rc
+
+The header file should be included by one or more source files, and the resource
+file should either be added to your project or included into an existing resource
+file.
+
+The header file contains macros and functions to emit events. For more details
+see http://randomascii.wordpress.com.
+
+For information on writing an instrumentation manifest see
+http://msdn.microsoft.com/en-us/library/dd996930(VS.85).aspx
+For more information on ETW see http://msdn.microsoft.com/en-us/magazine/cc163437.aspx
+and http://msdn.microsoft.com/en-us/library/aa363668(VS.85).aspx
+
+Documentation of the data types available for event payload templates is here:
+http://msdn.microsoft.com/en-us/library/aa382774(v=VS.85).aspx
+
+See also the Windows Platform SDK SimpleProvider and AdvancedProvider samples
+and the Scenario library at http://archive.msdn.microsoft.com/Scenario
+-->
+<instrumentationManifest xmlns="http://schemas.microsoft.com/win/2004/08/events">
+  <instrumentation
+      xmlns:win="http://manifests.microsoft.com/win/2004/08/windows/events"
+      xmlns:xs="http://www.w3.org/2001/XMLSchema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <events xmlns="http://schemas.microsoft.com/win/2004/08/events">
+      <provider
+          guid="{FCB1FFE1-1061-4395-94A2-8C9FBC0F7981}"
+          name="VS-Hack"
+          symbol="VS_HACK"
+          messageFileName="%temp%\devenvwrapper.exe"
+          resourceFileName="%temp%\devenvwrapper.exe" >
+        <templates>
+          <template tid="T_CompileStageDone">
+            <data inType="win:AnsiString" name="Source file" />
+            <data inType="win:Float" name="Stage duration (s)" />
+            <data inType="win:Float" name="Start offset (s)" />
+            <data inType="win:Float" name="End offset (s)" />
+          </template>
+          <template tid="T_CompileSummary">
+            <data inType="win:AnsiString" name="Source file" />
+            <data inType="win:Float" name="Compile time (s)" />
+          </template>
+        </templates>
+        <keywords>
+          <keyword name="NormalFrequency" mask="0x1" />
+        </keywords>
+        <opcodes>
+          <opcode name="CompileStage1" symbol="_CompileStage1" value="15"/>
+          <opcode name="CompileStage2" symbol="_CompileStage2" value="16"/>
+          <opcode name="CompileSummary" symbol="_CompileSummary" value="17"/>
+        </opcodes>
+        <tasks>
+          <task name="Block" symbol="Block_Task" value="1" eventGUID="{CEE8942F-3582-4CAD-AC21-240B6B4D068C}"/>
+        </tasks>
+        <events>
+          <event symbol="CompileStage1Done" template="T_CompileStageDone" value="104" task="Block" opcode="CompileStage1" keywords="NormalFrequency" />
+          <event symbol="CompileStage2Done" template="T_CompileStageDone" value="105" task="Block" opcode="CompileStage2" keywords="NormalFrequency" />
+          <event symbol="CompileSummary" template="T_CompileSummary" value="106" task="Block" opcode="CompileSummary" keywords="NormalFrequency" />
+        </events>
+      </provider>
+    </events>
+  </instrumentation>
+</instrumentationManifest>
