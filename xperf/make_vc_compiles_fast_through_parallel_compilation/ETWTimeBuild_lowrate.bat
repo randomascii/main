@@ -8,7 +8,7 @@
 :alreadySet
 
 set wrapper=%~dp0devenvwrapper.exe
-set manifest=%~dp0devenvwrapperetwprovider.man
+set manifest=%~dp0devenvwrapper\devenvwrapperetwprovider.man
 
 @if exist %wrapper% goto wrapperOkay
 @echo %wrapper% not found. Build this project first.
