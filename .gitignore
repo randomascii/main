@@ -8,3 +8,5 @@
 
 *.ilk
 *.pdb
+Debug/
+Release/
