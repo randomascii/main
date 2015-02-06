@@ -20,6 +20,8 @@ if len(sys.argv) < 2:
 	print "This script extracts process parentage data from the specified"
 	print "ETL file and prints it in a tree format, together with process name"
 	print "and command line information."
+	print "See this blog post for more details:"
+	print "http://randomascii.wordpress.com/2013/11/04/exporting-arbitrary-data-from-xperf-etl-files/"
 	sys.exit(0)
 
 if not os.path.exists(sys.argv[1]):
