@@ -57,9 +57,6 @@ if not FoundInPath("RetrieveSymbols.exe"):
   print "RetrieveSymbols.exe not found. No symbol retrieval is possible."
   sys.exit(0)
 
-print "Checks passed."
-sys.exit(0)
-
 tracename = sys.argv[1]
 # Each symbol file that we pdbcopy gets copied to a separate directory so
 # that we can support decoding symbols for multiple chrome versions without

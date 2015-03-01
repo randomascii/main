@@ -27,7 +27,7 @@
 @rem the parent directory of the batch file.
 @rem Note: this probably fails in some locales. Sorry.
 @for /F "tokens=2-4 delims=/- " %%A in ('date/T') do @set datevar=%%C-%%A-%%B
-@for /f "tokens=1-2 delims=/:" %%a in ("%TIME%") do (set timevar=%%a-%%b)
+@for /f "tokens=1-2 delims=/:" %%a in ("%TIME%") do @set timevar=%%a-%%b
 @set FileName=%tracedir%\%username%_%datevar%_%timevar%
 
 @if "%1" == "" goto NoFileSpecified
