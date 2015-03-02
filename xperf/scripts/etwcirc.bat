@@ -75,6 +75,12 @@ xperf -stop -stop %CircSessionName%
 
 
 :FailureToRecord
+
+@rem Rename the file back
+@if not "%RenameErrorCode%" equ "0" goto SkipRename
+@rename %HVEDir%\Amcache_temp.hve Amcache.hve
+:SkipRename
+
 @rem Delete the temporary ETL files
 @del \*.etl
 @echo Failed to record trace. Stopping circular tracing.
@@ -88,6 +94,12 @@ xperf -stop -stop %CircSessionName%
 @if "%1" == "StartSilent" goto nofile
 @if "%1" == "stop" goto stop
 
+@rem Rename c:\Windows\AppCompat\Programs\amcache.hve to avoid serious merge
+@rem performance problems (up to six minutes!)
+@set HVEDir=c:\Windows\AppCompat\Programs
+@rename %HVEDir%\Amcache.hve Amcache_temp.hve 2>nul
+@set RenameErrorCode=%errorlevel%
+
 @rem Record the data but leaving tracing enabled.
 @set CircKernelName=c:\kerneldata.etl
 @set CircUserName=c:\userdata.etl
@@ -95,12 +107,19 @@ xperf -stop -stop %CircSessionName%
 @rem Latch necessary state from the user session.
 xperf -capturestate %CircSessionName% %UserProviders%
 @if not %errorlevel% equ 0 goto FailureToRecord
+
 xperf -flush "NT Kernel Logger" -f %CircKernelName%
 @if not %errorlevel% equ 0 goto FailureToRecord
 xperf -flush %CircSessionName% -f %CircUserName%
 @if not %errorlevel% equ 0 goto FailureToRecord
 xperf -merge %CircKernelName% %CircUserName% %1
 @if not %errorlevel% equ 0 goto FailureToRecord
+
+@rem Rename the file back
+@if not "%RenameErrorCode%" equ "0" goto SkipRename
+@rename %HVEDir%\Amcache_temp.hve Amcache.hve
+:SkipRename
+
 @rem Delete the temporary ETL files
 @del \*.etl
 @echo Trace data is in %1 -- load it with wpa or xperfview or gpuview
