@@ -67,14 +67,16 @@ xperf -start %SessionName% -on %UserProviders%+%CustomProviders% -f %userfile%
 xperf -start %SessionName% -on %UserProviders% -f %userfile%
 :NotInvalidFlags
 @if not %errorlevel% equ 0 goto failure
-@rem Record information about the loggers at the start of the trace.
-@rem xperf -loggers >preloggers.txt
 
 @echo Hit a key when you are ready to stop heap tracing.
 @pause
 
-@rem Record information about the loggers (dropped events, for instance)
-@rem xperf -loggers >loggers.txt
+@rem Rename c:\Windows\AppCompat\Programs\amcache.hve to avoid serious merge
+@rem performance problems (up to six minutes!)
+@set HVEDir=c:\Windows\AppCompat\Programs
+@rename %HVEDir%\Amcache.hve Amcache_temp.hve 2>nul
+@set RenameErrorCode=%errorlevel%
+
 xperf -stop %SessionName% -stop %HeapSessionName% -stop "NT Kernel Logger"
 @if "%NOETWCOMPRESS%" == "" goto compressTrace
 @rem Don't compress trace, to allow loading them on Windows 7
@@ -86,6 +88,11 @@ goto nocompressTrace
 @rem Default to trace compression.
 xperf -merge %kernelfile% %userfile% %heapfile% %Filename% -compress
 :nocompressTrace
+
+@rem Rename the file back
+@if not "%RenameErrorCode%" equ "0" goto SkipRename
+@rename %HVEDir%\Amcache_temp.hve Amcache.hve
+:SkipRename
 
 @rem Delete heap tracing registry key
 reg delete "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\%2" /v TracingFlags /f
