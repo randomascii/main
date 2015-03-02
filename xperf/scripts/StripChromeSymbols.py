@@ -30,6 +30,7 @@ import os
 import sys
 import re
 import tempfile
+import shutil
 
 if len(sys.argv) < 2:
   print "Usage: %s trace.etl" % sys.argv[0]
@@ -127,5 +128,8 @@ if tempdirs:
       print "%s generated." % symcacheFile
     else:
       print "Error: %s not generated." % symcacheFile
+  # Delete the stripped PDB files
+  for dir in tempdirs:
+    shutil.rmtree(dir, ignore_errors=True)
 else:
   print "No PDBs copied, nothing to do."

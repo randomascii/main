@@ -5,7 +5,7 @@
 
 
 @rem Set up startup profile if it is not already set
-@set startupProfileDest=%HOMEDRIVE%%HOMEPATH%\Documents\WPA Files
+@set startupProfileDest=%USERPROFILE%\Documents\WPA Files
 @if exist "%startupProfileDest%\Startup.wpaProfile" goto StartupDone
 @if not exist %~dp0Startup.wpaProfile goto StartupDone
 @mkdir "%startupProfileDest%"
@@ -21,7 +21,7 @@
 @rem Set _NT_SYMBOL_PATH if it is not already set
 
 @if not "%_NT_SYMBOL_PATH%" == "" goto SymbolPathSet
-set _NT_SYMBOL_PATH=SRV*c:\SymbolCache*http://msdl.microsoft.com/download/symbols;SRV*d:\src\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com
+set _NT_SYMBOL_PATH=SRV*c:\symbols*http://msdl.microsoft.com/download/symbols;SRV*c:\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com
 :SymbolPathSet
 
 

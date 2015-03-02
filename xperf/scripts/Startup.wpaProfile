@@ -12,7 +12,7 @@
       </AnalysisView.UISessionRef>
       <GenericEventsGraphTreeItem DataTableHeight="0" GraphHeight="74" Color="#FF005DE0" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
         <GenericEventsGraphTreeItem.HdvViewModelPreset>
-          <HdvViewModelPreset Name="Google Events" GraphColumnCount="26" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="25" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
+          <HdvViewModelPreset Name="Randomascii Events" GraphColumnCount="26" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="25" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
             <HdvViewModelPreset.ColumnMetadataEntries>
               <ColumnMetadataEntry Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" ColumnMetadata="EndThreadId" />
               <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="StartTime" />
@@ -73,7 +73,7 @@
       </Core4SummaryTableFillerGraphTreeItem>
       <CpuSchedulingWithReadyThreadGraphTreeItem DataTableHeight="0" Color="#FFFF0000" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
         <CpuSchedulingWithReadyThreadGraphTreeItem.HdvViewModelPreset>
-          <HdvViewModelPreset Name="Google Wait Analysis" GraphColumnCount="61" KeyColumnCount="13" RightFrozenColumnCount="59" InitialFilterQuery="" InitialSelectionQuery="([Series Name]:=&quot;NewProcess&quot; AND NOT ([NewProcess]:=&quot;Idle (0)&quot;))" GraphFilterColumnGuid="17a03387-5d14-405a-a5b2-0201c934f917" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
+          <HdvViewModelPreset Name="Randomascii Wait Analysis" GraphColumnCount="61" KeyColumnCount="13" RightFrozenColumnCount="59" InitialFilterQuery="" InitialSelectionQuery="([Series Name]:=&quot;NewProcess&quot; AND NOT ([NewProcess]:=&quot;Idle (0)&quot;))" GraphFilterColumnGuid="17a03387-5d14-405a-a5b2-0201c934f917" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
             <HdvViewModelPreset.ColumnMetadataEntries>
               <ColumnMetadataEntry Guid="944ed37a-5774-421e-b2d5-84f17a4b3a05" Name="NewThreadId" ColumnMetadata="EndThreadId" />
               <ColumnMetadataEntry Guid="5417f63c-9b79-45aa-beb9-73e3c1959221" Name="SwitchInTime (s)" ColumnMetadata="StartTime" />
@@ -173,7 +173,7 @@
       </CpuSchedulingWithReadyThreadGraphTreeItem>
       <CpuSamplingGraphTreeItem DataTableHeight="299" GraphHeight="169" LayoutStyleFree="DataTable" Color="#FFFF0000" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
         <CpuSamplingGraphTreeItem.HdvViewModelPreset>
-          <HdvViewModelPreset Name="Google Inclusive (stack)" GraphColumnCount="23" KeyColumnCount="12" RightFrozenColumnCount="22" InitialFilterQuery="[DPC/ISR]:=&quot;DPC&quot; OR [DPC/ISR]:=&quot;ISR&quot;" InitialFilterShouldKeep="False" InitialSelectionQuery="([Series Name]:=&quot;Process&quot; AND NOT ([Process]:=&quot;Idle (0)&quot;))" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
+          <HdvViewModelPreset Name="Randomascii Inclusive (stack)" GraphColumnCount="23" KeyColumnCount="12" RightFrozenColumnCount="22" InitialFilterQuery="[DPC/ISR]:=&quot;DPC&quot; OR [DPC/ISR]:=&quot;ISR&quot;" InitialFilterShouldKeep="False" InitialSelectionQuery="([Series Name]:=&quot;Process&quot; AND NOT ([Process]:=&quot;Idle (0)&quot;))" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
             <HdvViewModelPreset.ColumnMetadataEntries>
               <ColumnMetadataEntry Guid="05100ece-df05-40c7-aad6-ffff99b60491" Name="Thread ID" ColumnMetadata="EndThreadId" />
               <ColumnMetadataEntry Guid="0bbf4299-0176-445e-b1d9-991df475d631" Name="TimeStamp" ColumnMetadata="EndTime" />
@@ -244,7 +244,7 @@
         </HdvViewModelPresetCollection>
         <HdvViewModelPresetCollection Name="c58f5fea-0319-4046-932d-e695ebe20b47">
           <HdvViewModelPresetCollection.UserPresets>
-            <HdvViewModelPreset Name="Google Wait Analysis" GraphColumnCount="61" KeyColumnCount="13" RightFrozenColumnCount="59" InitialFilterQuery="" InitialSelectionQuery="([Series Name]:=&quot;NewProcess&quot; AND NOT ([NewProcess]:=&quot;Idle (0)&quot;))" GraphFilterColumnGuid="17a03387-5d14-405a-a5b2-0201c934f917">
+            <HdvViewModelPreset Name="Randomascii Wait Analysis" GraphColumnCount="61" KeyColumnCount="13" RightFrozenColumnCount="59" InitialFilterQuery="" InitialSelectionQuery="([Series Name]:=&quot;NewProcess&quot; AND NOT ([NewProcess]:=&quot;Idle (0)&quot;))" GraphFilterColumnGuid="17a03387-5d14-405a-a5b2-0201c934f917">
               <HdvViewModelPreset.ColumnMetadataEntries>
                 <ColumnMetadataEntry Guid="944ed37a-5774-421e-b2d5-84f17a4b3a05" Name="NewThreadId" ColumnMetadata="EndThreadId" />
                 <ColumnMetadataEntry Guid="5417f63c-9b79-45aa-beb9-73e3c1959221" Name="SwitchInTime (s)" ColumnMetadata="StartTime" />
@@ -407,7 +407,7 @@
         </HdvViewModelPresetCollection>
         <HdvViewModelPresetCollection Name="04f69f98-176e-4d1c-b44e-97f734996ab8">
           <HdvViewModelPresetCollection.UserPresets>
-            <HdvViewModelPreset Name="Google Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="">
+            <HdvViewModelPreset Name="Randomascii Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="">
               <HdvViewModelPreset.ColumnMetadataEntries>
                 <ColumnMetadataEntry Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" ColumnMetadata="EndThreadId" />
                 <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="StartTime" />
@@ -469,7 +469,7 @@
         </HdvViewModelPresetCollection>
         <HdvViewModelPresetCollection Name="b855361e-7be0-4bc8-a754-3e8507715ca5">
           <HdvViewModelPresetCollection.UserPresets>
-            <HdvViewModelPreset Name="Google Inclusive (stack)" GraphColumnCount="23" KeyColumnCount="12" RightFrozenColumnCount="22" InitialFilterQuery="[DPC/ISR]:=&quot;DPC&quot; OR [DPC/ISR]:=&quot;ISR&quot;" InitialFilterShouldKeep="False" InitialSelectionQuery="([Series Name]:=&quot;Process&quot; AND NOT ([Process]:=&quot;Idle (0)&quot;))">
+            <HdvViewModelPreset Name="Randomascii Inclusive (stack)" GraphColumnCount="23" KeyColumnCount="12" RightFrozenColumnCount="22" InitialFilterQuery="[DPC/ISR]:=&quot;DPC&quot; OR [DPC/ISR]:=&quot;ISR&quot;" InitialFilterShouldKeep="False" InitialSelectionQuery="([Series Name]:=&quot;Process&quot; AND NOT ([Process]:=&quot;Idle (0)&quot;))">
               <HdvViewModelPreset.ColumnMetadataEntries>
                 <ColumnMetadataEntry Guid="05100ece-df05-40c7-aad6-ffff99b60491" Name="Thread ID" ColumnMetadata="EndThreadId" />
                 <ColumnMetadataEntry Guid="0bbf4299-0176-445e-b1d9-991df475d631" Name="TimeStamp" ColumnMetadata="EndTime" />
@@ -513,7 +513,7 @@
                 <HdvColumnViewModelPreset Guid="f5ebf01b-f7cb-4afb-877d-c36edb2a62b6" Name="% Weight" AggregationMode="Sum" SortOrder="Descending" SortPriority="20" TextAlignment="Right" Width="80" />
               </HdvViewModelPreset.ConfigurableColumns>
             </HdvViewModelPreset>
-            <HdvViewModelPreset Name="Google Exclusive (module and function)" GraphColumnCount="23" KeyColumnCount="12" RightFrozenColumnCount="22" InitialFilterQuery="[DPC/ISR]:=&quot;DPC&quot; OR [DPC/ISR]:=&quot;ISR&quot;" InitialFilterShouldKeep="False" InitialSelectionQuery="([Series Name]:=&quot;Process&quot; AND NOT ([Process]:=&quot;Idle (0)&quot;))">
+            <HdvViewModelPreset Name="Randomascii Exclusive (module and function)" GraphColumnCount="23" KeyColumnCount="12" RightFrozenColumnCount="22" InitialFilterQuery="[DPC/ISR]:=&quot;DPC&quot; OR [DPC/ISR]:=&quot;ISR&quot;" InitialFilterShouldKeep="False" InitialSelectionQuery="([Series Name]:=&quot;Process&quot; AND NOT ([Process]:=&quot;Idle (0)&quot;))">
               <HdvViewModelPreset.ColumnMetadataEntries>
                 <ColumnMetadataEntry Guid="05100ece-df05-40c7-aad6-ffff99b60491" Name="Thread ID" ColumnMetadata="EndThreadId" />
                 <ColumnMetadataEntry Guid="0bbf4299-0176-445e-b1d9-991df475d631" Name="TimeStamp" ColumnMetadata="EndTime" />

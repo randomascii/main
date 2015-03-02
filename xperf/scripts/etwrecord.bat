@@ -122,8 +122,8 @@ xperf -merge %kernelfile% %userfile% %FileAndCompressFlags%
 @del %kernelfile%
 @del %userfile%
 @echo Trace data is in %FileName% -- load it with wpa or xperfview or gpuview.
-@dir %FileName%
-@echo Preprocessing symbols to avoid delays with Chrome's huge symbols
+@dir %FileName% | find /i ".etl"
+@rem Preprocessing symbols to avoid delays with Chrome's huge symbols
 @pushd %batchdir%
 python StripChromeSymbols.py %FileName%
 @popd

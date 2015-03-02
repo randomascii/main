@@ -1,13 +1,5 @@
 @rem Customize to specify the location of your provider DLL or EXE
 
-@rem Clean up some obsolete files
-@if not exist etwprovider.man goto NoDelete1
-@del etwprovider.man
-:NoDelete1
-@if not exist MultiProvider.exe goto NoDelete2
-@del MultiProvider.exe
-:NoDelete2
-
 @set DLLFileMain=%~dp0ETWProviders.dll
 @set ManifestFileMain=%~dp0etwproviders.man
 
