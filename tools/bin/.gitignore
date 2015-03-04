@@ -1,0 +1,4 @@
+# In this directory, executables are allowed to be checked in. Please
+# try to minimize churn.
+!*.exe
+!*.dll
