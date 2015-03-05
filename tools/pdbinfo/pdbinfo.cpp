@@ -41,7 +41,7 @@ bool DumpAgeAndSignature(_TCHAR* sFile)
     CComPtr<IDiaDataSource> pSource;
     if (FAILED(CoCreateInstance(CLSID_DiaSource, NULL, CLSCTX_INPROC_SERVER, __uuidof( IDiaDataSource ), (void **) &pSource)))
     {   
-        printf("Could not CoCreate CLSID_DiaSource. Please register msdia80.dll.\n");
+        printf("Could not CoCreate CLSID_DiaSource. Please register msdia120.dll or other msdia version.\n");
         return false;
     }
 
@@ -76,7 +76,7 @@ bool DumpAgeAndSignature(_TCHAR* sFile)
         return false;
     }
 
-    GUID guid = {0};
+    GUID guid = {};
     if (FAILED(pGlobal->get_guid(&guid)))
     {
         printf("get_guid failed.\n");
@@ -87,7 +87,7 @@ bool DumpAgeAndSignature(_TCHAR* sFile)
     // Yes, you use get_signature to get the timestamp, not get_timestamp
     if (FAILED(pGlobal->get_signature(&timeStamp)))
     {
-        printf("get_timeStamp failed.\n");
+        printf("get_signature failed.\n");
         return false;
     }
 
