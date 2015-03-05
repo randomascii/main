@@ -1,6 +1,7 @@
 *.user
 *.suo
 *.sdf
+*.aps
 *.opensdf
 *Generated*
 # Excluded most executables, but include a few specific ones.
