@@ -9,7 +9,7 @@
 @set tracedir=%batchdir%..\traces
 :TraceDirSet
 @if not "%temptracedir%" == "" goto TempTraceDirSet
-@set temptracedir=%batchdir%..
+@set temptracedir=%tracedir%
 :TempTraceDirSet
 
 @rem Make sure %tracedir% and %temptracedir% exist
