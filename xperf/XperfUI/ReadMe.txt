@@ -15,7 +15,7 @@ Process Chrome symbols.
 Finish input recording options and give warning about full input recording.
 
 Register providers.
-Add OS specific checks.
+Add OS specific checks for what user providers to enable.
 List all traces in tracedir and allow viewing them.
 Disable compress option for Windows 7 and below.
 Hot key to stop/record traces.

@@ -374,7 +374,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 void CXperfUIDlg::OnBnClickedStoptracing()
 {
 	std::string traceFilename = GetResultFile();
-	outputPrintf("Saving trace to disk.\n");
+	outputPrintf("\nSaving trace to disk...\n");
 	{
 		ChildProcess child(GetXperfPath());
 		child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
@@ -385,6 +385,7 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
 	const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
 	BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
+	outputPrintf("Merging trace...\n");
 	{
 		// Separate merge step to allow compression on Windows 8+
 		// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
