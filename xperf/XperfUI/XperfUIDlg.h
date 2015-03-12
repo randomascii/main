@@ -25,19 +25,25 @@ protected:
 protected:
 	HICON m_hIcon;
 
+	bool bIsTracing_ = false;
+
 	bool bCompress_ = true;
 	bool bSampledStacks_ = true;
 	bool bCswitchStacks_ = true;
-	bool bIsTracing_ = false;
 	bool bShowCommands_ = false;
+	bool bFastSampling_ = false;
+	bool bRecordInput_ = false;
 
 	CButton btStartTracing_;
 	CButton btSaveTraceBuffers_;
 	CButton btStopTracing_;
+
 	CButton btCompress_;
 	CButton btSampledStacks_;
 	CButton btCswitchStacks_;
 	CButton btShowCommands_;
+	CButton btFastSampling_;
+	CButton btRecordInput_;
 
 	std::string traceDir_;
 	std::string tempTraceDir_;
@@ -69,4 +75,6 @@ public:
 	afx_msg void OnBnClickedCpusamplingcallstacks();
 	afx_msg void OnBnClickedContextswitchcallstacks();
 	afx_msg void OnBnClickedShowcommands();
+	afx_msg void OnBnClickedFastsampling();
+	afx_msg void OnBnClickedLoginput();
 };

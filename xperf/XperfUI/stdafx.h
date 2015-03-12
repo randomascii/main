@@ -33,8 +33,10 @@
 
 #include <afxcontrolbars.h>     // MFC support for ribbons and control bars
 
+#include <sal.h>
+
 // Global function for printing to the dialog output window.
-void outputPrintf(const char* _Printf_format_string_ pFormat, ...);
+void outputPrintf(_Printf_format_string_ const char* pFormat, ...);
 
 
 

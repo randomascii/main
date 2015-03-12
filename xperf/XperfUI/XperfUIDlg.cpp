@@ -9,6 +9,8 @@
 #include "ChildProcess.h"
 #include <direct.h>
 #include <vector>
+#include <ETWProviders\etwprof.h>
+#include "KeyLoggerThread.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -50,7 +52,7 @@ END_MESSAGE_MAP()
 
 static CXperfUIDlg* pMainWindow;
 
-void outputPrintf(const char* _Printf_format_string_ pFormat, ...)
+void outputPrintf(_Printf_format_string_ const char* pFormat, ...)
 {
 	va_list args;
 	va_start(args, pFormat);
@@ -103,6 +105,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMPRESSTRACE, btCompress_);
 	DDX_Control(pDX, IDC_CPUSAMPLINGCALLSTACKS, btSampledStacks_);
 	DDX_Control(pDX, IDC_CONTEXTSWITCHCALLSTACKS, btCswitchStacks_);
+	DDX_Control(pDX, IDC_FASTSAMPLING, btFastSampling_);
 	DDX_Control(pDX, IDC_SHOWCOMMANDS, btShowCommands_);
 
 	CDialogEx::DoDataExchange(pDX);
@@ -118,6 +121,8 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CPUSAMPLINGCALLSTACKS, &CXperfUIDlg::OnBnClickedCpusamplingcallstacks)
 	ON_BN_CLICKED(IDC_CONTEXTSWITCHCALLSTACKS, &CXperfUIDlg::OnBnClickedContextswitchcallstacks)
 	ON_BN_CLICKED(IDC_SHOWCOMMANDS, &CXperfUIDlg::OnBnClickedShowcommands)
+	ON_BN_CLICKED(IDC_FASTSAMPLING, &CXperfUIDlg::OnBnClickedFastsampling)
+	ON_BN_CLICKED(IDC_LOGINPUT, &CXperfUIDlg::OnBnClickedLoginput)
 END_MESSAGE_MAP()
 
 
@@ -154,10 +159,13 @@ BOOL CXperfUIDlg::OnInitDialog()
 	}
 
 	// Select the trace directory and make sure it exists.
+#pragma warning(suppress : 4996)
 	const char* traceDir = getenv("tracedir");
 	if (traceDir)
 	{
 		traceDir_ = traceDir;
+		if (!traceDir_.empty() && traceDir_[traceDir_.size() - 1] != '\\')
+			traceDir_ += '\\';
 	}
 	else
 	{
@@ -171,7 +179,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	}
 	if (!PathFileExists(GetTraceDir().c_str()))
 	{
-		_mkdir(GetTraceDir().c_str());
+		(void)_mkdir(GetTraceDir().c_str());
 	}
 	if (!PathIsDirectory(GetTraceDir().c_str()))
 	{
@@ -179,13 +187,16 @@ BOOL CXperfUIDlg::OnInitDialog()
 		exit(10);
 	}
 
+#pragma warning(suppress : 4996)
 	const char* tempTraceDir = getenv("temptracedir");
 	if (tempTraceDir)
 	{
 		tempTraceDir_ = tempTraceDir;
+		if (!tempTraceDir_.empty() && tempTraceDir_[tempTraceDir_.size() - 1] != '\\')
+			tempTraceDir_ += '\\';
 		if (!PathFileExists(GetTempTraceDir().c_str()))
 		{
-			_mkdir(GetTempTraceDir().c_str());
+			(void)_mkdir(GetTempTraceDir().c_str());
 		}
 		if (!PathIsDirectory(GetTempTraceDir().c_str()))
 		{
@@ -289,7 +300,30 @@ std::string CXperfUIDlg::GetTraceDir()
 
 std::string CXperfUIDlg::GetResultFile()
 {
-	return GetTempTraceDir() + "xperfui.etl";
+	std::string traceDir = GetTraceDir();
+
+	char time[9];
+	_strtime_s(time);
+	char date[9];
+	_strdate_s(date);
+	int hour, min, sec;
+	int year, month, day;
+#pragma warning(suppress : 4996)
+	const char* username = getenv("USERNAME");
+	if (!username)
+		username = "";
+	char fileName[MAX_PATH];
+	// Hilarious /analyze warning on this line from bug in _strtime_s annotation!
+	if (3 == sscanf_s(time, "%d:%d:%d", &hour, &min, &sec) &&
+		3 == sscanf_s(date, "%d/%d/%d", &month, &day, &year))
+	{
+		sprintf_s(fileName, "%s_%04d-%02d-%02d_%02d-%02d-%02d.etl", username, year + 2000, month, day, hour, min, sec);
+	}
+	else
+	{
+		strcpy_s(fileName, "xperfui.etl");
+	}
+	return GetTraceDir() + fileName;
 }
 
 std::string CXperfUIDlg::GetTempTraceDir()
@@ -339,6 +373,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 
 void CXperfUIDlg::OnBnClickedStoptracing()
 {
+	std::string traceFilename = GetResultFile();
 	outputPrintf("Saving trace to disk.\n");
 	{
 		ChildProcess child(GetXperfPath());
@@ -354,7 +389,7 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 		// Separate merge step to allow compression on Windows 8+
 		// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
 		ChildProcess merge(GetXperfPath());
-		std::string args = " -merge " + GetKernelFile() + " " + GetUserFile() + " " + GetResultFile();;
+		std::string args = " -merge " + GetKernelFile() + " " + GetUserFile() + " " + traceFilename;
 		if (bCompress_)
 			args += " -compress";
 		merge.Run(bShowCommands_, "xperf.exe" + args);
@@ -376,7 +411,7 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	// Call Python script here, or recreate it in C++.
 	// python StripChromeSymbols.py %FileName%
 
-	LaunchTraceViewer(GetResultFile());
+	LaunchTraceViewer(traceFilename);
 }
 
 void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
@@ -435,4 +470,31 @@ void CXperfUIDlg::OnBnClickedContextswitchcallstacks()
 void CXperfUIDlg::OnBnClickedShowcommands()
 {
 	bShowCommands_ = !bShowCommands_;
+}
+
+
+void CXperfUIDlg::OnBnClickedFastsampling()
+{
+	bFastSampling_ = !bFastSampling_;
+	const char* message = nullptr;
+	if (bFastSampling_)
+		message = "Setting CPU sampling speed to 8 KHz, for finer resolution.";
+	else
+		message = "Setting CPU sampling speed to 1 KHz, for lower overhead.";
+	outputPrintf("%s\n", message);
+	// Record the CPU sampling frequency change in the trace, if one is being recorded.
+	ETWMark(message);
+	ChildProcess child(GetXperfPath());
+	std::string profInt = bFastSampling_ ? "1221" : "9001";
+	std::string args = "xperf.exe -setprofint " + profInt + " cached";
+	child.Run(bShowCommands_, args);
+}
+
+
+void CXperfUIDlg::OnBnClickedLoginput()
+{
+	bRecordInput_ = !bRecordInput_;
+	// Should have a way to set it to kKeyLoggerAnonymized. Oh well. kKeyLoggerFull makes for better demos!
+	SetKeyloggingState(bRecordInput_ ? kKeyLoggerFull : kKeyLoggerOff);
+	ETWMarkPrintf("%s input logger", bRecordInput_ ? "Enabling" : "Disabling");
 }
