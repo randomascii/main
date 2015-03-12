@@ -118,18 +118,25 @@ if tempdirs:
     tempName = localPDB + "x"
     print "Renaming %s to %s to stop unstripped PDBs from being used." % (localPDB, tempName)
     os.rename(localPDB, tempName)
-  for line in os.popen("xperf -i %s -symbols -a symcache -build" % tracename).readlines():
+  genCommand = "xperf -i %s -symbols -a symcache -build" % tracename
+  print "Running: %s" % genCommand
+  for line in os.popen(genCommand).readlines():
     print line
   for localPDB in localSymbolFiles:
     tempName = localPDB + "x"
     os.rename(tempName, localPDB)
+  error = False
   for symcacheFile in symcacheFiles:
     if os.path.exists(symcacheFile):
       print "%s generated." % symcacheFile
     else:
       print "Error: %s not generated." % symcacheFile
+      error = True
   # Delete the stripped PDB files
-  for dir in tempdirs:
-    shutil.rmtree(dir, ignore_errors=True)
+  if error:
+    print "Retaining PDBs to allow rerunning xperf command-line."
+  else:
+    for dir in tempdirs:
+      shutil.rmtree(dir, ignore_errors=True)
 else:
   print "No PDBs copied, nothing to do."

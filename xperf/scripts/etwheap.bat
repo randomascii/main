@@ -104,7 +104,7 @@ reg delete "HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Executi
 @dir %FileName%
 @echo Preprocessing symbols
 @pushd %batchdir%
-python convert_symbols.py %FileName%
+python StripChromeSymbols.py %FileName%
 @popd
 start wpa %Filename%
 @rem Restart circular tracing.
