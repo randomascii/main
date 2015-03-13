@@ -412,7 +412,11 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	// conversion times for the full private symbols.
 	// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
 	// Call Python script here, or recreate it in C++.
-	// python StripChromeSymbols.py %FileName%
+	{
+		ChildProcess child("c:\\devtools\\python27\\python.EXE");
+		std::string args = " StripChromeSymbols.py \"" + traceFilename + "\"";
+		child.Run(bShowCommands_, "python.exe" + args);
+	}
 
 	LaunchTraceViewer(traceFilename);
 }

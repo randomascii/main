@@ -4,20 +4,21 @@
 @set batchdir=%~dp0
 @set path=%path%;%batchdir%
 
-@rem Set the tracedir and temptracedir environment variables
-@if not "%tracedir%" == "" goto TraceDirSet
-@set tracedir=%batchdir%..\traces
+@rem Set the xperftracedir and xperftemptracedir environment variables if they
+@rem aren't set already.
+@if not "%xperftracedir%" == "" goto TraceDirSet
+@set xperftracedir=%batchdir%..\traces
 :TraceDirSet
-@if not "%temptracedir%" == "" goto TempTraceDirSet
-@set temptracedir=%tracedir%
+@if not "%xperftemptracedir%" == "" goto TempTraceDirSet
+@set xperftemptracedir=%xperftracedir%
 :TempTraceDirSet
 
-@rem Make sure %tracedir% and %temptracedir% exist
-@if exist %tracedir% goto TraceDirExists
-@mkdir %tracedir%
+@rem Make sure %xperftracedir% and %xperftemptracedir% exist
+@if exist %xperftracedir% goto TraceDirExists
+@mkdir %xperftracedir%
 :TraceDirExists
-@if exist %temptracedir% goto TempTraceDirExists
-@mkdir %temptracedir%
+@if exist %xperftemptracedir% goto TempTraceDirExists
+@mkdir %xperftemptracedir%
 :TempTraceDirExists
 
 @call etwcommonsettings.bat
@@ -28,13 +29,14 @@
 @rem Note: this probably fails in some locales. Sorry.
 @for /F "tokens=2-4 delims=/- " %%A in ('date/T') do @set datevar=%%C-%%A-%%B
 @for /f "tokens=1-2 delims=/:" %%a in ("%TIME%") do @set timevar=%%a-%%b
-@set FileName=%tracedir%\%username%_%datevar%_%timevar%
+@set FileName=%xperftracedir%\%datevar%_%timevar%_%username%
 
 @if "%1" == "" goto NoFileSpecified
 @set ext=%~x1
 @if "%ext%" == ".etl" goto fullFileSpecified
-@rem Must be just a sub-component -- add it to the end
-@set Filename=%FileName%_%1.etl
+@rem Must be just a sub-component -- add it to the end. Use a + sign as the
+@rem unique separator.
+@set Filename=%FileName%+%1.etl
 @goto FileSpecified
 
 :fullFileSpecified
@@ -80,8 +82,8 @@
 @rem Select locations for the temporary kernel and user trace files.
 @rem These locations are chosen to be on the SSD and be in the directory
 @rem that is excluded from virus scanning and bit9 hashing.
-@set kernelfile=%temptracedir%\kernel.etl
-@set userfile=%temptracedir%\user.etl
+@set kernelfile=%xperftemptracedir%\kernel.etl
+@set userfile=%xperftemptracedir%\user.etl
 
 @rem Start the kernel provider and user-mode provider
 xperf -on %KernelProviders% %KernelStackWalk% %KBuffers% -f %kernelfile% -start %SessionName% -on %UserProviders%+%CustomProviders% -f %userfile%

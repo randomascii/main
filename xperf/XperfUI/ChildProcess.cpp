@@ -126,6 +126,10 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 		hProcess_ = processInfo.hProcess;
 		return true;
 	}
+	else
+	{
+		outputPrintf("Error %d starting %s, %s\n", (int)GetLastError(), exePath_.c_str(), args.c_str());
+	}
 
 	return false;
 }
