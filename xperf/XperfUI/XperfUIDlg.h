@@ -53,10 +53,15 @@ protected:
 	std::string GetWPTDir();
 	std::string GetXperfPath();
 	std::string GetTraceDir();
+	// Note that GetResultFile() gives a time-based name, so don't expect
+	// the same result across multiple calls!
 	std::string GetResultFile();
 	std::string GetTempTraceDir();
 	std::string GetKernelFile();
 	std::string GetUserFile();
+
+	void SetSymbolPath();
+	std::string GetDirectory(const char* env, const std::string& default);
 
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();

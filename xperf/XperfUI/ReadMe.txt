@@ -9,6 +9,7 @@ Print readable, well-spaced information about the state of tracing.
 Respect tracedir and temptracedir.
 Generate good trace names, with built-in keywords.
 Input recording.
+Move more initialization like _NT_SYMBOL_PATH to startup.
 
 To-do before first release:
 Process Chrome symbols.

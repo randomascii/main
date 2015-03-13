@@ -128,6 +128,20 @@ END_MESSAGE_MAP()
 
 // CXperfUIDlg message handlers
 
+void CXperfUIDlg::SetSymbolPath()
+{
+	// Make sure that the symbol paths are set.
+
+#pragma warning(suppress : 4996)
+	const char* symPath = getenv("_NT_SYMBOL_PATH");
+	if (!symPath)
+		(void)_putenv("_NT_SYMBOL_PATH=SRV*c:\\symbols*\\\\symsrv\\symbols;SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols");
+#pragma warning(suppress : 4996)
+	const char* symCachePath = getenv("_NT_SYMCACHE_PATH");
+	if (!symCachePath)
+		(void)_putenv("_NT_SYMCACHE_PATH=c:\\symcache");
+}
+
 BOOL CXperfUIDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
@@ -158,56 +172,18 @@ BOOL CXperfUIDlg::OnInitDialog()
 		exit(10);
 	}
 
-	// Select the trace directory and make sure it exists.
-#pragma warning(suppress : 4996)
-	const char* traceDir = getenv("tracedir");
-	if (traceDir)
+	char documents[MAX_PATH];
+	if (!SHGetSpecialFolderPath(*this, documents, CSIDL_MYDOCUMENTS, TRUE))
 	{
-		traceDir_ = traceDir;
-		if (!traceDir_.empty() && traceDir_[traceDir_.size() - 1] != '\\')
-			traceDir_ += '\\';
-	}
-	else
-	{
-		char documents[MAX_PATH];
-		if (!SHGetSpecialFolderPath(*this, documents, CSIDL_MYDOCUMENTS, TRUE))
-		{
-			assert(!"Failed to find My Documents directory.\n");
-			exit(10);
-		}
-		traceDir_ = documents + std::string("\\xperftraces\\");
-	}
-	if (!PathFileExists(GetTraceDir().c_str()))
-	{
-		(void)_mkdir(GetTraceDir().c_str());
-	}
-	if (!PathIsDirectory(GetTraceDir().c_str()))
-	{
-		AfxMessageBox((GetTraceDir() + " is not a directory. Exiting.").c_str());
+		assert(!"Failed to find My Documents directory.\n");
 		exit(10);
 	}
+	std::string defaultTraceDir = documents + std::string("\\xperftraces\\");
+	traceDir_ = GetDirectory("xperftracedir", defaultTraceDir);
 
-#pragma warning(suppress : 4996)
-	const char* tempTraceDir = getenv("temptracedir");
-	if (tempTraceDir)
-	{
-		tempTraceDir_ = tempTraceDir;
-		if (!tempTraceDir_.empty() && tempTraceDir_[tempTraceDir_.size() - 1] != '\\')
-			tempTraceDir_ += '\\';
-		if (!PathFileExists(GetTempTraceDir().c_str()))
-		{
-			(void)_mkdir(GetTempTraceDir().c_str());
-		}
-		if (!PathIsDirectory(GetTempTraceDir().c_str()))
-		{
-			AfxMessageBox((GetTempTraceDir() + " is not a directory. Exiting.").c_str());
-			exit(10);
-		}
-	}
-	else
-	{
-		tempTraceDir_ = traceDir_;
-	}
+	tempTraceDir_ = GetDirectory("xperftemptracedir", traceDir_);
+
+	SetSymbolPath();
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
@@ -221,6 +197,31 @@ BOOL CXperfUIDlg::OnInitDialog()
 	UpdateEnabling();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+std::string CXperfUIDlg::GetDirectory(const char* env, const std::string& default)
+{
+	// Get a directory (from an environment variable, if set) and make sure it exists.
+	std::string result = default;
+#pragma warning(suppress : 4996)
+	const char* traceDir = getenv(env);
+	if (traceDir)
+	{
+		result = traceDir;
+	}
+	// Make sure the name ends with a backslash.
+	if (!result.empty() && result[result.size() - 1] != '\\')
+		result += '\\';
+	if (!PathFileExists(result.c_str()))
+	{
+		(void)_mkdir(result.c_str());
+	}
+	if (!PathIsDirectory(result.c_str()))
+	{
+		AfxMessageBox((result + " is not a directory. Exiting.").c_str());
+		exit(10);
+	}
+	return result;
 }
 
 void CXperfUIDlg::UpdateEnabling()
@@ -317,7 +318,8 @@ std::string CXperfUIDlg::GetResultFile()
 	if (3 == sscanf_s(time, "%d:%d:%d", &hour, &min, &sec) &&
 		3 == sscanf_s(date, "%d/%d/%d", &month, &day, &year))
 	{
-		sprintf_s(fileName, "%s_%04d-%02d-%02d_%02d-%02d-%02d.etl", username, year + 2000, month, day, hour, min, sec);
+		// The filenames are chosen to sort by date, with username as the LSB.
+		sprintf_s(fileName, "%04d-%02d-%02d_%02d-%02d-%02d_%s.etl", year + 2000, month, day, hour, min, sec, username);
 	}
 	else
 	{
@@ -333,7 +335,7 @@ std::string CXperfUIDlg::GetTempTraceDir()
 
 std::string CXperfUIDlg::GetKernelFile()
 {
-	return CXperfUIDlg::GetTraceDir() + "kernel.etl";
+	return CXperfUIDlg::GetTempTraceDir() + "kernel.etl";
 }
 
 std::string CXperfUIDlg::GetUserFile()
@@ -355,11 +357,11 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 		kernelStackWalk = " -stackwalk CSWITCH+READYTHREAD";
 	// Make this configurable.
 	std::string kernelBuffers = " -buffersize 1024 -minbuffers 1200";
-	std::string kernelFile = " -f " + GetKernelFile();
+	std::string kernelFile = " -f \"" + GetKernelFile() + "\"";
 	std::string kernelArgs = " -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
 	std::string userProviders = " -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
-	std::string userFile = " -f " + GetUserFile();
+	std::string userFile = " -f \"" + GetUserFile() + "\"";
 	std::string userArgs = " -start xperfuiSession" + userProviders + userFile;
 
 	std::string args = "xperf.exe" + kernelArgs + userArgs;
@@ -390,7 +392,7 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 		// Separate merge step to allow compression on Windows 8+
 		// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
 		ChildProcess merge(GetXperfPath());
-		std::string args = " -merge " + GetKernelFile() + " " + GetUserFile() + " " + traceFilename;
+		std::string args = " -merge \"" + GetKernelFile() + "\" \"" + GetUserFile() + "\" \"" + traceFilename + "\"";
 		if (bCompress_)
 			args += " -compress";
 		merge.Run(bShowCommands_, "xperf.exe" + args);
@@ -417,17 +419,6 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 
 void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
 {
-	// Before launching trace analysis make sure that the symbol paths are set.
-
-#pragma warning(suppress : 4996)
-	const char* symPath = getenv("_NT_SYMBOL_PATH");
-	if (!symPath)
-		(void)_putenv("_NT_SYMBOL_PATH=SRV*c:\\symbols*\\\\symsrv\\symbols;SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols");
-#pragma warning(suppress : 4996)
-	const char* symCachePath = getenv("_NT_SYMCACHE_PATH");
-	if (!symCachePath)
-		(void)_putenv("_NT_SYMCACHE_PATH=c:\\symcache");
-
 	std::string wpaPath = GetWPTDir() + "wpa.exe";
 
 	const std::string args = std::string("wpa.exe \"") + traceFilename.c_str() + "\"";
