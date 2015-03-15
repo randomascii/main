@@ -50,6 +50,10 @@ protected:
 	std::vector<std::string> traces_;
 	CListBox btTraces_;
 
+	CEdit btTraceNotes_;
+
+	// Note that the DirectoryMonitorThread has a pointer to the contents of
+	// this string object, so don't change it without adding synchronization.
 	std::string traceDir_;
 	std::string tempTraceDir_;
 
@@ -65,6 +69,11 @@ protected:
 	std::string GetTempTraceDir();
 	std::string GetKernelFile();
 	std::string GetUserFile();
+
+	int initialWidth_ = 0;
+	int initialHeight_ = 0;
+	int lastWidth_ = 0;
+	int lastHeight_ = 0;
 
 	void SetSymbolPath();
 	std::string GetDirectory(const char* env, const std::string& default);
@@ -93,4 +102,6 @@ public:
 	afx_msg void OnCbnSelchangeInputtracing();
 	afx_msg LRESULT UpdateTraceListHandler(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnLbnDblclkTracelist();
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
+	afx_msg void OnSize(UINT, int, int);
 };

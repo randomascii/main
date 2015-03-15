@@ -114,6 +114,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Control(pDX, IDC_INPUTTRACING, btInputTracing_);
 	DDX_Control(pDX, IDC_TRACELIST, btTraces_);
+	DDX_Control(pDX, IDC_TRACENOTES, btTraceNotes_);
 
 	CDialogEx::DoDataExchange(pDX);
 }
@@ -132,6 +133,8 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_INPUTTRACING, &CXperfUIDlg::OnCbnSelchangeInputtracing)
 	ON_MESSAGE(WM_UPDATETRACELIST, UpdateTraceListHandler)
 	ON_LBN_DBLCLK(IDC_TRACELIST, &CXperfUIDlg::OnLbnDblclkTracelist)
+	ON_WM_GETMINMAXINFO()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -197,6 +200,12 @@ BOOL CXperfUIDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
+	CRect windowRect;
+	GetWindowRect(&windowRect);
+	initialWidth_ = lastWidth_ = windowRect.Width();
+	initialHeight_ = lastHeight_ = windowRect.Height();
+
+
 	// Add "About..." menu item to system menu.
 
 	// IDM_ABOUTBOX must be in the system command range.
@@ -204,7 +213,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	ASSERT(IDM_ABOUTBOX < 0xF000);
 
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != NULL)
+	if (pSysMenu)
 	{
 		BOOL bNameValid;
 		CString strAboutMenu;
@@ -252,9 +261,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 	UpdateEnabling();
 
-	// We will leak this string. Oh well.
-	char* traceDir = _strdup(GetTraceDir().c_str());
-	(void)CreateThread(NULL, 0, DirectoryMonitorThread, traceDir, 0, 0);
+	// Don't change traceDir_ - the DirectoryMonitorThread has a pointer to it.
+	(void)CreateThread(nullptr, 0, DirectoryMonitorThread, const_cast<char*>(traceDir_.c_str()), 0, 0);
 
 	RegisterProviders();
 	DisablePagingExecutive();
@@ -576,7 +584,7 @@ void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
 	strcpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
 	STARTUPINFO startupInfo = {};
 	PROCESS_INFORMATION processInfo = {};
-	BOOL result = CreateProcess(wpaPath.c_str(), &argsCopy[0], NULL, NULL, FALSE, 0, NULL, NULL, &startupInfo, &processInfo);
+	BOOL result = CreateProcessA(wpaPath.c_str(), &argsCopy[0], nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo);
 	if (result)
 	{
 		// Close the handles to avoid leaks.
@@ -692,4 +700,46 @@ void CXperfUIDlg::OnLbnDblclkTracelist()
 	btTraces_.GetText(selIndex, cStringTraceName);
 	std::string tracename = GetTraceDir() + static_cast<const char*>(cStringTraceName);
 	LaunchTraceViewer(tracename);
+}
+
+void CXperfUIDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+{
+	if (!initialWidth_)
+		return;
+
+	// Don't let the dialog be smaller than its initial size.
+	lpMMI->ptMinTrackSize.x = initialWidth_;
+	lpMMI->ptMinTrackSize.y = initialHeight_;
+}
+
+
+void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
+{
+	if (nType == SIZE_RESTORED && initialWidth_)
+	{
+		// Calculate xDelta and yDelta -- the change in the window's size.
+		CRect windowRect;
+		GetWindowRect(&windowRect);
+		int xDelta = windowRect.Width() - lastWidth_;
+		lastWidth_ += xDelta;
+		int yDelta = windowRect.Height() - lastHeight_;
+		lastHeight_ += yDelta;
+
+		UINT flags = SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE;
+
+		// Resize the trace list and notes control.
+		CRect listRect;
+		btTraces_.GetWindowRect(&listRect);
+		btTraces_.SetWindowPos(nullptr, 0, 0, listRect.Width(), listRect.Height() + yDelta, flags);
+		int selectedIndex = btTraces_.GetCurSel();
+		if (selectedIndex != LB_ERR)
+		{
+			// Make the selected line visible.
+			btTraces_.SetTopIndex(selectedIndex);
+		}
+
+		CRect editRect;
+		btTraceNotes_.GetWindowRect(&editRect);
+		btTraceNotes_.SetWindowPos(nullptr, 0, 0, editRect.Width() + xDelta, editRect.Height() + yDelta, flags);
+	}
 }

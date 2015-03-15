@@ -1,3 +1,5 @@
+This is the to-do list for XperfUI, a UI to wrap recording ETW traces with xperf.exe.
+
 Done:
 Get appropriate default for tracedir.
 Create tracedir as needed.
@@ -14,9 +16,12 @@ Process Chrome symbols.
 Finish input recording options and give warning about full input recording.
 List all traces in tracedir and allow viewing them.
 Register providers.
-set HKLM\System\CurrentControlSet\Control\Session Manager\Memory Management" DisablePagingExecutive to 1
+set DisablePagingExecutive to 1
+Vertically resizable window to show more traces.
 
 To-do before first release:
+Editing and auto-saving of trace notes.
+Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
 Hot key to stop/record traces.
 
@@ -25,11 +30,11 @@ Disable compress option for Windows 7 and below.
 Allow configuring which symbols should be stripped.
 Tool-tips
 Add circular-buffer support.
+Heap tracing.
 Unicode support
 Configure a maximum time to trace for to avoid infinitely long traces.
 Transparent compression/decompression into .zip files.
 CPU frequency monitoring.
-Vertically resizable window to show more traces.
 Allow configuring the temporary and final trace directories.
-Have a button to copy the recommend (or one of several recommend) startup profiles.
+Have a button to copy the recommended (or one of several recommended) startup profiles.
 Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
