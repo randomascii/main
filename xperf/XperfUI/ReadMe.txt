@@ -10,18 +10,18 @@ Respect tracedir and temptracedir.
 Generate good trace names, with built-in keywords.
 Input recording.
 Move more initialization like _NT_SYMBOL_PATH to startup.
-
-To-do before first release:
 Process Chrome symbols.
 Finish input recording options and give warning about full input recording.
-
-Register providers.
-Add OS specific checks for what user providers to enable.
 List all traces in tracedir and allow viewing them.
-Disable compress option for Windows 7 and below.
+Register providers.
+set HKLM\System\CurrentControlSet\Control\Session Manager\Memory Management" DisablePagingExecutive to 1
+
+To-do before first release:
+Add OS specific checks for what user providers to enable.
 Hot key to stop/record traces.
 
 To-do eventually:
+Disable compress option for Windows 7 and below.
 Allow configuring which symbols should be stripped.
 Tool-tips
 Add circular-buffer support.
@@ -30,3 +30,6 @@ Configure a maximum time to trace for to avoid infinitely long traces.
 Transparent compression/decompression into .zip files.
 CPU frequency monitoring.
 Vertically resizable window to show more traces.
+Allow configuring the temporary and final trace directories.
+Have a button to copy the recommend (or one of several recommend) startup profiles.
+Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.

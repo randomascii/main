@@ -7,14 +7,18 @@
 #include "XperfUIDlg.h"
 #include "afxdialogex.h"
 #include "ChildProcess.h"
+#include <ETWProviders\etwprof.h>
+#include "Utility.h"
 #include <direct.h>
 #include <vector>
-#include <ETWProviders\etwprof.h>
-#include "KeyLoggerThread.h"
+#include <algorithm>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+// Send this when the list of traces needs to be updated.
+const int WM_UPDATETRACELIST = WM_USER + 10;
 
 // CAboutDlg dialog used for App About
 
@@ -108,6 +112,9 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_FASTSAMPLING, btFastSampling_);
 	DDX_Control(pDX, IDC_SHOWCOMMANDS, btShowCommands_);
 
+	DDX_Control(pDX, IDC_INPUTTRACING, btInputTracing_);
+	DDX_Control(pDX, IDC_TRACELIST, btTraces_);
+
 	CDialogEx::DoDataExchange(pDX);
 }
 
@@ -122,7 +129,9 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CONTEXTSWITCHCALLSTACKS, &CXperfUIDlg::OnBnClickedContextswitchcallstacks)
 	ON_BN_CLICKED(IDC_SHOWCOMMANDS, &CXperfUIDlg::OnBnClickedShowcommands)
 	ON_BN_CLICKED(IDC_FASTSAMPLING, &CXperfUIDlg::OnBnClickedFastsampling)
-	ON_BN_CLICKED(IDC_LOGINPUT, &CXperfUIDlg::OnBnClickedLoginput)
+	ON_CBN_SELCHANGE(IDC_INPUTTRACING, &CXperfUIDlg::OnCbnSelchangeInputtracing)
+	ON_MESSAGE(WM_UPDATETRACELIST, UpdateTraceListHandler)
+	ON_LBN_DBLCLK(IDC_TRACELIST, &CXperfUIDlg::OnLbnDblclkTracelist)
 END_MESSAGE_MAP()
 
 
@@ -141,6 +150,48 @@ void CXperfUIDlg::SetSymbolPath()
 	if (!symCachePath)
 		(void)_putenv("_NT_SYMCACHE_PATH=c:\\symcache");
 }
+
+
+// This function monitors the traceDir_ directory and sends a message to the main thread
+// whenever anything changes. That's it. All UI work is done in the main thread.
+DWORD __stdcall DirectoryMonitorThread(LPVOID voidTraceDir)
+{
+	const char* traceDir = (const char*)voidTraceDir;
+
+	HANDLE hChangeHandle = FindFirstChangeNotification(traceDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
+
+	if (hChangeHandle == INVALID_HANDLE_VALUE)
+	{
+		assert(0);
+		return 0;
+	}
+
+	for (;;)
+	{
+		DWORD dwWaitStatus = WaitForSingleObject(hChangeHandle, INFINITE);
+
+		switch (dwWaitStatus)
+		{
+		case WAIT_OBJECT_0:
+			pMainWindow->PostMessage(WM_UPDATETRACELIST, 0, 0);
+			if (FindNextChangeNotification(hChangeHandle) == FALSE)
+			{
+				assert(0);
+				return 0;
+			}
+			break;
+
+		default:
+			assert(0);
+			return 0;
+		}
+	}
+
+	assert(0);
+
+	return 0;
+}
+
 
 BOOL CXperfUIDlg::OnInitDialog()
 {
@@ -194,7 +245,21 @@ BOOL CXperfUIDlg::OnInitDialog()
 	CheckDlgButton(IDC_CPUSAMPLINGCALLSTACKS, bSampledStacks_);
 	CheckDlgButton(IDC_CONTEXTSWITCHCALLSTACKS, bCswitchStacks_);
 
+	btInputTracing_.AddString(_T("Off"));
+	btInputTracing_.AddString(_T("Private"));
+	btInputTracing_.AddString(_T("Full"));
+	btInputTracing_.SetCurSel(InputTracing_);
+
 	UpdateEnabling();
+
+	// We will leak this string. Oh well.
+	char* traceDir = _strdup(GetTraceDir().c_str());
+	(void)CreateThread(NULL, 0, DirectoryMonitorThread, traceDir, 0, 0);
+
+	RegisterProviders();
+	DisablePagingExecutive();
+
+	UpdateTraceList();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -222,6 +287,57 @@ std::string CXperfUIDlg::GetDirectory(const char* env, const std::string& defaul
 		exit(10);
 	}
 	return result;
+}
+
+void CXperfUIDlg::RegisterProviders()
+{
+	std::string dllSource = GetExeDir() + "ETWProviders.dll";
+#pragma warning(suppress:4996)
+	const char* temp = getenv("temp");
+	if (!temp)
+		return;
+	std::string dllDest = temp;
+	dllDest += "\\ETWProviders.dll";
+	if (!CopyFile(dllSource.c_str(), dllDest.c_str(), FALSE))
+	{
+		outputPrintf("Registering of ETW providers failed due to copy error.\n");
+		return;
+	}
+	char systemDir[MAX_PATH];
+	systemDir[0] = 0;
+	GetSystemDirectory(systemDir, ARRAYSIZE(systemDir));
+	std::string wevtPath = systemDir + std::string("\\wevtutil.exe");
+
+	for (int pass = 0; pass < 2; ++pass)
+	{
+		ChildProcess child(wevtPath);
+		std::string args = pass ? " im" : " um";
+		args += " \"" + GetExeDir() + "etwproviders.man\"";
+		child.Run(bShowCommands_, "wevtutil.exe" + args);
+	}
+}
+
+
+// Tell Windows to keep 64-bit kernel metadata in memory so that
+// stack walking will work. Just do it -- don't ask.
+void CXperfUIDlg::DisablePagingExecutive()
+{
+	// http://blogs.msdn.com/b/oldnewthing/archive/2005/02/01/364563.aspx
+	BOOL f64 = FALSE;
+	bool bIsWin64 = IsWow64Process(GetCurrentProcess(), &f64) && f64;
+
+	if (bIsWin64)
+	{
+		HKEY key;
+		const char* keyName = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management";
+		LSTATUS result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyName, 0, KEY_ALL_ACCESS, &key);
+		if (result == ERROR_SUCCESS)
+		{
+			DWORD DisablePagingExecutive = 1;
+			LONG setResult = RegSetValueEx(key, "DisablePagingExecutive", 0, REG_DWORD, (BYTE*)&DisablePagingExecutive, sizeof(DisablePagingExecutive));
+			RegCloseKey(key);
+		}
+	}
 }
 
 void CXperfUIDlg::UpdateEnabling()
@@ -299,6 +415,22 @@ std::string CXperfUIDlg::GetTraceDir()
 	return traceDir_;
 }
 
+std::string CXperfUIDlg::GetExeDir()
+{
+	char exePath[MAX_PATH];
+	if (GetModuleFileName(0, exePath, sizeof(exePath)))
+	{
+		char* lastSlash = strrchr(exePath, '\\');
+		if (lastSlash)
+		{
+			lastSlash[1] = 0;
+			return exePath;
+		}
+	}
+
+	exit(10);
+}
+
 std::string CXperfUIDlg::GetResultFile()
 {
 	std::string traceDir = GetTraceDir();
@@ -364,9 +496,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	std::string userFile = " -f \"" + GetUserFile() + "\"";
 	std::string userArgs = " -start xperfuiSession" + userProviders + userFile;
 
-	std::string args = "xperf.exe" + kernelArgs + userArgs;
-
-	child.Run(bShowCommands_, args);
+	child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs);
 
 	bIsTracing_ = true;
 	UpdateEnabling();
@@ -412,10 +542,24 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	// conversion times for the full private symbols.
 	// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
 	// Call Python script here, or recreate it in C++.
+#pragma warning(suppress:4996)
+	const char* path = getenv("path");
+	if (path)
 	{
-		ChildProcess child("c:\\devtools\\python27\\python.EXE");
-		std::string args = " StripChromeSymbols.py \"" + traceFilename + "\"";
-		child.Run(bShowCommands_, "python.exe" + args);
+		std::vector<std::string> pathParts = split(path, ';');
+		for (auto part : pathParts)
+		{
+			std::string pythonPath = part + '\\' + "python.exe";
+			if (PathFileExists(pythonPath.c_str()))
+			{
+				outputPrintf("Stripping chrome symbols...\n");
+				//ChildProcess child("\"" + pythonPath + "\"");
+				ChildProcess child(pythonPath);
+				std::string args = " \"" + GetExeDir() + "StripChromeSymbols.py\" \"" + traceFilename + "\"";
+				child.Run(bShowCommands_, "python.exe" + args);
+				break;
+			}
+		}
 	}
 
 	LaunchTraceViewer(traceFilename);
@@ -482,15 +626,70 @@ void CXperfUIDlg::OnBnClickedFastsampling()
 	ETWMark(message);
 	ChildProcess child(GetXperfPath());
 	std::string profInt = bFastSampling_ ? "1221" : "9001";
-	std::string args = "xperf.exe -setprofint " + profInt + " cached";
-	child.Run(bShowCommands_, args);
+	std::string args = " -setprofint " + profInt + " cached";
+	child.Run(bShowCommands_, "xperf.exe" + args);
 }
 
 
-void CXperfUIDlg::OnBnClickedLoginput()
+void CXperfUIDlg::OnCbnSelchangeInputtracing()
 {
-	bRecordInput_ = !bRecordInput_;
-	// Should have a way to set it to kKeyLoggerAnonymized. Oh well. kKeyLoggerFull makes for better demos!
-	SetKeyloggingState(bRecordInput_ ? kKeyLoggerFull : kKeyLoggerOff);
-	ETWMarkPrintf("%s input logger", bRecordInput_ ? "Enabling" : "Disabling");
+	InputTracing_ = (KeyLoggerState)btInputTracing_.GetCurSel();
+	switch (InputTracing_)
+	{
+	case kKeyLoggerOff:
+		outputPrintf("Key logging disabled.\n");
+		break;
+	case kKeyLoggerAnonymized:
+		outputPrintf("Key logging enabled. Number and letter keys will be recorded generically.\n");
+		break;
+	case kKeyLoggerFull:
+		outputPrintf("Key logging enabled. Full keyboard information recorded - beware of private information being recorded.\n");
+		break;
+	default:
+		assert(0);
+		InputTracing_ = kKeyLoggerOff;
+		break;
+	}
+	SetKeyloggingState(InputTracing_);
+}
+
+void CXperfUIDlg::UpdateTraceList()
+{
+	const std::string tracePath = GetTraceDir() + "\\*.etl";
+
+	auto tempTraces = GetFileList(tracePath);
+	std::sort(tempTraces.begin(), tempTraces.end());
+	// Function to stop the temporary kernel.etl and user.etl traces from showing up.
+	auto ifInvalid = [](const std::string& name) { return name == "kernel.etl" || name == "user.etl"; };
+	tempTraces.erase(std::remove_if(tempTraces.begin(), tempTraces.end(), ifInvalid), tempTraces.end());
+	// If nothing has changed, do nothing. This avoids flicker and other ugliness.
+	if (tempTraces == traces_)
+		return;
+	traces_ = tempTraces;
+
+	// Erase all entries and replace them.
+	// Todo: retain the current selection index.
+	while (btTraces_.GetCount())
+		btTraces_.DeleteString(0);
+	for (auto name : traces_)
+	{
+		btTraces_.AddString(name.c_str());
+	}
+}
+
+LRESULT CXperfUIDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
+{
+	UpdateTraceList();
+
+	return 0;
+}
+
+
+void CXperfUIDlg::OnLbnDblclkTracelist()
+{
+	int selIndex = btTraces_.GetCurSel();
+	CString cStringTraceName;
+	btTraces_.GetText(selIndex, cStringTraceName);
+	std::string tracename = GetTraceDir() + static_cast<const char*>(cStringTraceName);
+	LaunchTraceViewer(tracename);
 }

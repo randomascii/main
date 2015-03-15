@@ -5,6 +5,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include "KeyLoggerThread.h"
 
 // CXperfUIDlg dialog
 class CXperfUIDlg : public CDialogEx
@@ -27,23 +29,26 @@ protected:
 
 	bool bIsTracing_ = false;
 
+	CButton btStartTracing_;
+	CButton btSaveTraceBuffers_;
+	CButton btStopTracing_;
+
 	bool bCompress_ = true;
 	bool bSampledStacks_ = true;
 	bool bCswitchStacks_ = true;
 	bool bShowCommands_ = false;
 	bool bFastSampling_ = false;
-	bool bRecordInput_ = false;
-
-	CButton btStartTracing_;
-	CButton btSaveTraceBuffers_;
-	CButton btStopTracing_;
-
 	CButton btCompress_;
 	CButton btSampledStacks_;
 	CButton btCswitchStacks_;
 	CButton btShowCommands_;
 	CButton btFastSampling_;
-	CButton btRecordInput_;
+
+	KeyLoggerState InputTracing_ = kKeyLoggerAnonymized;
+	CComboBox btInputTracing_;
+
+	std::vector<std::string> traces_;
+	CListBox btTraces_;
 
 	std::string traceDir_;
 	std::string tempTraceDir_;
@@ -53,6 +58,7 @@ protected:
 	std::string GetWPTDir();
 	std::string GetXperfPath();
 	std::string GetTraceDir();
+	std::string GetExeDir();
 	// Note that GetResultFile() gives a time-based name, so don't expect
 	// the same result across multiple calls!
 	std::string GetResultFile();
@@ -62,6 +68,9 @@ protected:
 
 	void SetSymbolPath();
 	std::string GetDirectory(const char* env, const std::string& default);
+	void CXperfUIDlg::UpdateTraceList();
+	void RegisterProviders();
+	void DisablePagingExecutive();
 
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();
@@ -81,5 +90,7 @@ public:
 	afx_msg void OnBnClickedContextswitchcallstacks();
 	afx_msg void OnBnClickedShowcommands();
 	afx_msg void OnBnClickedFastsampling();
-	afx_msg void OnBnClickedLoginput();
+	afx_msg void OnCbnSelchangeInputtracing();
+	afx_msg LRESULT UpdateTraceListHandler(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnLbnDblclkTracelist();
 };
