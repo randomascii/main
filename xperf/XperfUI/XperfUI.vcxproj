@@ -116,6 +116,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="About.h" />
     <ClInclude Include="ChildProcess.h" />
     <ClInclude Include="KeyLoggerThread.h" />
     <ClInclude Include="Resource.h" />
@@ -126,6 +127,7 @@
     <ClInclude Include="XperfUIDlg.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="About.cpp" />
     <ClCompile Include="ChildProcess.cpp" />
     <ClCompile Include="KeyLoggerThread.cpp" />
     <ClCompile Include="stdafx.cpp">

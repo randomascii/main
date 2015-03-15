@@ -1,10 +1,8 @@
-
-// XperfUIDlg.cpp : implementation file
-//
-
 #include "stdafx.h"
 #include "XperfUI.h"
 #include "XperfUIDlg.h"
+
+#include "About.h"
 #include "afxdialogex.h"
 #include "ChildProcess.h"
 #include <ETWProviders\etwprof.h>
@@ -19,36 +17,6 @@
 
 // Send this when the list of traces needs to be updated.
 const int WM_UPDATETRACELIST = WM_USER + 10;
-
-// CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-// Dialog Data
-	enum { IDD = IDD_ABOUTBOX };
-
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(CAboutDlg::IDD)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
 
 
 // CXperfUIDlg dialog
@@ -85,9 +53,8 @@ void CXperfUIDlg::vprintf(const char* pFormat, va_list args)
 	SetDlgItemText(IDC_OUTPUT, output_.c_str());
 
 	// Make sure the end of the data is visible.
-	CEdit* pOutput = (CEdit*)GetDlgItem(IDC_OUTPUT);
-	pOutput->SetSel(0, -1);
-	pOutput->SetSel(-1, -1);
+	btOutput_.SetSel(0, -1);
+	btOutput_.SetSel(-1, -1);
 
 	// Display the results immediately.
 	UpdateWindow();
@@ -98,6 +65,14 @@ CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
 {
 	pMainWindow = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+CXperfUIDlg::~CXperfUIDlg()
+{
+	if (bIsTracing_)
+	{
+		StopTracing(false);
+	}
 }
 
 void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
@@ -115,6 +90,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_INPUTTRACING, btInputTracing_);
 	DDX_Control(pDX, IDC_TRACELIST, btTraces_);
 	DDX_Control(pDX, IDC_TRACENOTES, btTraceNotes_);
+	DDX_Control(pDX, IDC_OUTPUT, btOutput_);
 
 	CDialogEx::DoDataExchange(pDX);
 }
@@ -135,6 +111,9 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_LBN_DBLCLK(IDC_TRACELIST, &CXperfUIDlg::OnLbnDblclkTracelist)
 	ON_WM_GETMINMAXINFO()
 	ON_WM_SIZE()
+	ON_LBN_SELCHANGE(IDC_TRACELIST, &CXperfUIDlg::OnLbnSelchangeTracelist)
+	ON_BN_CLICKED(IDC_ABOUT, &CXperfUIDlg::OnBnClickedAbout)
+	ON_BN_CLICKED(IDC_SAVETRACEBUFFERS, &CXperfUIDlg::OnBnClickedSavetracebuffers)
 END_MESSAGE_MAP()
 
 
@@ -351,7 +330,7 @@ void CXperfUIDlg::DisablePagingExecutive()
 void CXperfUIDlg::UpdateEnabling()
 {
 	btStartTracing_.EnableWindow(!bIsTracing_);
-	btSaveTraceBuffers_.EnableWindow(FALSE);
+	btSaveTraceBuffers_.EnableWindow(bIsTracing_);
 	btStopTracing_.EnableWindow(bIsTracing_);
 
 	btSampledStacks_.EnableWindow(!bIsTracing_);
@@ -511,32 +490,40 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	outputPrintf("Tracing is started.\n");
 }
 
-void CXperfUIDlg::OnBnClickedStoptracing()
+void CXperfUIDlg::StopTracing(bool bSaveTrace)
 {
 	std::string traceFilename = GetResultFile();
-	outputPrintf("\nSaving trace to disk...\n");
+	if (bSaveTrace)
+		outputPrintf("\nSaving trace to disk...\n");
+	else
+		outputPrintf("\nStopping tracing...\n");
 	{
+		// Stop the kernel and user sessions.
 		ChildProcess child(GetXperfPath());
 		child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
 	}
-	// Rename Amcache.hve to work around a merge hang that can last up to six
-	// minutes.
-	// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
-	const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
-	const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
-	BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
-	outputPrintf("Merging trace...\n");
+
+	if (bSaveTrace)
 	{
-		// Separate merge step to allow compression on Windows 8+
-		// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
-		ChildProcess merge(GetXperfPath());
-		std::string args = " -merge \"" + GetKernelFile() + "\" \"" + GetUserFile() + "\" \"" + traceFilename + "\"";
-		if (bCompress_)
-			args += " -compress";
-		merge.Run(bShowCommands_, "xperf.exe" + args);
+		// Rename Amcache.hve to work around a merge hang that can last up to six
+		// minutes.
+		// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
+		const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
+		const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
+		BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
+		outputPrintf("Merging trace...\n");
+		{
+			// Separate merge step to allow compression on Windows 8+
+			// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
+			ChildProcess merge(GetXperfPath());
+			std::string args = " -merge \"" + GetKernelFile() + "\" \"" + GetUserFile() + "\" \"" + traceFilename + "\"";
+			if (bCompress_)
+				args += " -compress";
+			merge.Run(bShowCommands_, "xperf.exe" + args);
+		}
+		if (moveSuccess)
+			MoveFile(compatFileTemp, compatFile);
 	}
-	if (moveSuccess)
-		MoveFile(compatFileTemp, compatFile);
 
 	// Delete the temporary files.
 	DeleteFile(GetKernelFile().c_str());
@@ -545,32 +532,48 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	bIsTracing_ = false;
 	UpdateEnabling();
 
-	// Some private symbols, particularly Chrome's, must be stripped and
-	// then converted to .symcache files in order to avoid ~25 minute
-	// conversion times for the full private symbols.
-	// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
-	// Call Python script here, or recreate it in C++.
-#pragma warning(suppress:4996)
-	const char* path = getenv("path");
-	if (path)
+	if (bSaveTrace)
 	{
-		std::vector<std::string> pathParts = split(path, ';');
-		for (auto part : pathParts)
+		// Some private symbols, particularly Chrome's, must be stripped and
+		// then converted to .symcache files in order to avoid ~25 minute
+		// conversion times for the full private symbols.
+		// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
+		// Call Python script here, or recreate it in C++.
+#pragma warning(suppress:4996)
+		const char* path = getenv("path");
+		if (path)
 		{
-			std::string pythonPath = part + '\\' + "python.exe";
-			if (PathFileExists(pythonPath.c_str()))
+			std::vector<std::string> pathParts = split(path, ';');
+			for (auto part : pathParts)
 			{
-				outputPrintf("Stripping chrome symbols...\n");
-				//ChildProcess child("\"" + pythonPath + "\"");
-				ChildProcess child(pythonPath);
-				std::string args = " \"" + GetExeDir() + "StripChromeSymbols.py\" \"" + traceFilename + "\"";
-				child.Run(bShowCommands_, "python.exe" + args);
-				break;
+				std::string pythonPath = part + '\\' + "python.exe";
+				if (PathFileExists(pythonPath.c_str()))
+				{
+					outputPrintf("Stripping chrome symbols...\n");
+					//ChildProcess child("\"" + pythonPath + "\"");
+					ChildProcess child(pythonPath);
+					std::string args = " \"" + GetExeDir() + "StripChromeSymbols.py\" \"" + traceFilename + "\"";
+					child.Run(bShowCommands_, "python.exe" + args);
+					break;
+				}
 			}
 		}
-	}
 
-	LaunchTraceViewer(traceFilename);
+		LaunchTraceViewer(traceFilename);
+	}
+	else
+		outputPrintf("Tracing stopped.\n");
+}
+
+
+void CXperfUIDlg::OnBnClickedSavetracebuffers()
+{
+	StopTracing(true);
+}
+
+void CXperfUIDlg::OnBnClickedStoptracing()
+{
+	StopTracing(false);
 }
 
 void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
@@ -731,15 +734,49 @@ void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
 		CRect listRect;
 		btTraces_.GetWindowRect(&listRect);
 		btTraces_.SetWindowPos(nullptr, 0, 0, listRect.Width(), listRect.Height() + yDelta, flags);
-		int selectedIndex = btTraces_.GetCurSel();
-		if (selectedIndex != LB_ERR)
+		int curSel = btTraces_.GetCurSel();
+		if (curSel != LB_ERR)
 		{
 			// Make the selected line visible.
-			btTraces_.SetTopIndex(selectedIndex);
+			btTraces_.SetTopIndex(curSel);
 		}
 
 		CRect editRect;
 		btTraceNotes_.GetWindowRect(&editRect);
 		btTraceNotes_.SetWindowPos(nullptr, 0, 0, editRect.Width() + xDelta, editRect.Height() + yDelta, flags);
 	}
+}
+
+
+void CXperfUIDlg::OnLbnSelchangeTracelist()
+{
+	int curSel = btTraces_.GetCurSel();
+	if (curSel >= 0 && curSel < (int)traces_.size())
+	{
+		// Get the currently selected text, which might have been edited.
+		CString editedNotesCString;
+		GetDlgItemText(IDC_TRACENOTES, editedNotesCString);
+		std::string editedNotes = static_cast<const char*>(editedNotesCString);
+		if (editedNotes != traceNotes_)
+		{
+			if (!traceNoteFilename_.empty())
+			{
+				WriteTextAsFile(traceNoteFilename_, editedNotes);
+			}
+		}
+
+		std::string traceName = traces_[curSel];
+		std::string notesFilename = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + ".txt";
+		std::string notes = LoadFileAsText(notesFilename);
+		SetDlgItemText(IDC_TRACENOTES, notes.c_str());
+		traceNotes_ = notes;
+		traceNoteFilename_ = notesFilename;
+	}
+}
+
+
+void CXperfUIDlg::OnBnClickedAbout()
+{
+	CAboutDlg dlgAbout;
+	dlgAbout.DoModal();
 }

@@ -14,6 +14,7 @@ class CXperfUIDlg : public CDialogEx
 // Construction
 public:
 	CXperfUIDlg(CWnd* pParent = NULL);	// standard constructor
+	~CXperfUIDlg();
 
 // Dialog Data
 	enum { IDD = IDD_XPERFUI_DIALOG };
@@ -50,6 +51,9 @@ protected:
 	std::vector<std::string> traces_;
 	CListBox btTraces_;
 
+	// This contains the notes for the selected trace, as loaded from disk.
+	std::string traceNotes_;
+	std::string traceNoteFilename_;
 	CEdit btTraceNotes_;
 
 	// Note that the DirectoryMonitorThread has a pointer to the contents of
@@ -58,6 +62,9 @@ protected:
 	std::string tempTraceDir_;
 
 	std::string output_;
+	CEdit btOutput_;
+
+	void StopTracing(bool bSaveTrace);
 
 	std::string GetWPTDir();
 	std::string GetXperfPath();
@@ -104,4 +111,7 @@ public:
 	afx_msg void OnLbnDblclkTracelist();
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	afx_msg void OnSize(UINT, int, int);
+	afx_msg void OnLbnSelchangeTracelist();
+	afx_msg void OnBnClickedAbout();
+	afx_msg void OnBnClickedSavetracebuffers();
 };

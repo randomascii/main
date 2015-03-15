@@ -18,9 +18,10 @@ List all traces in tracedir and allow viewing them.
 Register providers.
 set DisablePagingExecutive to 1
 Vertically resizable window to show more traces.
+Editing and auto-saving of trace notes.
+Stop tracing on shutdown!!!
 
 To-do before first release:
-Editing and auto-saving of trace notes.
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
 Hot key to stop/record traces.

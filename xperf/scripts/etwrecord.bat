@@ -29,14 +29,13 @@
 @rem Note: this probably fails in some locales. Sorry.
 @for /F "tokens=2-4 delims=/- " %%A in ('date/T') do @set datevar=%%C-%%A-%%B
 @for /f "tokens=1-2 delims=/:" %%a in ("%TIME%") do @set timevar=%%a-%%b
-@set FileName=%xperftracedir%\%datevar%_%timevar%_%username%
+@set FileName=%xperftracedir%\%datevar%_%timevar%-00_%username%
 
 @if "%1" == "" goto NoFileSpecified
 @set ext=%~x1
 @if "%ext%" == ".etl" goto fullFileSpecified
-@rem Must be just a sub-component -- add it to the end. Use a + sign as the
-@rem unique separator.
-@set Filename=%FileName%+%1.etl
+@rem Must be just a sub-component -- add it to the end.
+@set Filename=%FileName%_%1.etl
 @goto FileSpecified
 
 :fullFileSpecified
