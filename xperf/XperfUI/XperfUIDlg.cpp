@@ -119,6 +119,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Control(pDX, IDC_INPUTTRACING, btInputTracing_);
 	DDX_Control(pDX, IDC_INPUTTRACING_LABEL, btInputTracingLabel_);
+	DDX_Control(pDX, IDC_TRACINGMODE, btTracingMode_);
 	DDX_Control(pDX, IDC_TRACELIST, btTraces_);
 	DDX_Control(pDX, IDC_TRACENOTES, btTraceNotes_);
 	DDX_Control(pDX, IDC_OUTPUT, btOutput_);
@@ -147,6 +148,7 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SAVETRACEBUFFERS, &CXperfUIDlg::OnBnClickedSavetracebuffers)
 	ON_MESSAGE(WM_HOTKEY, OnHotKey)
 	ON_WM_CLOSE()
+	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
 END_MESSAGE_MAP()
 
 
@@ -275,6 +277,10 @@ BOOL CXperfUIDlg::OnInitDialog()
 	btInputTracing_.AddString(_T("Full"));
 	btInputTracing_.SetCurSel(InputTracing_);
 
+	btTracingMode_.AddString(_T("Tracing to file"));
+	btTracingMode_.AddString(_T("Circular buffer tracing"));
+	btTracingMode_.SetCurSel(tracingMode_);
+
 	UpdateEnabling();
 	btTraceNotes_.EnableWindow(false); // This window always starts out disabled.
 
@@ -290,7 +296,9 @@ BOOL CXperfUIDlg::OnInitDialog()
 	{
 		toolTip_.AddTool(&btStartTracing_, _T("Start ETW tracing."));
 
-		toolTip_.AddTool(&btCompress_, _T("Enable ETW trace compression. On Windows 8 and above this compresses traces "
+		toolTip_.AddTool(&btCompress_, _T("Only uncheck this if you record traces on Windows 8 and above and want to analyze "
+					"them on Windows 7 and below.\n"
+					"Enable ETW trace compression. On Windows 8 and above this compresses traces "
 					"as they are saved, making them 5-10x smaller. However compressed traces cannot be loaded on "
 					"Windows 7 or earlier. On Windows 7 this setting has no effect."));
 		toolTip_.AddTool(&btCswitchStacks_, _T("This enables recording of call stacks on context switches, from both "
@@ -313,6 +321,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 					"'off' setting records no input.");
 		toolTip_.AddTool(&btInputTracingLabel_, pInputTip);
 		toolTip_.AddTool(&btInputTracing_, pInputTip);
+
+		toolTip_.AddTool(&btTracingMode_, _T("Select whether to trace straight to disk or to in-memory circular buffers."));
 
 		toolTip_.AddTool(&btTraces_, _T("This is a list of all traces found in %xperftracedir%, which defaults to "
 					"documents\\xperftraces."));
@@ -408,6 +418,7 @@ void CXperfUIDlg::UpdateEnabling()
 	btStartTracing_.EnableWindow(!bIsTracing_);
 	btSaveTraceBuffers_.EnableWindow(bIsTracing_);
 	btStopTracing_.EnableWindow(bIsTracing_);
+	btTracingMode_.EnableWindow(!bIsTracing_);
 
 	btSampledStacks_.EnableWindow(!bIsTracing_);
 	btCswitchStacks_.EnableWindow(!bIsTracing_);
@@ -540,7 +551,10 @@ std::string CXperfUIDlg::GetUserFile()
 
 void CXperfUIDlg::OnBnClickedStarttracing()
 {
-	outputPrintf("\nStarting tracing...\n");
+	if (tracingMode_ == kTracingToFile)
+		outputPrintf("\nStarting tracing to disk...\n");
+	else
+		outputPrintf("\nStarting tracing to in-memory circular buffers.\n");
 	ChildProcess child(GetXperfPath());
 	std::string kernelProviders = " Latency+POWER+DISPATCHER+FILE_IO+FILE_IO_INIT+VIRT_ALLOC";
 	std::string kernelStackWalk = "";
@@ -550,14 +564,20 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 		kernelStackWalk = " -stackwalk PROFILE";
 	else if (bCswitchStacks_)
 		kernelStackWalk = " -stackwalk CSWITCH+READYTHREAD";
+	// Buffer sizes are in KB, so 1024 is actually 1 MB
 	// Make this configurable.
-	std::string kernelBuffers = " -buffersize 1024 -minbuffers 1200";
+	std::string kernelBuffers = " -buffersize 1024 -minbuffers 600 -maxbuffers 600";
 	std::string kernelFile = " -f \"" + GetKernelFile() + "\"";
+	if (tracingMode_ == kTracingToMemory)
+		kernelFile = " -buffering";
 	std::string kernelArgs = " -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
 	std::string userProviders = " -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
+	std::string userBuffers = " -buffersize 1024 -minbuffers 100 -maxbuffers 100";
 	std::string userFile = " -f \"" + GetUserFile() + "\"";
-	std::string userArgs = " -start xperfuiSession" + userProviders + userFile;
+	if (tracingMode_ == kTracingToMemory)
+		userFile = " -buffering";
+	std::string userArgs = " -start xperfuiSession" + userProviders + userBuffers + userFile;
 
 	child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs);
 
@@ -573,20 +593,30 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		outputPrintf("\nSaving trace to disk...\n");
 	else
 		outputPrintf("\nStopping tracing...\n");
+
+	// Rename Amcache.hve to work around a merge hang that can last up to six
+	// minutes.
+	// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
+	const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
+	const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
+	BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
+
 	{
 		// Stop the kernel and user sessions.
 		ChildProcess child(GetXperfPath());
-		child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
+		if (bSaveTrace && tracingMode_ == kTracingToMemory)
+		{
+			// If we are in memory tracing mode then don't actually stop tracing,
+			// just flush the buffers to disk.
+			std::string args = " -flush \"NT Kernel Logger\" -f \"" + GetKernelFile() + "\" -flush xperfuisession -f \"" + GetUserFile() + "\"";
+			child.Run(bShowCommands_, "xperf.exe" + args);
+		}
+		else
+			child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
 	}
 
 	if (bSaveTrace)
 	{
-		// Rename Amcache.hve to work around a merge hang that can last up to six
-		// minutes.
-		// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
-		const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
-		const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
-		BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
 		outputPrintf("Merging trace...\n");
 		{
 			// Separate merge step to allow compression on Windows 8+
@@ -597,16 +627,20 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 				args += " -compress";
 			merge.Run(bShowCommands_, "xperf.exe" + args);
 		}
-		if (moveSuccess)
-			MoveFile(compatFileTemp, compatFile);
 	}
+
+	if (moveSuccess)
+		MoveFile(compatFileTemp, compatFile);
 
 	// Delete the temporary files.
 	DeleteFile(GetKernelFile().c_str());
 	DeleteFile(GetUserFile().c_str());
 
-	bIsTracing_ = false;
-	UpdateEnabling();
+	if (!bSaveTrace || tracingMode_ != kTracingToMemory)
+	{
+		bIsTracing_ = false;
+		UpdateEnabling();
+	}
 
 	if (bSaveTrace)
 	{
@@ -881,4 +915,23 @@ BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
 	toolTip_.RelayEvent(pMsg);
 
 	return CDialog::PreTranslateMessage(pMsg);
+}
+
+
+void CXperfUIDlg::OnCbnSelchangeTracingmode()
+{
+	tracingMode_ = (TracingMode)btTracingMode_.GetCurSel();
+	switch (tracingMode_)
+	{
+	case kTracingToFile:
+		outputPrintf("Traces will be recorded to disk to allow arbitrarily long recordings.\n");
+		break;
+	case kTracingToMemory:
+		outputPrintf("Traces will be recorded to in-memory circular buffers. Tracing can be enabled "
+			"indefinitely long, and will record the last ~10-60 seconds.\n");
+		break;
+	case kHeapTracingToFile:
+		outputPrintf("Not implemented!\n");
+		break;
+	}
 }

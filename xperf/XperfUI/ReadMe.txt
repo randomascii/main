@@ -23,17 +23,18 @@ Stop tracing on shutdown!!!
 Hot key to stop/record traces.
 Make sure trace notes are saved when closing.
 Tool-tips
+Add circular-buffer support.
 
-To-do before first release:
-Make sure trace notes are disabled when no trace is selected, including when
-traces are added or deleted.
+Most important tasks:
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
 
 To-do eventually:
+Error checking -- checking for failures to start or stop tracing.
+Make sure trace notes are disabled when no trace is selected, including when
+traces are added or deleted.
 Disable compress option for Windows 7 and below.
 Allow configuring which symbols should be stripped.
-Add circular-buffer support.
 Heap tracing.
 Unicode support
 Configure a maximum time to trace for to avoid infinitely long traces.
@@ -43,3 +44,5 @@ Allow configuring the temporary and final trace directories.
 Have a button to copy the recommended (or one of several recommended) startup profiles.
 Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
 Disable ESC as a way to close XperfUI.
+Remember settings.
+Implement settings dialog.

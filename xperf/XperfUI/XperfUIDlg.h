@@ -9,6 +9,13 @@
 #include <memory>
 #include "KeyLoggerThread.h"
 
+enum TracingMode
+{
+	kTracingToFile,
+	kTracingToMemory,
+	kHeapTracingToFile
+};
+
 // CXperfUIDlg dialog
 class CXperfUIDlg : public CDialogEx
 {
@@ -49,6 +56,9 @@ protected:
 	KeyLoggerState InputTracing_ = kKeyLoggerAnonymized;
 	CComboBox btInputTracing_;
 	CStatic btInputTracingLabel_;
+
+	TracingMode tracingMode_ = kTracingToMemory;
+	CComboBox btTracingMode_;
 
 	std::vector<std::string> traces_;
 	CListBox btTraces_;
@@ -126,4 +136,5 @@ public:
 	afx_msg void OnClose(); 
 	afx_msg void OnCancel();
 	afx_msg void OnOK();
+	afx_msg void OnCbnSelchangeTracingmode();
 };

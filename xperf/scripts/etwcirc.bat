@@ -108,9 +108,8 @@ xperf -stop -stop %CircSessionName%
 xperf -capturestate %CircSessionName% %UserProviders%
 @if not %errorlevel% equ 0 goto FailureToRecord
 
-xperf -flush "NT Kernel Logger" -f %CircKernelName%
-@if not %errorlevel% equ 0 goto FailureToRecord
-xperf -flush %CircSessionName% -f %CircUserName%
+@rem Flush both sessions to disk.
+xperf -flush "NT Kernel Logger" -f %CircKernelName% -flush %CircSessionName% -f %CircUserName%
 @if not %errorlevel% equ 0 goto FailureToRecord
 xperf -merge %CircKernelName% %CircUserName% %1
 @if not %errorlevel% equ 0 goto FailureToRecord
