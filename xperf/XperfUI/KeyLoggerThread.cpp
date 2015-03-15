@@ -30,7 +30,13 @@ LRESULT CALLBACK LowLevelKeyboardHook(int nCode, WPARAM wParam, LPARAM lParam)
 			if ((code >= 'A' && code <= 'Z') || (code >= '0' && code <= '9') || code == ' ')
 			{
 				if (!g_LogKeyboardDetails)
-					code = ' ';
+				{
+					// Make letters and numbers generic, for privacy.
+					if (code >= 'A' && code <= 'Z')
+						code = 'A';
+					else if (code >= '0' && code <= '9')
+						code = '0';
+				}
 				sprintf_s(buffer, "%c", code);
 			}
 			else if (code >= VK_NUMPAD0 && code <= VK_NUMPAD9)

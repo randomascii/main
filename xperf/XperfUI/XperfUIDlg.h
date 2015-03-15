@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include "KeyLoggerThread.h"
 
 // CXperfUIDlg dialog
@@ -35,18 +36,19 @@ protected:
 	CButton btStopTracing_;
 
 	bool bCompress_ = true;
-	bool bSampledStacks_ = true;
 	bool bCswitchStacks_ = true;
-	bool bShowCommands_ = false;
+	bool bSampledStacks_ = true;
 	bool bFastSampling_ = false;
+	bool bShowCommands_ = false;
 	CButton btCompress_;
-	CButton btSampledStacks_;
 	CButton btCswitchStacks_;
-	CButton btShowCommands_;
+	CButton btSampledStacks_;
 	CButton btFastSampling_;
+	CButton btShowCommands_;
 
 	KeyLoggerState InputTracing_ = kKeyLoggerAnonymized;
 	CComboBox btInputTracing_;
+	CStatic btInputTracingLabel_;
 
 	std::vector<std::string> traces_;
 	CListBox btTraces_;
@@ -88,9 +90,14 @@ protected:
 	void RegisterProviders();
 	void DisablePagingExecutive();
 
+	CToolTipCtrl toolTip_;
+
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();
 	void LaunchTraceViewer(const std::string traceFilename);
+	void SaveNotesIfNeeded();
+	void ShutdownTasks();
+	bool bShutdownCompleted_ = false;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -114,4 +121,9 @@ public:
 	afx_msg void OnLbnSelchangeTracelist();
 	afx_msg void OnBnClickedAbout();
 	afx_msg void OnBnClickedSavetracebuffers();
+	afx_msg LRESULT OnHotKey(WPARAM wParam, LPARAM lParam);
+	afx_msg BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnClose(); 
+	afx_msg void OnCancel();
+	afx_msg void OnOK();
 };

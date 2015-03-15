@@ -18,6 +18,8 @@
 // Send this when the list of traces needs to be updated.
 const int WM_UPDATETRACELIST = WM_USER + 10;
 
+const int kRecordTraceHotKey = 1234;
+
 
 // CXperfUIDlg dialog
 
@@ -69,10 +71,38 @@ CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
 
 CXperfUIDlg::~CXperfUIDlg()
 {
+}
+
+void CXperfUIDlg::ShutdownTasks()
+{
+	if (bShutdownCompleted_)
+		return;
+	bShutdownCompleted_ = true;
+	SaveNotesIfNeeded();
 	if (bIsTracing_)
 	{
 		StopTracing(false);
 	}
+}
+
+void CXperfUIDlg::OnCancel()
+{
+	ShutdownTasks();
+
+	CDialog::OnCancel();
+}
+
+void CXperfUIDlg::OnClose()
+{
+	ShutdownTasks();
+
+	CDialog::OnClose();
+}
+
+void CXperfUIDlg::OnOK()
+{
+	ShutdownTasks();
+	CDialog::OnOK();
 }
 
 void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
@@ -88,6 +118,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SHOWCOMMANDS, btShowCommands_);
 
 	DDX_Control(pDX, IDC_INPUTTRACING, btInputTracing_);
+	DDX_Control(pDX, IDC_INPUTTRACING_LABEL, btInputTracingLabel_);
 	DDX_Control(pDX, IDC_TRACELIST, btTraces_);
 	DDX_Control(pDX, IDC_TRACENOTES, btTraceNotes_);
 	DDX_Control(pDX, IDC_OUTPUT, btOutput_);
@@ -114,6 +145,8 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_LBN_SELCHANGE(IDC_TRACELIST, &CXperfUIDlg::OnLbnSelchangeTracelist)
 	ON_BN_CLICKED(IDC_ABOUT, &CXperfUIDlg::OnBnClickedAbout)
 	ON_BN_CLICKED(IDC_SAVETRACEBUFFERS, &CXperfUIDlg::OnBnClickedSavetracebuffers)
+	ON_MESSAGE(WM_HOTKEY, OnHotKey)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -184,6 +217,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 	initialWidth_ = lastWidth_ = windowRect.Width();
 	initialHeight_ = lastHeight_ = windowRect.Height();
 
+	// 0x41 is 'C', compatible with wprui
+	RegisterHotKey(*this, kRecordTraceHotKey, MOD_WIN + MOD_CONTROL, 0x43);
 
 	// Add "About..." menu item to system menu.
 
@@ -233,12 +268,15 @@ BOOL CXperfUIDlg::OnInitDialog()
 	CheckDlgButton(IDC_CPUSAMPLINGCALLSTACKS, bSampledStacks_);
 	CheckDlgButton(IDC_CONTEXTSWITCHCALLSTACKS, bCswitchStacks_);
 
+
+
 	btInputTracing_.AddString(_T("Off"));
 	btInputTracing_.AddString(_T("Private"));
 	btInputTracing_.AddString(_T("Full"));
 	btInputTracing_.SetCurSel(InputTracing_);
 
 	UpdateEnabling();
+	btTraceNotes_.EnableWindow(false); // This window always starts out disabled.
 
 	// Don't change traceDir_ - the DirectoryMonitorThread has a pointer to it.
 	(void)CreateThread(nullptr, 0, DirectoryMonitorThread, const_cast<char*>(traceDir_.c_str()), 0, 0);
@@ -247,6 +285,44 @@ BOOL CXperfUIDlg::OnInitDialog()
 	DisablePagingExecutive();
 
 	UpdateTraceList();
+
+	if (toolTip_.Create(this))
+	{
+		toolTip_.AddTool(&btStartTracing_, _T("Start ETW tracing."));
+
+		toolTip_.AddTool(&btCompress_, _T("Enable ETW trace compression. On Windows 8 and above this compresses traces "
+					"as they are saved, making them 5-10x smaller. However compressed traces cannot be loaded on "
+					"Windows 7 or earlier. On Windows 7 this setting has no effect."));
+		toolTip_.AddTool(&btCswitchStacks_, _T("This enables recording of call stacks on context switches, from both "
+					"the thread being switched in and the readying thread. This should only be disabled if the performance "
+					"of functions like WaitForSingleObject and SetEvent appears to be distorted, which can happen when the "
+					"context-switch rate is very high."));
+		toolTip_.AddTool(&btSampledStacks_, _T("This enables recording of call stacks on CPU sampling events, which "
+			"by default happen at 1 KHz. This should rarely be disabled."));
+		toolTip_.AddTool(&btFastSampling_, _T("Checking this changes the CPU sampling frequency from the default of "
+					"~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces "
+					"but can make investigating brief CPU-bound performance problems (such as a single long frame) "
+					"more practical."));
+		toolTip_.AddTool(&btShowCommands_, _T("This tells XperfUI to display the xperf.exe and other commands being "
+			"executed. This can be helpful for diagnostic purposes but is not normally needed."));
+
+		const TCHAR* pInputTip = _T("Input tracing inserts custom ETW events into traces which can be helpful when "
+					"investigating performance problems that are correlated with user input. The default setting of "
+					"'private' records alphabetic keys as 'A' and numeric keys as '0'. The 'full' setting records "
+					"alphanumeric details. Both 'private' and 'full' record mouse movement and button clicks. The "
+					"'off' setting records no input.");
+		toolTip_.AddTool(&btInputTracingLabel_, pInputTip);
+		toolTip_.AddTool(&btInputTracing_, pInputTip);
+
+		toolTip_.AddTool(&btTraces_, _T("This is a list of all traces found in %xperftracedir%, which defaults to "
+					"documents\\xperftraces."));
+		toolTip_.AddTool(&btTraceNotes_, _T("Trace notes are intended for recording information about ETW traces, such "
+					"as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text "
+					"file - just type your analysis."));
+
+		toolTip_.SetMaxTipWidth(400);
+		toolTip_.Activate(TRUE);
+	}
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -747,24 +823,29 @@ void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
 	}
 }
 
+void CXperfUIDlg::SaveNotesIfNeeded()
+{
+	// Get the currently selected text, which might have been edited.
+	CString editedNotesCString;
+	GetDlgItemText(IDC_TRACENOTES, editedNotesCString);
+	std::string editedNotes = static_cast<const char*>(editedNotesCString);
+	if (editedNotes != traceNotes_)
+	{
+		if (!traceNoteFilename_.empty())
+		{
+			WriteTextAsFile(traceNoteFilename_, editedNotes);
+		}
+	}
+}
 
 void CXperfUIDlg::OnLbnSelchangeTracelist()
 {
 	int curSel = btTraces_.GetCurSel();
 	if (curSel >= 0 && curSel < (int)traces_.size())
 	{
-		// Get the currently selected text, which might have been edited.
-		CString editedNotesCString;
-		GetDlgItemText(IDC_TRACENOTES, editedNotesCString);
-		std::string editedNotes = static_cast<const char*>(editedNotesCString);
-		if (editedNotes != traceNotes_)
-		{
-			if (!traceNoteFilename_.empty())
-			{
-				WriteTextAsFile(traceNoteFilename_, editedNotes);
-			}
-		}
+		SaveNotesIfNeeded();
 
+		btTraceNotes_.EnableWindow(true);
 		std::string traceName = traces_[curSel];
 		std::string notesFilename = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + ".txt";
 		std::string notes = LoadFileAsText(notesFilename);
@@ -779,4 +860,25 @@ void CXperfUIDlg::OnBnClickedAbout()
 {
 	CAboutDlg dlgAbout;
 	dlgAbout.DoModal();
+}
+
+LRESULT CXperfUIDlg::OnHotKey(WPARAM wParam, LPARAM lParam)
+{
+	switch (wParam)
+	{
+	case kRecordTraceHotKey:
+		StopTracing(true);
+		break;
+	}
+
+	return 0;
+}
+
+
+// Magic sauce to make tooltips work.
+BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
+{
+	toolTip_.RelayEvent(pMsg);
+
+	return CDialog::PreTranslateMessage(pMsg);
 }

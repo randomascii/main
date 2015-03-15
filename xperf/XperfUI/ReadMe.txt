@@ -20,16 +20,19 @@ set DisablePagingExecutive to 1
 Vertically resizable window to show more traces.
 Editing and auto-saving of trace notes.
 Stop tracing on shutdown!!!
+Hot key to stop/record traces.
+Make sure trace notes are saved when closing.
+Tool-tips
 
 To-do before first release:
+Make sure trace notes are disabled when no trace is selected, including when
+traces are added or deleted.
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
-Hot key to stop/record traces.
 
 To-do eventually:
 Disable compress option for Windows 7 and below.
 Allow configuring which symbols should be stripped.
-Tool-tips
 Add circular-buffer support.
 Heap tracing.
 Unicode support
@@ -39,3 +42,4 @@ CPU frequency monitoring.
 Allow configuring the temporary and final trace directories.
 Have a button to copy the recommended (or one of several recommended) startup profiles.
 Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
+Disable ESC as a way to close XperfUI.
