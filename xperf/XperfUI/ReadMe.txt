@@ -24,6 +24,7 @@ Hot key to stop/record traces.
 Make sure trace notes are saved when closing.
 Tool-tips
 Add circular-buffer support.
+Heap tracing.
 
 Most important tasks:
 Renaming of traces and associated files.
@@ -35,17 +36,21 @@ Make sure trace notes are disabled when no trace is selected, including when
 traces are added or deleted.
 Disable compress option for Windows 7 and below.
 Allow configuring which symbols should be stripped.
-Heap tracing.
 Unicode support
 Configure a maximum time to trace for to avoid infinitely long traces.
 Transparent compression/decompression into .zip files.
 CPU frequency monitoring.
-Allow configuring the temporary and final trace directories.
 Have a button to copy the recommended (or one of several recommended) startup profiles.
 Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
 Disable ESC as a way to close XperfUI.
 Remember settings.
-Implement settings dialog.
+Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
+option for stacks on user events, option for DX tracing.
+Trace list should let the user:
+- delete traces
+- Explore to the trace directory
+- Copy the traces name/path to the clipboard
+- Run scripts on all traces
 Code cleanup:
 - getenv wrapper
 - ordering code sanely

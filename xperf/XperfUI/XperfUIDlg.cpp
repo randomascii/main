@@ -5,11 +5,13 @@
 #include "About.h"
 #include "afxdialogex.h"
 #include "ChildProcess.h"
-#include <ETWProviders\etwprof.h>
+#include "Settings.h"
 #include "Utility.h"
-#include <direct.h>
-#include <vector>
+
 #include <algorithm>
+#include <direct.h>
+#include <ETWProviders\etwprof.h>
+#include <vector>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -151,6 +153,7 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_MESSAGE(WM_HOTKEY, OnHotKey)
 	ON_WM_CLOSE()
 	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
+	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
 END_MESSAGE_MAP()
 
 
@@ -980,9 +983,22 @@ void CXperfUIDlg::OnCbnSelchangeTracingmode()
 	case kHeapTracingToFile:
 		outputPrintf("Heap traces will be recorded to disk for %s. Note that only %s processes "
 			"started after this is selected will be traced. Note that %s processes started now "
-			"will run slightly slower even if not being traced.\n", heapTracingExe_.c_str(),
+			"may run slightly slower even if not being traced.\n"
+			"To keep trace sizes manageable you may want to turn off context switch and CPU "
+			"sampling call stacks.\n", heapTracingExe_.c_str(),
 			heapTracingExe_.c_str(), heapTracingExe_.c_str());
 		break;
 	}
 	SetHeapTracing(false);
+}
+
+
+void CXperfUIDlg::OnBnClickedSettings()
+{
+	CSettings dlgAbout;
+	dlgAbout.heapTracingExe_ = heapTracingExe_;
+	if (dlgAbout.DoModal() == IDOK)
+	{
+		heapTracingExe_ = dlgAbout.heapTracingExe_;
+	}
 }

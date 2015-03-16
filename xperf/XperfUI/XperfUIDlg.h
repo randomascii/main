@@ -119,7 +119,6 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
-public:
 	afx_msg void OnBnClickedStarttracing();
 	afx_msg void OnBnClickedStoptracing();
 	afx_msg void OnBnClickedCompresstrace();
@@ -141,4 +140,5 @@ public:
 	afx_msg void OnCancel();
 	afx_msg void OnOK();
 	afx_msg void OnCbnSelchangeTracingmode();
+	afx_msg void OnBnClickedSettings();
 };
