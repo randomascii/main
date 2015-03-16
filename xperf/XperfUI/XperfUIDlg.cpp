@@ -83,6 +83,8 @@ void CXperfUIDlg::ShutdownTasks()
 	{
 		StopTracing(false);
 	}
+
+	SetHeapTracing(true);
 }
 
 void CXperfUIDlg::OnCancel()
@@ -279,6 +281,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 	btTracingMode_.AddString(_T("Tracing to file"));
 	btTracingMode_.AddString(_T("Circular buffer tracing"));
+	btTracingMode_.AddString(_T("Heap tracing to file"));
 	btTracingMode_.SetCurSel(tracingMode_);
 
 	UpdateEnabling();
@@ -333,6 +336,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 		toolTip_.SetMaxTipWidth(400);
 		toolTip_.Activate(TRUE);
 	}
+
+	SetHeapTracing(false);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -401,15 +406,8 @@ void CXperfUIDlg::DisablePagingExecutive()
 
 	if (bIsWin64)
 	{
-		HKEY key;
 		const char* keyName = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management";
-		LSTATUS result = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyName, 0, KEY_ALL_ACCESS, &key);
-		if (result == ERROR_SUCCESS)
-		{
-			DWORD DisablePagingExecutive = 1;
-			LONG setResult = RegSetValueEx(key, "DisablePagingExecutive", 0, REG_DWORD, (BYTE*)&DisablePagingExecutive, sizeof(DisablePagingExecutive));
-			RegCloseKey(key);
-		}
+		SetRegistryDWORD(HKEY_LOCAL_MACHINE, keyName, "DisablePagingExecutive", 1);
 	}
 }
 
@@ -525,13 +523,22 @@ std::string CXperfUIDlg::GetResultFile()
 		3 == sscanf_s(date, "%d/%d/%d", &month, &day, &year))
 	{
 		// The filenames are chosen to sort by date, with username as the LSB.
-		sprintf_s(fileName, "%04d-%02d-%02d_%02d-%02d-%02d_%s.etl", year + 2000, month, day, hour, min, sec, username);
+		sprintf_s(fileName, "%04d-%02d-%02d_%02d-%02d-%02d_%s", year + 2000, month, day, hour, min, sec, username);
 	}
 	else
 	{
-		strcpy_s(fileName, "xperfui.etl");
+		strcpy_s(fileName, "xperfui");
 	}
-	return GetTraceDir() + fileName;
+
+	std::string filePart = fileName;
+
+	if (tracingMode_ == kHeapTracingToFile)
+	{
+		filePart += "_" + heapTracingExe_.substr(0, heapTracingExe_.size() - 4);
+		filePart += "_heap";
+	}
+
+	return GetTraceDir() + filePart + ".etl";
 }
 
 std::string CXperfUIDlg::GetTempTraceDir()
@@ -549,12 +556,21 @@ std::string CXperfUIDlg::GetUserFile()
 	return GetTempTraceDir() + "user.etl";
 }
 
+std::string CXperfUIDlg::GetHeapFile()
+{
+	return GetTempTraceDir() + "heap.etl";
+}
+
 void CXperfUIDlg::OnBnClickedStarttracing()
 {
 	if (tracingMode_ == kTracingToFile)
 		outputPrintf("\nStarting tracing to disk...\n");
+	else if (tracingMode_ == kTracingToMemory)
+		outputPrintf("\nStarting tracing to in-memory circular buffers...\n");
+	else if (tracingMode_ == kHeapTracingToFile)
+		outputPrintf("\nStarting heap tracing to disk of %s...\n", heapTracingExe_.c_str());
 	else
-		outputPrintf("\nStarting tracing to in-memory circular buffers.\n");
+		assert(0);
 	ChildProcess child(GetXperfPath());
 	std::string kernelProviders = " Latency+POWER+DISPATCHER+FILE_IO+FILE_IO_INIT+VIRT_ALLOC";
 	std::string kernelStackWalk = "";
@@ -579,7 +595,17 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 		userFile = " -buffering";
 	std::string userArgs = " -start xperfuiSession" + userProviders + userBuffers + userFile;
 
-	child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs);
+	// Heap tracing settings -- only used for heap tracing.
+	// Could also record stacks on HeapFree
+	std::string heapBuffers = " -buffersize 1024 -minbuffers 200";
+	std::string heapFile = " -f \"" + GetHeapFile() + "\"";
+	std::string heapStackWalk = " -stackwalk HeapCreate+HeapDestroy+HeapAlloc+HeapRealloc";
+	std::string heapArgs = " -start xperfHeapSession -heap -Pids 0" + heapStackWalk + heapBuffers + heapFile;
+
+	if (tracingMode_ == kHeapTracingToFile)
+		child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs + heapArgs);
+	else
+		child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs);
 
 	bIsTracing_ = true;
 	UpdateEnabling();
@@ -612,7 +638,12 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 			child.Run(bShowCommands_, "xperf.exe" + args);
 		}
 		else
-			child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
+		{
+			if (tracingMode_ == kHeapTracingToFile)
+				child.Run(bShowCommands_, "xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop");
+			else
+				child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
+		}
 	}
 
 	if (bSaveTrace)
@@ -622,7 +653,10 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 			// Separate merge step to allow compression on Windows 8+
 			// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
 			ChildProcess merge(GetXperfPath());
-			std::string args = " -merge \"" + GetKernelFile() + "\" \"" + GetUserFile() + "\" \"" + traceFilename + "\"";
+			std::string args = " -merge \"" + GetKernelFile() + "\" \"" + GetUserFile() + "\"";
+			if (tracingMode_ == kHeapTracingToFile)
+				args += " \"" + GetHeapFile() + "\"";
+			args += " \"" + traceFilename + "\"";
 			if (bCompress_)
 				args += " -compress";
 			merge.Run(bShowCommands_, "xperf.exe" + args);
@@ -635,6 +669,8 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 	// Delete the temporary files.
 	DeleteFile(GetKernelFile().c_str());
 	DeleteFile(GetUserFile().c_str());
+	if (tracingMode_ == kHeapTracingToFile)
+		DeleteFile(GetHeapFile().c_str());
 
 	if (!bSaveTrace || tracingMode_ != kTracingToMemory)
 	{
@@ -780,8 +816,8 @@ void CXperfUIDlg::UpdateTraceList()
 
 	auto tempTraces = GetFileList(tracePath);
 	std::sort(tempTraces.begin(), tempTraces.end());
-	// Function to stop the temporary kernel.etl and user.etl traces from showing up.
-	auto ifInvalid = [](const std::string& name) { return name == "kernel.etl" || name == "user.etl"; };
+	// Function to stop the temporary traces from showing up.
+	auto ifInvalid = [](const std::string& name) { return name == "kernel.etl" || name == "user.etl" || name == "heap.etl"; };
 	tempTraces.erase(std::remove_if(tempTraces.begin(), tempTraces.end(), ifInvalid), tempTraces.end());
 	// If nothing has changed, do nothing. This avoids flicker and other ugliness.
 	if (tempTraces == traces_)
@@ -918,6 +954,17 @@ BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
 }
 
 
+void CXperfUIDlg::SetHeapTracing(bool forceOff)
+{
+	std::string targetKey = "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
+	DWORD tracingFlags = tracingMode_ == kHeapTracingToFile ? 1 : 0;
+	if (forceOff)
+		tracingFlags = 0;
+	CreateRegistryKey(HKEY_LOCAL_MACHINE, targetKey, heapTracingExe_);
+	targetKey += "\\" + heapTracingExe_;
+	SetRegistryDWORD(HKEY_LOCAL_MACHINE, targetKey, "TracingFlags", tracingFlags);
+}
+
 void CXperfUIDlg::OnCbnSelchangeTracingmode()
 {
 	tracingMode_ = (TracingMode)btTracingMode_.GetCurSel();
@@ -931,7 +978,11 @@ void CXperfUIDlg::OnCbnSelchangeTracingmode()
 			"indefinitely long, and will record the last ~10-60 seconds.\n");
 		break;
 	case kHeapTracingToFile:
-		outputPrintf("Not implemented!\n");
+		outputPrintf("Heap traces will be recorded to disk for %s. Note that only %s processes "
+			"started after this is selected will be traced. Note that %s processes started now "
+			"will run slightly slower even if not being traced.\n", heapTracingExe_.c_str(),
+			heapTracingExe_.c_str(), heapTracingExe_.c_str());
 		break;
 	}
+	SetHeapTracing(false);
 }

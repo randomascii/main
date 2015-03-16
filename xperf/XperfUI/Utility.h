@@ -9,4 +9,7 @@ std::vector<std::string> GetFileList(const std::string& pattern);
 std::string LoadFileAsText(const std::string& fileName);
 void WriteTextAsFile(const std::string& fileName, const std::string& text);
 
+void SetRegistryDWORD(HKEY root, const std::string& subkey, const std::string& valueName, DWORD value);
+void CreateRegistryKey(HKEY root, const std::string& subkey, const std::string& newKey);
+
 #endif

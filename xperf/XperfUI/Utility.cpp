@@ -78,3 +78,30 @@ void WriteTextAsFile(const std::string& fileName, const std::string& text)
 
 	outFile.write(text.c_str(), text.size());
 }
+
+void SetRegistryDWORD(HKEY root, const std::string& subkey, const std::string& valueName, DWORD value)
+{
+	HKEY key;
+	LONG result = RegOpenKeyExA(root, subkey.c_str(), 0, KEY_ALL_ACCESS, &key);
+	if (result == ERROR_SUCCESS)
+	{
+		LONG setResult = RegSetValueEx(key, valueName.c_str(), 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value));
+		RegCloseKey(key);
+	}
+}
+
+void CreateRegistryKey(HKEY root, const std::string& subkey, const std::string& newKey)
+{
+	HKEY key;
+	LONG result = RegOpenKeyExA(root, subkey.c_str(), 0, KEY_ALL_ACCESS, &key);
+	if (result == ERROR_SUCCESS)
+	{
+		HKEY resultKey;
+		result = RegCreateKey(key, newKey.c_str(), &resultKey);
+		if (result == ERROR_SUCCESS)
+		{
+			RegCloseKey(resultKey);
+		}
+		RegCloseKey(key);
+	}
+}

@@ -59,6 +59,9 @@ protected:
 
 	TracingMode tracingMode_ = kTracingToMemory;
 	CComboBox btTracingMode_;
+	// Hardcoded to chrome.exe for now.
+	std::string heapTracingExe_ = "chrome.exe";
+	void SetHeapTracing(bool forceOff);
 
 	std::vector<std::string> traces_;
 	CListBox btTraces_;
@@ -88,6 +91,7 @@ protected:
 	std::string GetTempTraceDir();
 	std::string GetKernelFile();
 	std::string GetUserFile();
+	std::string GetHeapFile();
 
 	int initialWidth_ = 0;
 	int initialHeight_ = 0;

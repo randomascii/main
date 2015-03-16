@@ -46,3 +46,7 @@ Move focus away from buttons before they are disabled, as when starting a trace 
 Disable ESC as a way to close XperfUI.
 Remember settings.
 Implement settings dialog.
+Code cleanup:
+- getenv wrapper
+- ordering code sanely
+- moving more code to separate functions/files
