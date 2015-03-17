@@ -62,6 +62,13 @@ void CXperfUIDlg::vprintf(const wchar_t* pFormat, va_list args)
 
 	// Display the results immediately.
 	UpdateWindow();
+
+	// Fake out the Windows hang detection since otherwise on long-running
+	// child-processes such as processing Chrome symbols we will get
+	// frosted, a ghost window will be displayed, and none of our updates
+	// will be visible.
+	MSG msg;
+	PeekMessage(&msg, *this, 0, 0, PM_NOREMOVE);
 }
 
 CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
@@ -705,6 +712,13 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 					ChildProcess child(pythonPath);
 					std::wstring args = L" \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
 					child.Run(bShowCommands_, L"python.exe" + args);
+					// Long-running child process -- display output as it is printed
+					// so the application doesn't look hung.
+					while (child.IsStillRunning())
+					{
+						std::wstring output = child.RemoveOutputText();
+						outputPrintf(L"%s", output.c_str());
+					}
 					break;
 				}
 			}

@@ -23,14 +23,26 @@ public:
 	// so calling this is strictly optional.
 	void WaitForCompletion();
 
+	// IsStillRunning returns when the child process exits or
+	// when new output is available. It returns true if the
+	// child is still running.
+	bool IsStillRunning();
+	// Remove and return the accumulated output text. Typically
+	// this is called in an IsStillRunning() loop.
+	std::wstring RemoveOutputText();
+
 private:
 	// Path to the executable to be run, and its process handle.
 	std::wstring exePath_;
 	HANDLE hProcess_;
 
+	// This will be signaled when fresh child-process output is available.
+	HANDLE hOutputAvailable_;
+
 	// This string is written to by the listener thread.
-	// Once the listener thread has exited the main thread can
-	// display it to the user.
+	// Don't modify processOutput_ without acquiring the lock,
+	// unless the pipe thread is known to be not running.
+	CCriticalSection outputLock_;
 	std::wstring processOutput_;
 
 	// Output handles for the child process -- connected to the pipe.

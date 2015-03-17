@@ -24,6 +24,8 @@ ChildProcess::ChildProcess(std::wstring exePath)
 		NMPWAIT_USE_DEFAULT_WAIT,
 		NULL);
 	hChildThread_ = CreateThread(0, 0, ListenerThreadStatic, this, 0, 0);
+
+	hOutputAvailable_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
 ChildProcess::~ChildProcess()
@@ -54,12 +56,36 @@ ChildProcess::~ChildProcess()
 	// Clean up.
 	if (hPipe_)
 		CloseHandle(hPipe_);
+	if (hOutputAvailable_)
+		CloseHandle(hOutputAvailable_);
 
 	// Now that the child thread has exited we can safely
-	// read from and print the process output.
+	// read from and print the process output. Acquire the lock
+	// for consistency.
+	CSingleLock locker(&outputLock_);
 	outputPrintf(L"%s", processOutput_.c_str());
 	if (exitCode)
 		outputPrintf(L"Process exit code was %08x (%d)\n", exitCode, exitCode);
+}
+
+bool ChildProcess::IsStillRunning()
+{
+	HANDLE handles[] =
+	{
+		hProcess_,
+		hOutputAvailable_,
+	};
+	DWORD waitIndex = WaitForMultipleObjects(ARRAYSIZE(handles), &handles[0], FALSE, INFINITE);
+	// Return true if hProcess_ was not signaled.
+	return waitIndex != 0;
+}
+
+std::wstring ChildProcess::RemoveOutputText()
+{
+	CSingleLock locker(&outputLock_);
+	std::wstring result = processOutput_;
+	processOutput_ = L"";
+	return result;
 }
 
 DWORD WINAPI ChildProcess::ListenerThreadStatic(LPVOID pVoidThis)
@@ -72,13 +98,18 @@ DWORD ChildProcess::ListenerThread()
 {
 	if (ConnectNamedPipe(hPipe_, NULL) || GetLastError() == ERROR_PIPE_CONNECTED)   // wait for someone to connect to the pipe
 	{
+		// Acquire the lock while writing to processOutput_
 		char buffer[1024];
 		DWORD dwRead;
 		while (ReadFile(hPipe_, buffer, sizeof(buffer) - 1, &dwRead, NULL) != FALSE)
 		{
-			buffer[dwRead] = 0;
-			OutputDebugStringA(buffer);
-			processOutput_ += AnsiToUnicode(buffer);
+			{
+				CSingleLock locker(&outputLock_);
+				buffer[dwRead] = 0;
+				OutputDebugStringA(buffer);
+				processOutput_ += AnsiToUnicode(buffer);
+			}
+			SetEvent(hOutputAvailable_);
 		}
 	}
 	else
