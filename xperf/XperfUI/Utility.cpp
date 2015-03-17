@@ -23,8 +23,8 @@ std::vector<std::string> split(const std::string& s, char c)
 
 std::vector<std::string> GetFileList(const std::string& pattern)
 {
-	WIN32_FIND_DATA findData;
-	HANDLE hFindFile = FindFirstFileEx(pattern.c_str(), FindExInfoStandard,
+	WIN32_FIND_DATAA findData;
+	HANDLE hFindFile = FindFirstFileExA(pattern.c_str(), FindExInfoStandard,
 				&findData, FindExSearchNameMatch, NULL, 0);
 
 	std::vector<std::string> result;
@@ -33,7 +33,7 @@ std::vector<std::string> GetFileList(const std::string& pattern)
 		do
 		{
 			result.push_back(findData.cFileName);
-		} while (FindNextFile(hFindFile, &findData));
+		} while (FindNextFileA(hFindFile, &findData));
 
 		FindClose(hFindFile);
 	}
@@ -85,7 +85,7 @@ void SetRegistryDWORD(HKEY root, const std::string& subkey, const std::string& v
 	LONG result = RegOpenKeyExA(root, subkey.c_str(), 0, KEY_ALL_ACCESS, &key);
 	if (result == ERROR_SUCCESS)
 	{
-		LONG setResult = RegSetValueEx(key, valueName.c_str(), 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value));
+		LONG setResult = RegSetValueExA(key, valueName.c_str(), 0, REG_DWORD, reinterpret_cast<const BYTE*>(&value), sizeof(value));
 		RegCloseKey(key);
 	}
 }
@@ -97,7 +97,7 @@ void CreateRegistryKey(HKEY root, const std::string& subkey, const std::string& 
 	if (result == ERROR_SUCCESS)
 	{
 		HKEY resultKey;
-		result = RegCreateKey(key, newKey.c_str(), &resultKey);
+		result = RegCreateKeyA(key, newKey.c_str(), &resultKey);
 		if (result == ERROR_SUCCESS)
 		{
 			RegCloseKey(resultKey);
@@ -105,3 +105,58 @@ void CreateRegistryKey(HKEY root, const std::string& subkey, const std::string& 
 		RegCloseKey(key);
 	}
 }
+
+std::string GetEditControlText(HWND hwnd, int id)
+{
+	std::string result;
+	HWND hEdit = GetDlgItem(hwnd, id);
+	if (!hEdit)
+		return result;
+	int length = GetWindowTextLengthA(hEdit);
+	std::vector<char> buffer(length + 1);
+	GetDlgItemTextA(hwnd, id, &buffer[0], buffer.size());
+	// Double-verify that the buffer is null-terminated.
+	buffer[buffer.size() - 1] = 0;
+	return &buffer[0];
+}
+
+std::string GetListControlText(HWND hwnd, int id, int index)
+{
+	std::string result;
+	int length = SendDlgItemMessageA(hwnd, id, LB_GETTEXTLEN, index, 0);
+	if (length == LB_ERR)
+		return result;
+	std::vector<char> buffer(length + 1);
+	SendDlgItemMessageA(hwnd, id, LB_GETTEXT, index, (LPARAM)&buffer[0]);
+	// Double-verify that the buffer is null-terminated.
+	buffer[buffer.size() - 1] = 0;
+	return &buffer[0];
+}
+
+#ifdef _UNICODE
+std::wstring AnsiToTChar(const std::string& text)
+{
+	// Determine number of wide characters to be allocated for the
+	// Unicode string.
+	size_t cCharacters = text.size() + 1;
+
+	std::vector<wchar_t> buffer(cCharacters);
+
+	// Convert to Unicode.
+	std::wstring result;
+	if (MultiByteToWideChar(CP_ACP, 0, text.c_str(), cCharacters, &buffer[0], cCharacters))
+	{
+		// Double-verify that the buffer is null-terminated.
+		buffer[buffer.size() - 1] = 0;
+		result = &buffer[0];
+		return result;
+	}
+
+	return result;
+}
+#else
+std::string AnsiToTChar(const std::string& text)
+{
+	return text;
+}
+#endif

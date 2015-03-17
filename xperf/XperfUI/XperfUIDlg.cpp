@@ -54,7 +54,7 @@ void CXperfUIDlg::vprintf(const char* pFormat, va_list args)
 			output_ += pBuf[0];
 	}
 
-	SetDlgItemText(IDC_OUTPUT, output_.c_str());
+	::SetDlgItemTextA(*this, IDC_OUTPUT, output_.c_str());
 
 	// Make sure the end of the data is visible.
 	btOutput_.SetSel(0, -1);
@@ -180,7 +180,7 @@ DWORD __stdcall DirectoryMonitorThread(LPVOID voidTraceDir)
 {
 	const char* traceDir = (const char*)voidTraceDir;
 
-	HANDLE hChangeHandle = FindFirstChangeNotification(traceDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
+	HANDLE hChangeHandle = FindFirstChangeNotificationA(traceDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
 
 	if (hChangeHandle == INVALID_HANDLE_VALUE)
 	{
@@ -247,14 +247,14 @@ BOOL CXperfUIDlg::OnInitDialog()
 		}
 	}
 
-	if (!PathFileExists(GetXperfPath().c_str()))
+	if (!PathFileExistsA(GetXperfPath().c_str()))
 	{
-		AfxMessageBox((GetXperfPath() + " does not exist. Please install WPT 8.1. Exiting.").c_str());
+		AfxMessageBox(AnsiToTChar(GetXperfPath() + " does not exist. Please install WPT 8.1. Exiting.").c_str());
 		exit(10);
 	}
 
 	char documents[MAX_PATH];
-	if (!SHGetSpecialFolderPath(*this, documents, CSIDL_MYDOCUMENTS, TRUE))
+	if (!SHGetSpecialFolderPathA(*this, documents, CSIDL_MYDOCUMENTS, TRUE))
 	{
 		assert(!"Failed to find My Documents directory.\n");
 		exit(10);
@@ -302,39 +302,39 @@ BOOL CXperfUIDlg::OnInitDialog()
 	{
 		toolTip_.AddTool(&btStartTracing_, _T("Start ETW tracing."));
 
-		toolTip_.AddTool(&btCompress_, _T("Only uncheck this if you record traces on Windows 8 and above and want to analyze "
-					"them on Windows 7 and below.\n"
-					"Enable ETW trace compression. On Windows 8 and above this compresses traces "
-					"as they are saved, making them 5-10x smaller. However compressed traces cannot be loaded on "
-					"Windows 7 or earlier. On Windows 7 this setting has no effect."));
-		toolTip_.AddTool(&btCswitchStacks_, _T("This enables recording of call stacks on context switches, from both "
-					"the thread being switched in and the readying thread. This should only be disabled if the performance "
-					"of functions like WaitForSingleObject and SetEvent appears to be distorted, which can happen when the "
-					"context-switch rate is very high."));
-		toolTip_.AddTool(&btSampledStacks_, _T("This enables recording of call stacks on CPU sampling events, which "
-			"by default happen at 1 KHz. This should rarely be disabled."));
-		toolTip_.AddTool(&btFastSampling_, _T("Checking this changes the CPU sampling frequency from the default of "
-					"~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces "
-					"but can make investigating brief CPU-bound performance problems (such as a single long frame) "
-					"more practical."));
-		toolTip_.AddTool(&btShowCommands_, _T("This tells XperfUI to display the xperf.exe and other commands being "
-			"executed. This can be helpful for diagnostic purposes but is not normally needed."));
+		toolTip_.AddTool(&btCompress_, _T("Only uncheck this if you record traces on Windows 8 and above and want to analyze ")
+					_T("them on Windows 7 and below.\n")
+					_T("Enable ETW trace compression. On Windows 8 and above this compresses traces ")
+					_T("as they are saved, making them 5-10x smaller. However compressed traces cannot be loaded on ")
+					_T("Windows 7 or earlier. On Windows 7 this setting has no effect."));
+		toolTip_.AddTool(&btCswitchStacks_, _T("This enables recording of call stacks on context switches, from both ")
+					_T("the thread being switched in and the readying thread. This should only be disabled if the performance ")
+					_T("of functions like WaitForSingleObject and SetEvent appears to be distorted, which can happen when the ")
+					_T("context-switch rate is very high."));
+		toolTip_.AddTool(&btSampledStacks_, _T("This enables recording of call stacks on CPU sampling events, which ")
+					_T("by default happen at 1 KHz. This should rarely be disabled."));
+		toolTip_.AddTool(&btFastSampling_, _T("Checking this changes the CPU sampling frequency from the default of ")
+					_T("~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces ")
+					_T("but can make investigating brief CPU-bound performance problems (such as a single long frame) ")
+					_T("more practical."));
+		toolTip_.AddTool(&btShowCommands_, _T("This tells XperfUI to display the xperf.exe and other commands being ")
+					_T("executed. This can be helpful for diagnostic purposes but is not normally needed."));
 
-		const TCHAR* pInputTip = _T("Input tracing inserts custom ETW events into traces which can be helpful when "
-					"investigating performance problems that are correlated with user input. The default setting of "
-					"'private' records alphabetic keys as 'A' and numeric keys as '0'. The 'full' setting records "
-					"alphanumeric details. Both 'private' and 'full' record mouse movement and button clicks. The "
-					"'off' setting records no input.");
+		const TCHAR* pInputTip = _T("Input tracing inserts custom ETW events into traces which can be helpful when ")
+					_T("investigating performance problems that are correlated with user input. The default setting of ")
+					_T("'private' records alphabetic keys as 'A' and numeric keys as '0'. The 'full' setting records ")
+					_T("alphanumeric details. Both 'private' and 'full' record mouse movement and button clicks. The ")
+					_T("'off' setting records no input.");
 		toolTip_.AddTool(&btInputTracingLabel_, pInputTip);
 		toolTip_.AddTool(&btInputTracing_, pInputTip);
 
 		toolTip_.AddTool(&btTracingMode_, _T("Select whether to trace straight to disk or to in-memory circular buffers."));
 
-		toolTip_.AddTool(&btTraces_, _T("This is a list of all traces found in %xperftracedir%, which defaults to "
-					"documents\\xperftraces."));
-		toolTip_.AddTool(&btTraceNotes_, _T("Trace notes are intended for recording information about ETW traces, such "
-					"as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text "
-					"file - just type your analysis."));
+		toolTip_.AddTool(&btTraces_, _T("This is a list of all traces found in %xperftracedir%, which defaults to ")
+					_T("documents\\xperftraces."));
+		toolTip_.AddTool(&btTraceNotes_, _T("Trace notes are intended for recording information about ETW traces, such ")
+					_T("as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text ")
+					_T("file - just type your analysis."));
 
 		toolTip_.SetMaxTipWidth(400);
 		toolTip_.Activate(TRUE);
@@ -358,13 +358,13 @@ std::string CXperfUIDlg::GetDirectory(const char* env, const std::string& defaul
 	// Make sure the name ends with a backslash.
 	if (!result.empty() && result[result.size() - 1] != '\\')
 		result += '\\';
-	if (!PathFileExists(result.c_str()))
+	if (!PathFileExistsA(result.c_str()))
 	{
 		(void)_mkdir(result.c_str());
 	}
-	if (!PathIsDirectory(result.c_str()))
+	if (!PathIsDirectoryA(result.c_str()))
 	{
-		AfxMessageBox((result + " is not a directory. Exiting.").c_str());
+		AfxMessageBox(AnsiToTChar(result + " is not a directory. Exiting.").c_str());
 		exit(10);
 	}
 	return result;
@@ -379,14 +379,14 @@ void CXperfUIDlg::RegisterProviders()
 		return;
 	std::string dllDest = temp;
 	dllDest += "\\ETWProviders.dll";
-	if (!CopyFile(dllSource.c_str(), dllDest.c_str(), FALSE))
+	if (!CopyFileA(dllSource.c_str(), dllDest.c_str(), FALSE))
 	{
 		outputPrintf("Registering of ETW providers failed due to copy error.\n");
 		return;
 	}
 	char systemDir[MAX_PATH];
 	systemDir[0] = 0;
-	GetSystemDirectory(systemDir, ARRAYSIZE(systemDir));
+	GetSystemDirectoryA(systemDir, ARRAYSIZE(systemDir));
 	std::string wevtPath = systemDir + std::string("\\wevtutil.exe");
 
 	for (int pass = 0; pass < 2; ++pass)
@@ -493,7 +493,7 @@ std::string CXperfUIDlg::GetTraceDir()
 std::string CXperfUIDlg::GetExeDir()
 {
 	char exePath[MAX_PATH];
-	if (GetModuleFileName(0, exePath, sizeof(exePath)))
+	if (GetModuleFileNameA(0, exePath, sizeof(exePath)))
 	{
 		char* lastSlash = strrchr(exePath, '\\');
 		if (lastSlash)
@@ -628,7 +628,7 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 	// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
 	const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
 	const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
-	BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
+	BOOL moveSuccess = MoveFileA(compatFile, compatFileTemp);
 
 	{
 		// Stop the kernel and user sessions.
@@ -667,13 +667,13 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 	}
 
 	if (moveSuccess)
-		MoveFile(compatFileTemp, compatFile);
+		MoveFileA(compatFileTemp, compatFile);
 
 	// Delete the temporary files.
-	DeleteFile(GetKernelFile().c_str());
-	DeleteFile(GetUserFile().c_str());
+	DeleteFileA(GetKernelFile().c_str());
+	DeleteFileA(GetUserFile().c_str());
 	if (tracingMode_ == kHeapTracingToFile)
-		DeleteFile(GetHeapFile().c_str());
+		DeleteFileA(GetHeapFile().c_str());
 
 	if (!bSaveTrace || tracingMode_ != kTracingToMemory)
 	{
@@ -696,7 +696,7 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 			for (auto part : pathParts)
 			{
 				std::string pythonPath = part + '\\' + "python.exe";
-				if (PathFileExists(pythonPath.c_str()))
+				if (PathFileExistsA(pythonPath.c_str()))
 				{
 					outputPrintf("Stripping chrome symbols...\n");
 					//ChildProcess child("\"" + pythonPath + "\"");
@@ -734,7 +734,7 @@ void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
 	// Wacky CreateProcess rules say args has to be writable!
 	std::vector<char> argsCopy(args.size() + 1);
 	strcpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
-	STARTUPINFO startupInfo = {};
+	STARTUPINFOA startupInfo = {};
 	PROCESS_INFORMATION processInfo = {};
 	BOOL result = CreateProcessA(wpaPath.c_str(), &argsCopy[0], nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo);
 	if (result)
@@ -745,7 +745,7 @@ void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
 	}
 	else
 	{
-		AfxMessageBox("Failed to start trace viewer.");
+		AfxMessageBox(_T("Failed to start trace viewer."));
 	}
 }
 
@@ -833,7 +833,8 @@ void CXperfUIDlg::UpdateTraceList()
 		btTraces_.DeleteString(0);
 	for (auto name : traces_)
 	{
-		btTraces_.AddString(name.c_str());
+		// UNICODEHACK
+		::SendDlgItemMessageA(*this, IDC_TRACELIST, LB_ADDSTRING, 0, (LPARAM)name.c_str());
 	}
 }
 
@@ -850,7 +851,7 @@ void CXperfUIDlg::OnLbnDblclkTracelist()
 	int selIndex = btTraces_.GetCurSel();
 	CString cStringTraceName;
 	btTraces_.GetText(selIndex, cStringTraceName);
-	std::string tracename = GetTraceDir() + static_cast<const char*>(cStringTraceName);
+	std::string tracename = GetTraceDir() + GetListControlText(*this, IDC_TRACELIST, selIndex);
 	LaunchTraceViewer(tracename);
 }
 
@@ -899,9 +900,7 @@ void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
 void CXperfUIDlg::SaveNotesIfNeeded()
 {
 	// Get the currently selected text, which might have been edited.
-	CString editedNotesCString;
-	GetDlgItemText(IDC_TRACENOTES, editedNotesCString);
-	std::string editedNotes = static_cast<const char*>(editedNotesCString);
+	std::string editedNotes = GetEditControlText(*this, IDC_TRACENOTES);
 	if (editedNotes != traceNotes_)
 	{
 		if (!traceNoteFilename_.empty())
@@ -922,7 +921,7 @@ void CXperfUIDlg::OnLbnSelchangeTracelist()
 		std::string traceName = traces_[curSel];
 		std::string notesFilename = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + ".txt";
 		std::string notes = LoadFileAsText(notesFilename);
-		SetDlgItemText(IDC_TRACENOTES, notes.c_str());
+		::SetDlgItemTextA(*this, IDC_TRACENOTES, notes.c_str());
 		traceNotes_ = notes;
 		traceNoteFilename_ = notesFilename;
 	}

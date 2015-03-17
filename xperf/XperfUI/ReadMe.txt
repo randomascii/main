@@ -27,6 +27,9 @@ Add circular-buffer support.
 Heap tracing.
 
 Most important tasks:
+Copy over startup profile on first-run, and subsequent runs?
+Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
+Show ProcessChromeSymbols.py status as it runs so it doesn't look like it's hung forever.
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
 

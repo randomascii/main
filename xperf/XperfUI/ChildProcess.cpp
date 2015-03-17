@@ -13,7 +13,7 @@ ChildProcess::ChildProcess(std::string exePath)
 {
 	// Create the pipe here so that it is guaranteed to be created before
 	// we try starting the process.
-	hPipe_ = CreateNamedPipe(kPipeName,
+	hPipe_ = CreateNamedPipeA(kPipeName,
 		PIPE_ACCESS_DUPLEX | PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
 		PIPE_WAIT,
 		1,
@@ -75,13 +75,13 @@ DWORD ChildProcess::ListenerThread()
 		while (ReadFile(hPipe_, buffer, sizeof(buffer) - 1, &dwRead, NULL) != FALSE)
 		{
 			buffer[dwRead] = 0;
-			OutputDebugString(buffer);
+			OutputDebugStringA(buffer);
 			processOutput_ += buffer;
 		}
 	}
 	else
 	{
-		OutputDebugString("Connect failed.\n");
+		OutputDebugStringA("Connect failed.\n");
 	}
 
 	DisconnectNamedPipe(hPipe_);
@@ -99,7 +99,7 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 
 	SECURITY_ATTRIBUTES security = { sizeof(security), 0, TRUE };
 
-	hStdOutput_ = CreateFile(kPipeName, GENERIC_WRITE, 0, &security,
+	hStdOutput_ = CreateFileA(kPipeName, GENERIC_WRITE, 0, &security,
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, INVALID_HANDLE_VALUE);
 	if (hStdOutput_ == INVALID_HANDLE_VALUE)
 		return false;
@@ -107,7 +107,7 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 		&hStdError_, 0, TRUE, DUPLICATE_SAME_ACCESS))
 		return false;
 
-	STARTUPINFO startupInfo = {};
+	STARTUPINFOA startupInfo = {};
 	startupInfo.hStdOutput = hStdOutput_;
 	startupInfo.hStdError = hStdError_;
 	startupInfo.hStdInput = INVALID_HANDLE_VALUE;
@@ -118,7 +118,7 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 	// Wacky CreateProcess rules say args has to be writable!
 	std::vector<char> argsCopy(args.size() + 1);
 	strcpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
-	BOOL success = CreateProcess(exePath_.c_str(), &argsCopy[0], NULL, NULL,
+	BOOL success = CreateProcessA(exePath_.c_str(), &argsCopy[0], NULL, NULL,
 		TRUE, flags, NULL, NULL, &startupInfo, &processInfo);
 	if (success)
 	{
