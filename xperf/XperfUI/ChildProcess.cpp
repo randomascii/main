@@ -1,11 +1,13 @@
 #include "stdafx.h"
 #include "ChildProcess.h"
+#include "Utility.h"
+
 #include <assert.h>
 #include <vector>
 
-const char* kPipeName = "\\\\.\\PIPE\\xperfUIPipe";
+const wchar_t* kPipeName = L"\\\\.\\PIPE\\xperfUIPipe";
 
-ChildProcess::ChildProcess(std::string exePath)
+ChildProcess::ChildProcess(std::wstring exePath)
 	: exePath_(std::move(exePath))
 	, hProcess_(0)
 	, hStdOutput_(INVALID_HANDLE_VALUE)
@@ -13,7 +15,7 @@ ChildProcess::ChildProcess(std::string exePath)
 {
 	// Create the pipe here so that it is guaranteed to be created before
 	// we try starting the process.
-	hPipe_ = CreateNamedPipeA(kPipeName,
+	hPipe_ = CreateNamedPipe(kPipeName,
 		PIPE_ACCESS_DUPLEX | PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
 		PIPE_WAIT,
 		1,
@@ -55,9 +57,9 @@ ChildProcess::~ChildProcess()
 
 	// Now that the child thread has exited we can safely
 	// read from and print the process output.
-	outputPrintf("%s", processOutput_.c_str());
+	outputPrintf(L"%s", processOutput_.c_str());
 	if (exitCode)
-		outputPrintf("Process exit code was %08x (%d)\n", exitCode, exitCode);
+		outputPrintf(L"Process exit code was %08x (%d)\n", exitCode, exitCode);
 }
 
 DWORD WINAPI ChildProcess::ListenerThreadStatic(LPVOID pVoidThis)
@@ -76,12 +78,12 @@ DWORD ChildProcess::ListenerThread()
 		{
 			buffer[dwRead] = 0;
 			OutputDebugStringA(buffer);
-			processOutput_ += buffer;
+			processOutput_ += AnsiToUnicode(buffer);
 		}
 	}
 	else
 	{
-		OutputDebugStringA("Connect failed.\n");
+		OutputDebugString(L"Connect failed.\n");
 	}
 
 	DisconnectNamedPipe(hPipe_);
@@ -90,16 +92,16 @@ DWORD ChildProcess::ListenerThread()
 }
 
 
-bool ChildProcess::Run(bool showCommand, std::string args)
+bool ChildProcess::Run(bool showCommand, std::wstring args)
 {
 	assert(!hProcess_);
 
 	if (showCommand)
-		outputPrintf("%s\n", args.c_str());
+		outputPrintf(L"%s\n", args.c_str());
 
 	SECURITY_ATTRIBUTES security = { sizeof(security), 0, TRUE };
 
-	hStdOutput_ = CreateFileA(kPipeName, GENERIC_WRITE, 0, &security,
+	hStdOutput_ = CreateFile(kPipeName, GENERIC_WRITE, 0, &security,
 		OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, INVALID_HANDLE_VALUE);
 	if (hStdOutput_ == INVALID_HANDLE_VALUE)
 		return false;
@@ -107,7 +109,7 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 		&hStdError_, 0, TRUE, DUPLICATE_SAME_ACCESS))
 		return false;
 
-	STARTUPINFOA startupInfo = {};
+	STARTUPINFO startupInfo = {};
 	startupInfo.hStdOutput = hStdOutput_;
 	startupInfo.hStdError = hStdError_;
 	startupInfo.hStdInput = INVALID_HANDLE_VALUE;
@@ -116,9 +118,9 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 	PROCESS_INFORMATION processInfo = {};
 	DWORD flags = CREATE_NO_WINDOW;
 	// Wacky CreateProcess rules say args has to be writable!
-	std::vector<char> argsCopy(args.size() + 1);
-	strcpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
-	BOOL success = CreateProcessA(exePath_.c_str(), &argsCopy[0], NULL, NULL,
+	std::vector<wchar_t> argsCopy(args.size() + 1);
+	wcscpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
+	BOOL success = CreateProcess(exePath_.c_str(), &argsCopy[0], NULL, NULL,
 		TRUE, flags, NULL, NULL, &startupInfo, &processInfo);
 	if (success)
 	{
@@ -128,7 +130,7 @@ bool ChildProcess::Run(bool showCommand, std::string args)
 	}
 	else
 	{
-		outputPrintf("Error %d starting %s, %s\n", (int)GetLastError(), exePath_.c_str(), args.c_str());
+		outputPrintf(L"Error %d starting %s, %s\n", (int)GetLastError(), exePath_.c_str(), args.c_str());
 	}
 
 	return false;

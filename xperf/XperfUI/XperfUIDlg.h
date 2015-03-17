@@ -27,7 +27,7 @@ public:
 // Dialog Data
 	enum { IDD = IDD_XPERFUI_DIALOG };
 
-	void vprintf(const char* pFormat, va_list marker);
+	void vprintf(const wchar_t* pFormat, va_list marker);
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
@@ -60,38 +60,38 @@ protected:
 	TracingMode tracingMode_ = kTracingToMemory;
 	CComboBox btTracingMode_;
 	// Hardcoded to chrome.exe for now.
-	std::string heapTracingExe_ = "chrome.exe";
+	std::wstring heapTracingExe_ = L"chrome.exe";
 	void SetHeapTracing(bool forceOff);
 
-	std::vector<std::string> traces_;
+	std::vector<std::wstring> traces_;
 	CListBox btTraces_;
 
 	// This contains the notes for the selected trace, as loaded from disk.
-	std::string traceNotes_;
-	std::string traceNoteFilename_;
+	std::wstring traceNotes_;
+	std::wstring traceNoteFilename_;
 	CEdit btTraceNotes_;
 
 	// Note that the DirectoryMonitorThread has a pointer to the contents of
 	// this string object, so don't change it without adding synchronization.
-	std::string traceDir_;
-	std::string tempTraceDir_;
+	std::wstring traceDir_;
+	std::wstring tempTraceDir_;
 
-	std::string output_;
+	std::wstring output_;
 	CEdit btOutput_;
 
 	void StopTracing(bool bSaveTrace);
 
-	std::string GetWPTDir();
-	std::string GetXperfPath();
-	std::string GetTraceDir();
-	std::string GetExeDir();
+	std::wstring GetWPTDir();
+	std::wstring GetXperfPath();
+	std::wstring GetTraceDir();
+	std::wstring GetExeDir();
 	// Note that GetResultFile() gives a time-based name, so don't expect
 	// the same result across multiple calls!
-	std::string GetResultFile();
-	std::string GetTempTraceDir();
-	std::string GetKernelFile();
-	std::string GetUserFile();
-	std::string GetHeapFile();
+	std::wstring GetResultFile();
+	std::wstring GetTempTraceDir();
+	std::wstring GetKernelFile();
+	std::wstring GetUserFile();
+	std::wstring GetHeapFile();
 
 	int initialWidth_ = 0;
 	int initialHeight_ = 0;
@@ -99,7 +99,7 @@ protected:
 	int lastHeight_ = 0;
 
 	void SetSymbolPath();
-	std::string GetDirectory(const char* env, const std::string& default);
+	std::wstring GetDirectory(const wchar_t* env, const std::wstring& default);
 	void CXperfUIDlg::UpdateTraceList();
 	void RegisterProviders();
 	void DisablePagingExecutive();
@@ -108,7 +108,7 @@ protected:
 
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();
-	void LaunchTraceViewer(const std::string traceFilename);
+	void LaunchTraceViewer(const std::wstring traceFilename);
 	void SaveNotesIfNeeded();
 	void ShutdownTasks();
 	bool bShutdownCompleted_ = false;

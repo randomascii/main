@@ -5,11 +5,11 @@
 class ChildProcess
 {
 public:
-	ChildProcess(std::string exePath);
+	ChildProcess(std::wstring exePath);
 	~ChildProcess();
 
 	// Returns true if the process started.
-	bool Run(bool showCommand, std::string args);
+	bool Run(bool showCommand, std::wstring args);
 
 	// This can be called even if the process doesn't start, but
 	// it will return zero. If the process is still running it
@@ -25,13 +25,13 @@ public:
 
 private:
 	// Path to the executable to be run, and its process handle.
-	std::string exePath_;
+	std::wstring exePath_;
 	HANDLE hProcess_;
 
 	// This string is written to by the listener thread.
 	// Once the listener thread has exited the main thread can
 	// display it to the user.
-	std::string processOutput_;
+	std::wstring processOutput_;
 
 	// Output handles for the child process -- connected to the pipe.
 	HANDLE hStdOutput_;

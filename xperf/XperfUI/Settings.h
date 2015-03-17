@@ -15,7 +15,7 @@ public:
 // Dialog Data
 	enum { IDD = IDD_SETTINGS };
 
-	std::string heapTracingExe_;
+	std::wstring heapTracingExe_;
 
 protected:
 	CEdit btHeapTracingExe_;

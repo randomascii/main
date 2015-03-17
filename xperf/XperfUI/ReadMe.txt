@@ -30,6 +30,8 @@ Most important tasks:
 Copy over startup profile on first-run, and subsequent runs?
 Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
 Show ProcessChromeSymbols.py status as it runs so it doesn't look like it's hung forever.
+Rename output executables and check in a renamed copy so people don't have to build it.
+
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
 

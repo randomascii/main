@@ -28,7 +28,7 @@ const int kRecordTraceHotKey = 1234;
 
 static CXperfUIDlg* pMainWindow;
 
-void outputPrintf(_Printf_format_string_ const char* pFormat, ...)
+void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...)
 {
 	va_list args;
 	va_start(args, pFormat);
@@ -36,25 +36,25 @@ void outputPrintf(_Printf_format_string_ const char* pFormat, ...)
 	va_end(args);
 }
 
-void CXperfUIDlg::vprintf(const char* pFormat, va_list args)
+void CXperfUIDlg::vprintf(const wchar_t* pFormat, va_list args)
 {
-	char buffer[5000];
-	vsnprintf_s(buffer, _TRUNCATE, pFormat, args);
+	wchar_t buffer[5000];
+	_vsnwprintf_s(buffer, _TRUNCATE, pFormat, args);
 
-	for (const char* pBuf = buffer; *pBuf; ++pBuf)
+	for (const wchar_t* pBuf = buffer; *pBuf; ++pBuf)
 	{
 		// Need \r\n as a line separator.
 		if (pBuf[0] == '\n')
 		{
 			// Don't add a line separator at the very beginning.
 			if (!output_.empty())
-				output_ += "\r\n";
+				output_ += L"\r\n";
 		}
 		else
 			output_ += pBuf[0];
 	}
 
-	::SetDlgItemTextA(*this, IDC_OUTPUT, output_.c_str());
+	SetDlgItemText(IDC_OUTPUT, output_.c_str());
 
 	// Make sure the end of the data is visible.
 	btOutput_.SetSel(0, -1);
@@ -178,9 +178,9 @@ void CXperfUIDlg::SetSymbolPath()
 // whenever anything changes. That's it. All UI work is done in the main thread.
 DWORD __stdcall DirectoryMonitorThread(LPVOID voidTraceDir)
 {
-	const char* traceDir = (const char*)voidTraceDir;
+	const wchar_t* traceDir = reinterpret_cast<const wchar_t*>(voidTraceDir);
 
-	HANDLE hChangeHandle = FindFirstChangeNotificationA(traceDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
+	HANDLE hChangeHandle = FindFirstChangeNotification(traceDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
 
 	if (hChangeHandle == INVALID_HANDLE_VALUE)
 	{
@@ -247,22 +247,22 @@ BOOL CXperfUIDlg::OnInitDialog()
 		}
 	}
 
-	if (!PathFileExistsA(GetXperfPath().c_str()))
+	if (!PathFileExists(GetXperfPath().c_str()))
 	{
-		AfxMessageBox(AnsiToTChar(GetXperfPath() + " does not exist. Please install WPT 8.1. Exiting.").c_str());
+		AfxMessageBox((GetXperfPath() + L" does not exist. Please install WPT 8.1. Exiting.").c_str());
 		exit(10);
 	}
 
-	char documents[MAX_PATH];
-	if (!SHGetSpecialFolderPathA(*this, documents, CSIDL_MYDOCUMENTS, TRUE))
+	wchar_t documents[MAX_PATH];
+	if (!SHGetSpecialFolderPath(*this, documents, CSIDL_MYDOCUMENTS, TRUE))
 	{
 		assert(!"Failed to find My Documents directory.\n");
 		exit(10);
 	}
-	std::string defaultTraceDir = documents + std::string("\\xperftraces\\");
-	traceDir_ = GetDirectory("xperftracedir", defaultTraceDir);
+	std::wstring defaultTraceDir = documents + std::wstring(L"\\xperftraces\\");
+	traceDir_ = GetDirectory(L"xperftracedir", defaultTraceDir);
 
-	tempTraceDir_ = GetDirectory("xperftemptracedir", traceDir_);
+	tempTraceDir_ = GetDirectory(L"xperftemptracedir", traceDir_);
 
 	SetSymbolPath();
 
@@ -291,7 +291,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	btTraceNotes_.EnableWindow(false); // This window always starts out disabled.
 
 	// Don't change traceDir_ - the DirectoryMonitorThread has a pointer to it.
-	(void)CreateThread(nullptr, 0, DirectoryMonitorThread, const_cast<char*>(traceDir_.c_str()), 0, 0);
+	(void)CreateThread(nullptr, 0, DirectoryMonitorThread, const_cast<wchar_t*>(traceDir_.c_str()), 0, 0);
 
 	RegisterProviders();
 	DisablePagingExecutive();
@@ -345,12 +345,12 @@ BOOL CXperfUIDlg::OnInitDialog()
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-std::string CXperfUIDlg::GetDirectory(const char* env, const std::string& default)
+std::wstring CXperfUIDlg::GetDirectory(const wchar_t* env, const std::wstring& default)
 {
 	// Get a directory (from an environment variable, if set) and make sure it exists.
-	std::string result = default;
+	std::wstring result = default;
 #pragma warning(suppress : 4996)
-	const char* traceDir = getenv(env);
+	const wchar_t* traceDir = _wgetenv(env);
 	if (traceDir)
 	{
 		result = traceDir;
@@ -358,13 +358,13 @@ std::string CXperfUIDlg::GetDirectory(const char* env, const std::string& defaul
 	// Make sure the name ends with a backslash.
 	if (!result.empty() && result[result.size() - 1] != '\\')
 		result += '\\';
-	if (!PathFileExistsA(result.c_str()))
+	if (!PathFileExists(result.c_str()))
 	{
-		(void)_mkdir(result.c_str());
+		(void)_wmkdir(result.c_str());
 	}
-	if (!PathIsDirectoryA(result.c_str()))
+	if (!PathIsDirectory(result.c_str()))
 	{
-		AfxMessageBox(AnsiToTChar(result + " is not a directory. Exiting.").c_str());
+		AfxMessageBox((result + L" is not a directory. Exiting.").c_str());
 		exit(10);
 	}
 	return result;
@@ -372,29 +372,29 @@ std::string CXperfUIDlg::GetDirectory(const char* env, const std::string& defaul
 
 void CXperfUIDlg::RegisterProviders()
 {
-	std::string dllSource = GetExeDir() + "ETWProviders.dll";
+	std::wstring dllSource = GetExeDir() + L"ETWProviders.dll";
 #pragma warning(suppress:4996)
-	const char* temp = getenv("temp");
+	const wchar_t* temp = _wgetenv(L"temp");
 	if (!temp)
 		return;
-	std::string dllDest = temp;
-	dllDest += "\\ETWProviders.dll";
-	if (!CopyFileA(dllSource.c_str(), dllDest.c_str(), FALSE))
+	std::wstring dllDest = temp;
+	dllDest += L"\\ETWProviders.dll";
+	if (!CopyFile(dllSource.c_str(), dllDest.c_str(), FALSE))
 	{
-		outputPrintf("Registering of ETW providers failed due to copy error.\n");
+		outputPrintf(L"Registering of ETW providers failed due to copy error.\n");
 		return;
 	}
-	char systemDir[MAX_PATH];
+	wchar_t systemDir[MAX_PATH];
 	systemDir[0] = 0;
-	GetSystemDirectoryA(systemDir, ARRAYSIZE(systemDir));
-	std::string wevtPath = systemDir + std::string("\\wevtutil.exe");
+	GetSystemDirectory(systemDir, ARRAYSIZE(systemDir));
+	std::wstring wevtPath = systemDir + std::wstring(L"\\wevtutil.exe");
 
 	for (int pass = 0; pass < 2; ++pass)
 	{
 		ChildProcess child(wevtPath);
-		std::string args = pass ? " im" : " um";
-		args += " \"" + GetExeDir() + "etwproviders.man\"";
-		child.Run(bShowCommands_, "wevtutil.exe" + args);
+		std::wstring args = pass ? L" im" : L" um";
+		args += L" \"" + GetExeDir() + L"etwproviders.man\"";
+		child.Run(bShowCommands_, L"wevtutil.exe" + args);
 	}
 }
 
@@ -409,8 +409,8 @@ void CXperfUIDlg::DisablePagingExecutive()
 
 	if (bIsWin64)
 	{
-		const char* keyName = "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management";
-		SetRegistryDWORD(HKEY_LOCAL_MACHINE, keyName, "DisablePagingExecutive", 1);
+		const wchar_t* keyName = L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management";
+		SetRegistryDWORD(HKEY_LOCAL_MACHINE, keyName, L"DisablePagingExecutive", 1);
 	}
 }
 
@@ -475,27 +475,27 @@ HCURSOR CXperfUIDlg::OnQueryDragIcon()
 }
 
 
-std::string CXperfUIDlg::GetWPTDir()
+std::wstring CXperfUIDlg::GetWPTDir()
 {
-	return "C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
+	return L"C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
 }
 
-std::string CXperfUIDlg::GetXperfPath()
+std::wstring CXperfUIDlg::GetXperfPath()
 {
-	return GetWPTDir() + "xperf.exe";
+	return GetWPTDir() + L"xperf.exe";
 }
 
-std::string CXperfUIDlg::GetTraceDir()
+std::wstring CXperfUIDlg::GetTraceDir()
 {
 	return traceDir_;
 }
 
-std::string CXperfUIDlg::GetExeDir()
+std::wstring CXperfUIDlg::GetExeDir()
 {
-	char exePath[MAX_PATH];
-	if (GetModuleFileNameA(0, exePath, sizeof(exePath)))
+	wchar_t exePath[MAX_PATH];
+	if (GetModuleFileName(0, exePath, ARRAYSIZE(exePath)))
 	{
-		char* lastSlash = strrchr(exePath, '\\');
+		wchar_t* lastSlash = wcsrchr(exePath, '\\');
 		if (lastSlash)
 		{
 			lastSlash[1] = 0;
@@ -506,9 +506,9 @@ std::string CXperfUIDlg::GetExeDir()
 	exit(10);
 }
 
-std::string CXperfUIDlg::GetResultFile()
+std::wstring CXperfUIDlg::GetResultFile()
 {
-	std::string traceDir = GetTraceDir();
+	std::wstring traceDir = GetTraceDir();
 
 	char time[9];
 	_strtime_s(time);
@@ -517,118 +517,120 @@ std::string CXperfUIDlg::GetResultFile()
 	int hour, min, sec;
 	int year, month, day;
 #pragma warning(suppress : 4996)
-	const char* username = getenv("USERNAME");
+	const wchar_t* username = _wgetenv(L"USERNAME");
 	if (!username)
-		username = "";
-	char fileName[MAX_PATH];
+		username = L"";
+	wchar_t fileName[MAX_PATH];
 	// Hilarious /analyze warning on this line from bug in _strtime_s annotation!
+	// warning C6054: String 'time' might not be zero-terminated.
+#pragma warning(suppress : 6054)
 	if (3 == sscanf_s(time, "%d:%d:%d", &hour, &min, &sec) &&
 		3 == sscanf_s(date, "%d/%d/%d", &month, &day, &year))
 	{
 		// The filenames are chosen to sort by date, with username as the LSB.
-		sprintf_s(fileName, "%04d-%02d-%02d_%02d-%02d-%02d_%s", year + 2000, month, day, hour, min, sec, username);
+		swprintf_s(fileName, L"%04d-%02d-%02d_%02d-%02d-%02d_%s", year + 2000, month, day, hour, min, sec, username);
 	}
 	else
 	{
-		strcpy_s(fileName, "xperfui");
+		wcscpy_s(fileName, L"xperfui");
 	}
 
-	std::string filePart = fileName;
+	std::wstring filePart = fileName;
 
 	if (tracingMode_ == kHeapTracingToFile)
 	{
-		filePart += "_" + heapTracingExe_.substr(0, heapTracingExe_.size() - 4);
-		filePart += "_heap";
+		filePart += L"_" + heapTracingExe_.substr(0, heapTracingExe_.size() - 4);
+		filePart += L"_heap";
 	}
 
-	return GetTraceDir() + filePart + ".etl";
+	return GetTraceDir() + filePart + L".etl";
 }
 
-std::string CXperfUIDlg::GetTempTraceDir()
+std::wstring CXperfUIDlg::GetTempTraceDir()
 {
 	return tempTraceDir_;
 }
 
-std::string CXperfUIDlg::GetKernelFile()
+std::wstring CXperfUIDlg::GetKernelFile()
 {
-	return CXperfUIDlg::GetTempTraceDir() + "kernel.etl";
+	return CXperfUIDlg::GetTempTraceDir() + L"kernel.etl";
 }
 
-std::string CXperfUIDlg::GetUserFile()
+std::wstring CXperfUIDlg::GetUserFile()
 {
-	return GetTempTraceDir() + "user.etl";
+	return GetTempTraceDir() + L"user.etl";
 }
 
-std::string CXperfUIDlg::GetHeapFile()
+std::wstring CXperfUIDlg::GetHeapFile()
 {
-	return GetTempTraceDir() + "heap.etl";
+	return GetTempTraceDir() + L"heap.etl";
 }
 
 void CXperfUIDlg::OnBnClickedStarttracing()
 {
 	if (tracingMode_ == kTracingToFile)
-		outputPrintf("\nStarting tracing to disk...\n");
+		outputPrintf(L"\nStarting tracing to disk...\n");
 	else if (tracingMode_ == kTracingToMemory)
-		outputPrintf("\nStarting tracing to in-memory circular buffers...\n");
+		outputPrintf(L"\nStarting tracing to in-memory circular buffers...\n");
 	else if (tracingMode_ == kHeapTracingToFile)
-		outputPrintf("\nStarting heap tracing to disk of %s...\n", heapTracingExe_.c_str());
+		outputPrintf(L"\nStarting heap tracing to disk of %s...\n", heapTracingExe_.c_str());
 	else
 		assert(0);
 	ChildProcess child(GetXperfPath());
-	std::string kernelProviders = " Latency+POWER+DISPATCHER+FILE_IO+FILE_IO_INIT+VIRT_ALLOC";
-	std::string kernelStackWalk = "";
+	std::wstring kernelProviders = L" Latency+POWER+DISPATCHER+FILE_IO+FILE_IO_INIT+VIRT_ALLOC";
+	std::wstring kernelStackWalk = L"";
 	if (bSampledStacks_ && bCswitchStacks_)
-		kernelStackWalk = " -stackwalk PROFILE+CSWITCH+READYTHREAD";
+		kernelStackWalk = L" -stackwalk PROFILE+CSWITCH+READYTHREAD";
 	else if (bSampledStacks_)
-		kernelStackWalk = " -stackwalk PROFILE";
+		kernelStackWalk = L" -stackwalk PROFILE";
 	else if (bCswitchStacks_)
-		kernelStackWalk = " -stackwalk CSWITCH+READYTHREAD";
+		kernelStackWalk = L" -stackwalk CSWITCH+READYTHREAD";
 	// Buffer sizes are in KB, so 1024 is actually 1 MB
 	// Make this configurable.
-	std::string kernelBuffers = " -buffersize 1024 -minbuffers 600 -maxbuffers 600";
-	std::string kernelFile = " -f \"" + GetKernelFile() + "\"";
+	std::wstring kernelBuffers = L" -buffersize 1024 -minbuffers 600 -maxbuffers 600";
+	std::wstring kernelFile = L" -f \"" + GetKernelFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
-		kernelFile = " -buffering";
-	std::string kernelArgs = " -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
+		kernelFile = L" -buffering";
+	std::wstring kernelArgs = L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
-	std::string userProviders = " -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
-	std::string userBuffers = " -buffersize 1024 -minbuffers 100 -maxbuffers 100";
-	std::string userFile = " -f \"" + GetUserFile() + "\"";
+	std::wstring userProviders = L" -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
+	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
+	std::wstring userFile = L" -f \"" + GetUserFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
-		userFile = " -buffering";
-	std::string userArgs = " -start xperfuiSession" + userProviders + userBuffers + userFile;
+		userFile = L" -buffering";
+	std::wstring userArgs = L" -start xperfuiSession" + userProviders + userBuffers + userFile;
 
 	// Heap tracing settings -- only used for heap tracing.
 	// Could also record stacks on HeapFree
-	std::string heapBuffers = " -buffersize 1024 -minbuffers 200";
-	std::string heapFile = " -f \"" + GetHeapFile() + "\"";
-	std::string heapStackWalk = " -stackwalk HeapCreate+HeapDestroy+HeapAlloc+HeapRealloc";
-	std::string heapArgs = " -start xperfHeapSession -heap -Pids 0" + heapStackWalk + heapBuffers + heapFile;
+	std::wstring heapBuffers = L" -buffersize 1024 -minbuffers 200";
+	std::wstring heapFile = L" -f \"" + GetHeapFile() + L"\"";
+	std::wstring heapStackWalk = L" -stackwalk HeapCreate+HeapDestroy+HeapAlloc+HeapRealloc";
+	std::wstring heapArgs = L" -start xperfHeapSession -heap -Pids 0" + heapStackWalk + heapBuffers + heapFile;
 
 	if (tracingMode_ == kHeapTracingToFile)
-		child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs + heapArgs);
+		child.Run(bShowCommands_, L"xperf.exe" + kernelArgs + userArgs + heapArgs);
 	else
-		child.Run(bShowCommands_, "xperf.exe" + kernelArgs + userArgs);
+		child.Run(bShowCommands_, L"xperf.exe" + kernelArgs + userArgs);
 
 	bIsTracing_ = true;
 	UpdateEnabling();
-	outputPrintf("Tracing is started.\n");
+	outputPrintf(L"Tracing is started.\n");
 }
 
 void CXperfUIDlg::StopTracing(bool bSaveTrace)
 {
-	std::string traceFilename = GetResultFile();
+	std::wstring traceFilename = GetResultFile();
 	if (bSaveTrace)
-		outputPrintf("\nSaving trace to disk...\n");
+		outputPrintf(L"\nSaving trace to disk...\n");
 	else
-		outputPrintf("\nStopping tracing...\n");
+		outputPrintf(L"\nStopping tracing...\n");
 
 	// Rename Amcache.hve to work around a merge hang that can last up to six
 	// minutes.
 	// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
-	const char* const compatFile = "c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
-	const char* const compatFileTemp = "c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
-	BOOL moveSuccess = MoveFileA(compatFile, compatFileTemp);
+	const wchar_t* const compatFile = L"c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
+	const wchar_t* const compatFileTemp = L"c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
+	BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
 
 	{
 		// Stop the kernel and user sessions.
@@ -637,43 +639,43 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		{
 			// If we are in memory tracing mode then don't actually stop tracing,
 			// just flush the buffers to disk.
-			std::string args = " -flush \"NT Kernel Logger\" -f \"" + GetKernelFile() + "\" -flush xperfuisession -f \"" + GetUserFile() + "\"";
-			child.Run(bShowCommands_, "xperf.exe" + args);
+			std::wstring args = L" -flush \"NT Kernel Logger\" -f \"" + GetKernelFile() + L"\" -flush xperfuisession -f \"" + GetUserFile() + L"\"";
+			child.Run(bShowCommands_, L"xperf.exe" + args);
 		}
 		else
 		{
 			if (tracingMode_ == kHeapTracingToFile)
-				child.Run(bShowCommands_, "xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop");
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop");
 			else
-				child.Run(bShowCommands_, "xperf.exe -stop xperfuiSession -stop");
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfuiSession -stop");
 		}
 	}
 
 	if (bSaveTrace)
 	{
-		outputPrintf("Merging trace...\n");
+		outputPrintf(L"Merging trace...\n");
 		{
 			// Separate merge step to allow compression on Windows 8+
 			// https://randomascii.wordpress.com/2015/03/02/etw-trace-compression-and-xperf-syntax-refresher/
 			ChildProcess merge(GetXperfPath());
-			std::string args = " -merge \"" + GetKernelFile() + "\" \"" + GetUserFile() + "\"";
+			std::wstring args = L" -merge \"" + GetKernelFile() + L"\" \"" + GetUserFile() + L"\"";
 			if (tracingMode_ == kHeapTracingToFile)
-				args += " \"" + GetHeapFile() + "\"";
-			args += " \"" + traceFilename + "\"";
+				args += L" \"" + GetHeapFile() + L"\"";
+			args += L" \"" + traceFilename + L"\"";
 			if (bCompress_)
-				args += " -compress";
-			merge.Run(bShowCommands_, "xperf.exe" + args);
+				args += L" -compress";
+			merge.Run(bShowCommands_, L"xperf.exe" + args);
 		}
 	}
 
 	if (moveSuccess)
-		MoveFileA(compatFileTemp, compatFile);
+		MoveFile(compatFileTemp, compatFile);
 
 	// Delete the temporary files.
-	DeleteFileA(GetKernelFile().c_str());
-	DeleteFileA(GetUserFile().c_str());
+	DeleteFile(GetKernelFile().c_str());
+	DeleteFile(GetUserFile().c_str());
 	if (tracingMode_ == kHeapTracingToFile)
-		DeleteFileA(GetHeapFile().c_str());
+		DeleteFile(GetHeapFile().c_str());
 
 	if (!bSaveTrace || tracingMode_ != kTracingToMemory)
 	{
@@ -689,20 +691,20 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
 		// Call Python script here, or recreate it in C++.
 #pragma warning(suppress:4996)
-		const char* path = getenv("path");
+		const wchar_t* path = _wgetenv(L"path");
 		if (path)
 		{
-			std::vector<std::string> pathParts = split(path, ';');
+			std::vector<std::wstring> pathParts = split(path, ';');
 			for (auto part : pathParts)
 			{
-				std::string pythonPath = part + '\\' + "python.exe";
-				if (PathFileExistsA(pythonPath.c_str()))
+				std::wstring pythonPath = part + L"\\python.exe";
+				if (PathFileExists(pythonPath.c_str()))
 				{
-					outputPrintf("Stripping chrome symbols...\n");
+					outputPrintf(L"Stripping chrome symbols...\n");
 					//ChildProcess child("\"" + pythonPath + "\"");
 					ChildProcess child(pythonPath);
-					std::string args = " \"" + GetExeDir() + "StripChromeSymbols.py\" \"" + traceFilename + "\"";
-					child.Run(bShowCommands_, "python.exe" + args);
+					std::wstring args = L" \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
+					child.Run(bShowCommands_, L"python.exe" + args);
 					break;
 				}
 			}
@@ -711,7 +713,7 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		LaunchTraceViewer(traceFilename);
 	}
 	else
-		outputPrintf("Tracing stopped.\n");
+		outputPrintf(L"Tracing stopped.\n");
 }
 
 
@@ -725,18 +727,18 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	StopTracing(false);
 }
 
-void CXperfUIDlg::LaunchTraceViewer(const std::string traceFilename)
+void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename)
 {
-	std::string wpaPath = GetWPTDir() + "wpa.exe";
+	std::wstring wpaPath = GetWPTDir() + L"wpa.exe";
 
-	const std::string args = std::string("wpa.exe \"") + traceFilename.c_str() + "\"";
+	const std::wstring args = std::wstring(L"wpa.exe \"") + traceFilename.c_str() + L"\"";
 
 	// Wacky CreateProcess rules say args has to be writable!
-	std::vector<char> argsCopy(args.size() + 1);
-	strcpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
-	STARTUPINFOA startupInfo = {};
+	std::vector<wchar_t> argsCopy(args.size() + 1);
+	wcscpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
+	STARTUPINFO startupInfo = {};
 	PROCESS_INFORMATION processInfo = {};
-	BOOL result = CreateProcessA(wpaPath.c_str(), &argsCopy[0], nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo);
+	BOOL result = CreateProcess(wpaPath.c_str(), &argsCopy[0], nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo);
 	if (result)
 	{
 		// Close the handles to avoid leaks.
@@ -776,18 +778,25 @@ void CXperfUIDlg::OnBnClickedShowcommands()
 void CXperfUIDlg::OnBnClickedFastsampling()
 {
 	bFastSampling_ = !bFastSampling_;
-	const char* message = nullptr;
+	const wchar_t* message = nullptr;
+	const char* narrowMessage = nullptr;
 	if (bFastSampling_)
-		message = "Setting CPU sampling speed to 8 KHz, for finer resolution.";
+	{
+		message = L"Setting CPU sampling speed to 8 KHz, for finer resolution.";
+		narrowMessage = "Setting CPU sampling speed to 8 KHz, for finer resolution.";
+	}
 	else
-		message = "Setting CPU sampling speed to 1 KHz, for lower overhead.";
-	outputPrintf("%s\n", message);
+	{
+		message = L"Setting CPU sampling speed to 1 KHz, for lower overhead.";
+		narrowMessage = "Setting CPU sampling speed to 1 KHz, for lower overhead.";
+	}
+	outputPrintf(L"%s\n", message);
 	// Record the CPU sampling frequency change in the trace, if one is being recorded.
-	ETWMark(message);
+	ETWMark(narrowMessage);
 	ChildProcess child(GetXperfPath());
-	std::string profInt = bFastSampling_ ? "1221" : "9001";
-	std::string args = " -setprofint " + profInt + " cached";
-	child.Run(bShowCommands_, "xperf.exe" + args);
+	std::wstring profInt = bFastSampling_ ? L"1221" : L"9001";
+	std::wstring args = L" -setprofint " + profInt + L" cached";
+	child.Run(bShowCommands_, L"xperf.exe" + args);
 }
 
 
@@ -797,13 +806,13 @@ void CXperfUIDlg::OnCbnSelchangeInputtracing()
 	switch (InputTracing_)
 	{
 	case kKeyLoggerOff:
-		outputPrintf("Key logging disabled.\n");
+		outputPrintf(L"Key logging disabled.\n");
 		break;
 	case kKeyLoggerAnonymized:
-		outputPrintf("Key logging enabled. Number and letter keys will be recorded generically.\n");
+		outputPrintf(L"Key logging enabled. Number and letter keys will be recorded generically.\n");
 		break;
 	case kKeyLoggerFull:
-		outputPrintf("Key logging enabled. Full keyboard information recorded - beware of private information being recorded.\n");
+		outputPrintf(L"Key logging enabled. Full keyboard information recorded - beware of private information being recorded.\n");
 		break;
 	default:
 		assert(0);
@@ -815,12 +824,12 @@ void CXperfUIDlg::OnCbnSelchangeInputtracing()
 
 void CXperfUIDlg::UpdateTraceList()
 {
-	const std::string tracePath = GetTraceDir() + "\\*.etl";
+	const std::wstring tracePath = GetTraceDir() + L"\\*.etl";
 
 	auto tempTraces = GetFileList(tracePath);
 	std::sort(tempTraces.begin(), tempTraces.end());
 	// Function to stop the temporary traces from showing up.
-	auto ifInvalid = [](const std::string& name) { return name == "kernel.etl" || name == "user.etl" || name == "heap.etl"; };
+	auto ifInvalid = [](const std::wstring& name) { return name == L"kernel.etl" || name == L"user.etl" || name == L"heap.etl"; };
 	tempTraces.erase(std::remove_if(tempTraces.begin(), tempTraces.end(), ifInvalid), tempTraces.end());
 	// If nothing has changed, do nothing. This avoids flicker and other ugliness.
 	if (tempTraces == traces_)
@@ -833,8 +842,7 @@ void CXperfUIDlg::UpdateTraceList()
 		btTraces_.DeleteString(0);
 	for (auto name : traces_)
 	{
-		// UNICODEHACK
-		::SendDlgItemMessageA(*this, IDC_TRACELIST, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+		btTraces_.AddString(name.c_str());
 	}
 }
 
@@ -851,7 +859,7 @@ void CXperfUIDlg::OnLbnDblclkTracelist()
 	int selIndex = btTraces_.GetCurSel();
 	CString cStringTraceName;
 	btTraces_.GetText(selIndex, cStringTraceName);
-	std::string tracename = GetTraceDir() + GetListControlText(*this, IDC_TRACELIST, selIndex);
+	std::wstring tracename = GetTraceDir() + GetListControlText(*this, IDC_TRACELIST, selIndex);
 	LaunchTraceViewer(tracename);
 }
 
@@ -900,7 +908,7 @@ void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
 void CXperfUIDlg::SaveNotesIfNeeded()
 {
 	// Get the currently selected text, which might have been edited.
-	std::string editedNotes = GetEditControlText(*this, IDC_TRACENOTES);
+	std::wstring editedNotes = GetEditControlText(*this, IDC_TRACENOTES);
 	if (editedNotes != traceNotes_)
 	{
 		if (!traceNoteFilename_.empty())
@@ -918,10 +926,10 @@ void CXperfUIDlg::OnLbnSelchangeTracelist()
 		SaveNotesIfNeeded();
 
 		btTraceNotes_.EnableWindow(true);
-		std::string traceName = traces_[curSel];
-		std::string notesFilename = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + ".txt";
-		std::string notes = LoadFileAsText(notesFilename);
-		::SetDlgItemTextA(*this, IDC_TRACENOTES, notes.c_str());
+		std::wstring traceName = traces_[curSel];
+		std::wstring notesFilename = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + L".txt";
+		std::wstring notes = LoadFileAsText(notesFilename);
+		SetDlgItemText(IDC_TRACENOTES, notes.c_str());
 		traceNotes_ = notes;
 		traceNoteFilename_ = notesFilename;
 	}
@@ -958,13 +966,13 @@ BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
 
 void CXperfUIDlg::SetHeapTracing(bool forceOff)
 {
-	std::string targetKey = "Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
+	std::wstring targetKey = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
 	DWORD tracingFlags = tracingMode_ == kHeapTracingToFile ? 1 : 0;
 	if (forceOff)
 		tracingFlags = 0;
 	CreateRegistryKey(HKEY_LOCAL_MACHINE, targetKey, heapTracingExe_);
-	targetKey += "\\" + heapTracingExe_;
-	SetRegistryDWORD(HKEY_LOCAL_MACHINE, targetKey, "TracingFlags", tracingFlags);
+	targetKey += L"\\" + heapTracingExe_;
+	SetRegistryDWORD(HKEY_LOCAL_MACHINE, targetKey, L"TracingFlags", tracingFlags);
 }
 
 void CXperfUIDlg::OnCbnSelchangeTracingmode()
@@ -973,18 +981,18 @@ void CXperfUIDlg::OnCbnSelchangeTracingmode()
 	switch (tracingMode_)
 	{
 	case kTracingToFile:
-		outputPrintf("Traces will be recorded to disk to allow arbitrarily long recordings.\n");
+		outputPrintf(L"Traces will be recorded to disk to allow arbitrarily long recordings.\n");
 		break;
 	case kTracingToMemory:
-		outputPrintf("Traces will be recorded to in-memory circular buffers. Tracing can be enabled "
-			"indefinitely long, and will record the last ~10-60 seconds.\n");
+		outputPrintf(L"Traces will be recorded to in-memory circular buffers. Tracing can be enabled "
+				L"indefinitely long, and will record the last ~10-60 seconds.\n");
 		break;
 	case kHeapTracingToFile:
-		outputPrintf("Heap traces will be recorded to disk for %s. Note that only %s processes "
-			"started after this is selected will be traced. Note that %s processes started now "
-			"may run slightly slower even if not being traced.\n"
-			"To keep trace sizes manageable you may want to turn off context switch and CPU "
-			"sampling call stacks.\n", heapTracingExe_.c_str(),
+		outputPrintf(L"Heap traces will be recorded to disk for %s. Note that only %s processes "
+			L"started after this is selected will be traced. Note that %s processes started now "
+			L"may run slightly slower even if not being traced.\n"
+			L"To keep trace sizes manageable you may want to turn off context switch and CPU "
+			L"sampling call stacks.\n", heapTracingExe_.c_str(),
 			heapTracingExe_.c_str(), heapTracingExe_.c_str());
 		break;
 	}

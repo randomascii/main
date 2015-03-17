@@ -4,21 +4,20 @@
 #include <vector>
 #include <string>
 
-std::vector<std::string> split(const std::string& s, char c);
-std::vector<std::string> GetFileList(const std::string& pattern);
-std::string LoadFileAsText(const std::string& fileName);
-void WriteTextAsFile(const std::string& fileName, const std::string& text);
+std::vector<std::wstring> split(const std::wstring& s, char c);
+std::vector<std::wstring> GetFileList(const std::wstring& pattern);
 
-void SetRegistryDWORD(HKEY root, const std::string& subkey, const std::string& valueName, DWORD value);
-void CreateRegistryKey(HKEY root, const std::string& subkey, const std::string& newKey);
+// Load an ANSI or UTF-16 file into a wstring
+std::wstring LoadFileAsText(const std::wstring& fileName);
+// Write a wstring as UTF-16.
+void WriteTextAsFile(const std::wstring& fileName, const std::wstring& text);
+
+void SetRegistryDWORD(HKEY root, const std::wstring& subkey, const std::wstring& valueName, DWORD value);
+void CreateRegistryKey(HKEY root, const std::wstring& subkey, const std::wstring& newKey);
 
 // Various functions to hack a UNICODE build into working.
-std::string GetEditControlText(HWND hwnd, int id);
-std::string GetListControlText(HWND hwnd, int id, int index);
-#ifdef _UNICODE
-std::wstring AnsiToTChar(const std::string& text);
-#else
-std::string AnsiToTChar(const std::string& text);
-#endif
+std::wstring GetEditControlText(HWND hwnd, int id);
+std::wstring GetListControlText(HWND hwnd, int id, int index);
+std::wstring AnsiToUnicode(const std::string& text);
 
 #endif
