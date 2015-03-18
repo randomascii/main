@@ -83,11 +83,12 @@ for line in os.popen("xperf -i %s -a symcache -dbgid" % tracename).readlines():
       guid, age, path = match.groups()
       guid = guid.replace("-", "")
       filepart = os.path.split(path)[1]
-      print "Found reference to %s: %s - %s" % (filepart, guid, age, )
       symcacheFile = r"c:\symcache\chrome.dll-%s%sv2.symcache" % (guid, age)
       if os.path.exists(symcacheFile):
-        print "Symcache file %s already exists. Skipping." % symcacheFile
+        #print "Symcache file %s already exists. Skipping." % symcacheFile
         continue
+      # Only print messages for chrome PDBs that aren't in the symcache
+      print "Found uncached reference to %s: %s - %s" % (filepart, guid, age, )
       symcacheFiles.append(symcacheFile)
       pdbCachePath = None
       for subline in os.popen("RetrieveSymbols.exe %s %s %s" % (guid, age, filepart)):
@@ -104,7 +105,7 @@ for line in os.popen("xperf -i %s -a symcache -dbgid" % tracename).readlines():
         tempdir = tempfile.mkdtemp()
         tempdirs.append(tempdir)
         destPath = os.path.join(tempdir, os.path.split(pdbCachePath)[1])
-        print "Copying PDB from %s to %s" % (pdbCachePath, destPath)
+        print "Copying PDB to %s" % destPath
         for copyline in os.popen("pdbcopy %s %s -p" % (pdbCachePath, destPath)):
           print copyline.strip()
       else:

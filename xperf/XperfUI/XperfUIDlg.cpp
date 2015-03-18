@@ -707,18 +707,12 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 				std::wstring pythonPath = part + L"\\python.exe";
 				if (PathFileExists(pythonPath.c_str()))
 				{
-					outputPrintf(L"Stripping chrome symbols...\n");
-					//ChildProcess child("\"" + pythonPath + "\"");
+					outputPrintf(L"Stripping chrome symbols - this may take a while...\n");
 					ChildProcess child(pythonPath);
-					std::wstring args = L" \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
+					// Must pass -u to disable Python's output buffering when printing to
+					// a pipe, in order to get timely feedback.
+					std::wstring args = L" -u \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
 					child.Run(bShowCommands_, L"python.exe" + args);
-					// Long-running child process -- display output as it is printed
-					// so the application doesn't look hung.
-					while (child.IsStillRunning())
-					{
-						std::wstring output = child.RemoveOutputText();
-						outputPrintf(L"%s", output.c_str());
-					}
 					break;
 				}
 			}

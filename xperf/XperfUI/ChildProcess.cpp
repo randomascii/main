@@ -181,5 +181,15 @@ void ChildProcess::WaitForCompletion()
 	if (!hProcess_)
 		return;
 
+	// This looks like a busy loop, but it isn't. IsStillRunning()
+	// waits until the process exits or sends more output, so this
+	// is actually an idle loop.
+	while (IsStillRunning())
+	{
+		std::wstring output = RemoveOutputText();
+		outputPrintf(L"%s", output.c_str());
+	}
+	// This isn't technically needed, but removing it would make
+	// me nervous.
 	WaitForSingleObject(hProcess_, INFINITE);
 }
