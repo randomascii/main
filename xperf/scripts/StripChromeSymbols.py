@@ -76,7 +76,7 @@ symcacheFiles = []
 # to stop xperf from using -- rename them from .pdb to .pdbx
 localSymbolFiles = []
 
-for line in os.popen("xperf -i %s -a symcache -dbgid" % tracename).readlines():
+for line in os.popen("xperf -i %s -tle -tti -a symcache -dbgid" % tracename).readlines():
   if line.count("chrome.dll") > 0 or line.count("chrome_child.dll") > 0:
     match = pdbRe.match(line)
     if match:
@@ -119,7 +119,7 @@ if tempdirs:
     tempName = localPDB + "x"
     print "Renaming %s to %s to stop unstripped PDBs from being used." % (localPDB, tempName)
     os.rename(localPDB, tempName)
-  genCommand = "xperf -i %s -symbols -a symcache -build" % tracename
+  genCommand = "xperf -i %s -symbols -tle -tti -a symcache -build" % tracename
   print "Running: %s" % genCommand
   for line in os.popen(genCommand).readlines():
     print line
