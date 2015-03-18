@@ -60,3 +60,7 @@ Code cleanup:
 - getenv wrapper
 - ordering code sanely
 - moving more code to separate functions/files
+Have xperftemptracedir default to %temp%?
+Add compatibility manifest up to Windows 8.1
+Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
+StripChromeSymbols.py needs to pass the appropriate command-line to xperf to ignored dropped events and time inversions.
