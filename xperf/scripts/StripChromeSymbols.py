@@ -122,7 +122,7 @@ if tempdirs:
   genCommand = "xperf -i %s -symbols -tle -tti -a symcache -build" % tracename
   print "Running: %s" % genCommand
   for line in os.popen(genCommand).readlines():
-    print line
+    pass # Don't print line
   for localPDB in localSymbolFiles:
     tempName = localPDB + "x"
     os.rename(tempName, localPDB)

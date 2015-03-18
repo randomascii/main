@@ -26,11 +26,13 @@ Tool-tips
 Add circular-buffer support.
 Heap tracing.
 Show ProcessChromeSymbols.py status as it runs so it doesn't look like it's hung forever.
+Rename output executables and check in a renamed copy so people don't have to build it.
+StripChromeSymbols.py needs to pass the appropriate command-line to xperf to ignored dropped events and time inversions.
+Unicode support
 
 Most important tasks:
 Copy over startup profile on first-run, and subsequent runs?
 Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
-Rename output executables and check in a renamed copy so people don't have to build it.
 
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
@@ -41,7 +43,6 @@ Make sure trace notes are disabled when no trace is selected, including when
 traces are added or deleted.
 Disable compress option for Windows 7 and below.
 Allow configuring which symbols should be stripped.
-Unicode support
 Configure a maximum time to trace for to avoid infinitely long traces.
 Transparent compression/decompression into .zip files.
 CPU frequency monitoring.
@@ -63,4 +64,3 @@ Code cleanup:
 Have xperftemptracedir default to %temp%?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
-StripChromeSymbols.py needs to pass the appropriate command-line to xperf to ignored dropped events and time inversions.
