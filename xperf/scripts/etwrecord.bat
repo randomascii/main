@@ -4,22 +4,19 @@
 @set batchdir=%~dp0
 @set path=%path%;%batchdir%
 
-@rem Set the xperftracedir and xperftemptracedir environment variables if they
-@rem aren't set already.
+@rem Set the xperftracedir environment variable if it
+@rem isn't set already.
 @if not "%xperftracedir%" == "" goto TraceDirSet
-@set xperftracedir=%batchdir%..\traces
+@set xperftracedir=%homedrive%%homepath%\documents\xperftraces
 :TraceDirSet
-@if not "%xperftemptracedir%" == "" goto TempTraceDirSet
-@set xperftemptracedir=%xperftracedir%
-:TempTraceDirSet
 
-@rem Make sure %xperftracedir% and %xperftemptracedir% exist
+@rem Make sure %xperftracedir% exists
 @if exist %xperftracedir% goto TraceDirExists
 @mkdir %xperftracedir%
 :TraceDirExists
-@if exist %xperftemptracedir% goto TempTraceDirExists
-@mkdir %xperftemptracedir%
-:TempTraceDirExists
+
+@rem %temp% should be a good location for temporary traces.
+@set xperftemptracedir=%temp%
 
 @call etwcommonsettings.bat
 @call etwregister.bat
@@ -28,8 +25,10 @@
 @rem the parent directory of the batch file.
 @rem Note: this probably fails in some locales. Sorry.
 @for /F "tokens=2-4 delims=/- " %%A in ('date/T') do @set datevar=%%C-%%A-%%B
-@for /f "tokens=1-2 delims=/:" %%a in ("%TIME%") do @set timevar=%%a-%%b
-@set FileName=%xperftracedir%\%datevar%_%timevar%-00_%username%
+@for /F "tokens=1-3 delims=:-. " %%A in ('echo %time%') do @set timevar=%%A-%%B-%%C&set hour=%%A
+@rem Make sure that morning hours such as 9:00 are handled as 09 rather than 9
+@if %hour% LSS 10 set timevar=0%timevar%
+@set FileName=%xperftracedir%\%datevar%_%timevar%_%username%
 
 @if "%1" == "" goto NoFileSpecified
 @set ext=%~x1

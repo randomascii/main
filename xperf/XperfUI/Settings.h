@@ -20,7 +20,6 @@ public:
 protected:
 	CEdit btHeapTracingExe_;
 	CEdit btTraceDir_;
-	CEdit btTempTraceDir_;
 	CComboBox btBufferSizes_;
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support

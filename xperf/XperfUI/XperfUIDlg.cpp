@@ -28,6 +28,11 @@ const int kRecordTraceHotKey = 1234;
 
 static CXperfUIDlg* pMainWindow;
 
+// Use #define against my better judgment. Using wchar_t is inconvenient,
+// and using std::wstring means adding global constructors/destructors.
+// Thanks C++.
+#define KERNELPROVIDER L"\"NT Kernel Logger\"" // Can also be L"\"Circular Kernel Context Logger\""
+
 void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...)
 {
 	va_list args;
@@ -269,7 +274,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	std::wstring defaultTraceDir = documents + std::wstring(L"\\xperftraces\\");
 	traceDir_ = GetDirectory(L"xperftracedir", defaultTraceDir);
 
-	tempTraceDir_ = GetDirectory(L"xperftemptracedir", traceDir_);
+	tempTraceDir_ = GetDirectory(L"temp", traceDir_);
 
 	SetSymbolPath();
 
@@ -598,7 +603,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	std::wstring kernelFile = L" -f \"" + GetKernelFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
 		kernelFile = L" -buffering";
-	std::wstring kernelArgs = L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
+	std::wstring kernelArgs = L" -start " KERNELPROVIDER L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
 	std::wstring userProviders = L" -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
@@ -646,15 +651,15 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		{
 			// If we are in memory tracing mode then don't actually stop tracing,
 			// just flush the buffers to disk.
-			std::wstring args = L" -flush \"NT Kernel Logger\" -f \"" + GetKernelFile() + L"\" -flush xperfuisession -f \"" + GetUserFile() + L"\"";
+			std::wstring args = L" -flush " KERNELPROVIDER L" -f \"" + GetKernelFile() + L"\" -flush xperfuisession -f \"" + GetUserFile() + L"\"";
 			child.Run(bShowCommands_, L"xperf.exe" + args);
 		}
 		else
 		{
 			if (tracingMode_ == kHeapTracingToFile)
-				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop");
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop " KERNELPROVIDER);
 			else
-				child.Run(bShowCommands_, L"xperf.exe -stop xperfuiSession -stop");
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfuiSession -stop " KERNELPROVIDER);
 		}
 	}
 
