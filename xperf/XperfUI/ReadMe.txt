@@ -61,6 +61,7 @@ Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
 option for stacks on user events, option for DX tracing.
 Trace list should let the user:
+- Rename traces (and associated text file)
 - Run arbitrary scripts on all traces
 - Run StripChromeSymbols.py
 Code cleanup:

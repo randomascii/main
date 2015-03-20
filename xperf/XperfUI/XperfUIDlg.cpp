@@ -1057,15 +1057,18 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				CompressTrace(tracePath);
 				break;
 			case ID_TRACES_COMPRESSTRACES:
+				outputPrintf(L"\nCompressing all traces - this may take a while:\n");
 				for (auto traceName : traces_)
 				{
 					CompressTrace(GetTraceDir() + traceName);
 				}
+				outputPrintf(L"Finished compressing traces.\n");
 				break;
 			case ID_TRACES_BROWSEFOLDER:
 				ShellExecute(NULL, L"open", GetTraceDir().c_str(), NULL, GetTraceDir().c_str(), SW_SHOW);
 				break;
 			case ID_TRACES_STRIPCHROMESYMBOLS:
+				outputPrintf(L"\n");
 				StripChromeSymbols(tracePath);
 				break;
 			case ID_TRACES_TRACEPATHTOCLIPBOARD:
