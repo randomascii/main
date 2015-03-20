@@ -34,6 +34,7 @@ Trace list should let the user:
 - Compress traces
 - Explore to the trace directory
 - Copy the traces name/path to the clipboard
+Remove references to _T macro.
 
 
 
@@ -48,7 +49,7 @@ To-do eventually:
 Error checking -- checking for failures to start or stop tracing.
 Make sure trace notes are disabled when no trace is selected, including when
 traces are added or deleted.
-Disable compress option for Windows 7 and below.
+Disable compress options (checkbox and menu) for Windows 7 and below.
 Allow configuring which symbols should be stripped.
 Configure a maximum time to trace for to avoid infinitely long traces.
 Transparent compression/decompression into .zip files.
@@ -69,4 +70,3 @@ Code cleanup:
 Have xperftemptracedir default to %temp%?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
-Remove references to _T macro.

@@ -290,14 +290,14 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 
 
-	btInputTracing_.AddString(_T("Off"));
-	btInputTracing_.AddString(_T("Private"));
-	btInputTracing_.AddString(_T("Full"));
+	btInputTracing_.AddString(L"Off");
+	btInputTracing_.AddString(L"Private");
+	btInputTracing_.AddString(L"Full");
 	btInputTracing_.SetCurSel(InputTracing_);
 
-	btTracingMode_.AddString(_T("Tracing to file"));
-	btTracingMode_.AddString(_T("Circular buffer tracing"));
-	btTracingMode_.AddString(_T("Heap tracing to file"));
+	btTracingMode_.AddString(L"Tracing to file");
+	btTracingMode_.AddString(L"Circular buffer tracing");
+	btTracingMode_.AddString(L"Heap tracing to file");
 	btTracingMode_.SetCurSel(tracingMode_);
 
 	UpdateEnabling();
@@ -313,41 +313,41 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 	if (toolTip_.Create(this))
 	{
-		toolTip_.AddTool(&btStartTracing_, _T("Start ETW tracing."));
+		toolTip_.AddTool(&btStartTracing_, L"Start ETW tracing.");
 
-		toolTip_.AddTool(&btCompress_, _T("Only uncheck this if you record traces on Windows 8 and above and want to analyze ")
-					_T("them on Windows 7 and below.\n")
-					_T("Enable ETW trace compression. On Windows 8 and above this compresses traces ")
-					_T("as they are saved, making them 5-10x smaller. However compressed traces cannot be loaded on ")
-					_T("Windows 7 or earlier. On Windows 7 this setting has no effect."));
-		toolTip_.AddTool(&btCswitchStacks_, _T("This enables recording of call stacks on context switches, from both ")
-					_T("the thread being switched in and the readying thread. This should only be disabled if the performance ")
-					_T("of functions like WaitForSingleObject and SetEvent appears to be distorted, which can happen when the ")
-					_T("context-switch rate is very high."));
-		toolTip_.AddTool(&btSampledStacks_, _T("This enables recording of call stacks on CPU sampling events, which ")
-					_T("by default happen at 1 KHz. This should rarely be disabled."));
-		toolTip_.AddTool(&btFastSampling_, _T("Checking this changes the CPU sampling frequency from the default of ")
-					_T("~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces ")
-					_T("but can make investigating brief CPU-bound performance problems (such as a single long frame) ")
-					_T("more practical."));
-		toolTip_.AddTool(&btShowCommands_, _T("This tells XperfUI to display the xperf.exe and other commands being ")
-					_T("executed. This can be helpful for diagnostic purposes but is not normally needed."));
+		toolTip_.AddTool(&btCompress_, L"Only uncheck this if you record traces on Windows 8 and above and want to analyze "
+					L"them on Windows 7 and below.\n"
+					L"Enable ETW trace compression. On Windows 8 and above this compresses traces "
+					L"as they are saved, making them 5-10x smaller. However compressed traces cannot be loaded on "
+					L"Windows 7 or earlier. On Windows 7 this setting has no effect.");
+		toolTip_.AddTool(&btCswitchStacks_, L"This enables recording of call stacks on context switches, from both "
+					L"the thread being switched in and the readying thread. This should only be disabled if the performance "
+					L"of functions like WaitForSingleObject and SetEvent appears to be distorted, which can happen when the "
+					L"context-switch rate is very high.");
+		toolTip_.AddTool(&btSampledStacks_, L"This enables recording of call stacks on CPU sampling events, which "
+					L"by default happen at 1 KHz. This should rarely be disabled.");
+		toolTip_.AddTool(&btFastSampling_, L"Checking this changes the CPU sampling frequency from the default of "
+					L"~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces "
+					L"but can make investigating brief CPU-bound performance problems (such as a single long frame) "
+					L"more practical.");
+		toolTip_.AddTool(&btShowCommands_, L"This tells XperfUI to display the xperf.exe and other commands being "
+					L"executed. This can be helpful for diagnostic purposes but is not normally needed.");
 
-		const TCHAR* pInputTip = _T("Input tracing inserts custom ETW events into traces which can be helpful when ")
-					_T("investigating performance problems that are correlated with user input. The default setting of ")
-					_T("'private' records alphabetic keys as 'A' and numeric keys as '0'. The 'full' setting records ")
-					_T("alphanumeric details. Both 'private' and 'full' record mouse movement and button clicks. The ")
-					_T("'off' setting records no input.");
+		const TCHAR* pInputTip = L"Input tracing inserts custom ETW events into traces which can be helpful when "
+					L"investigating performance problems that are correlated with user input. The default setting of "
+					L"'private' records alphabetic keys as 'A' and numeric keys as '0'. The 'full' setting records "
+					L"alphanumeric details. Both 'private' and 'full' record mouse movement and button clicks. The "
+					L"'off' setting records no input.";
 		toolTip_.AddTool(&btInputTracingLabel_, pInputTip);
 		toolTip_.AddTool(&btInputTracing_, pInputTip);
 
-		toolTip_.AddTool(&btTracingMode_, _T("Select whether to trace straight to disk or to in-memory circular buffers."));
+		toolTip_.AddTool(&btTracingMode_, L"Select whether to trace straight to disk or to in-memory circular buffers.");
 
-		toolTip_.AddTool(&btTraces_, _T("This is a list of all traces found in %xperftracedir%, which defaults to ")
-					_T("documents\\xperftraces."));
-		toolTip_.AddTool(&btTraceNotes_, _T("Trace notes are intended for recording information about ETW traces, such ")
-					_T("as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text ")
-					_T("file - just type your analysis."));
+		toolTip_.AddTool(&btTraces_, L"This is a list of all traces found in %xperftracedir%, which defaults to "
+					L"documents\\xperftraces.");
+		toolTip_.AddTool(&btTraceNotes_, L"Trace notes are intended for recording information about ETW traces, such "
+					L"as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text "
+					L"file - just type your analysis.");
 
 		toolTip_.SetMaxTipWidth(400);
 		toolTip_.Activate(TRUE);
@@ -761,7 +761,7 @@ void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename)
 	}
 	else
 	{
-		AfxMessageBox(_T("Failed to start trace viewer."));
+		AfxMessageBox(L"Failed to start trace viewer.");
 	}
 }
 
