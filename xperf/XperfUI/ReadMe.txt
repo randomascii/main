@@ -34,6 +34,7 @@ Trace list should let the user:
 - Compress traces
 - Explore to the trace directory
 - Copy the traces name/path to the clipboard
+- Run StripChromeSymbols.py
 Remove references to _T macro.
 
 
@@ -63,7 +64,6 @@ option for stacks on user events, option for DX tracing.
 Trace list should let the user:
 - Rename traces (and associated text file)
 - Run arbitrary scripts on all traces
-- Run StripChromeSymbols.py
 Code cleanup:
 - getenv wrapper
 - ordering code sanely
