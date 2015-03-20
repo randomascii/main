@@ -116,6 +116,7 @@ protected:
 	void CompressTrace(const std::wstring& tracePath);
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();
+	void StripChromeSymbols(const std::wstring& traceFilename);
 	void LaunchTraceViewer(const std::wstring traceFilename);
 	void SaveNotesIfNeeded();
 	void ShutdownTasks();

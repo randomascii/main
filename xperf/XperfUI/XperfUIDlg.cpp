@@ -693,31 +693,7 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 
 	if (bSaveTrace)
 	{
-		// Some private symbols, particularly Chrome's, must be stripped and
-		// then converted to .symcache files in order to avoid ~25 minute
-		// conversion times for the full private symbols.
-		// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
-		// Call Python script here, or recreate it in C++.
-#pragma warning(suppress:4996)
-		const wchar_t* path = _wgetenv(L"path");
-		if (path)
-		{
-			std::vector<std::wstring> pathParts = split(path, ';');
-			for (auto part : pathParts)
-			{
-				std::wstring pythonPath = part + L"\\python.exe";
-				if (PathFileExists(pythonPath.c_str()))
-				{
-					outputPrintf(L"Stripping chrome symbols - this may take a while...\n");
-					ChildProcess child(pythonPath);
-					// Must pass -u to disable Python's output buffering when printing to
-					// a pipe, in order to get timely feedback.
-					std::wstring args = L" -u \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
-					child.Run(bShowCommands_, L"python.exe" + args);
-					break;
-				}
-			}
-		}
+		StripChromeSymbols(traceFilename);
 
 		LaunchTraceViewer(traceFilename);
 	}
@@ -1090,7 +1066,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				ShellExecute(NULL, L"open", GetTraceDir().c_str(), NULL, GetTraceDir().c_str(), SW_SHOW);
 				break;
 			case ID_TRACES_STRIPCHROMESYMBOLS:
-				AfxMessageBox(L"Not implemented.");
+				StripChromeSymbols(tracePath);
 				break;
 			case ID_TRACES_TRACEPATHTOCLIPBOARD:
 				SetClipboardText(tracePath);
@@ -1123,15 +1099,46 @@ void CXperfUIDlg::CompressTrace(const std::wstring& tracePath)
 
 	int64_t originalSize = GetFileSize(tracePath);
 	int64_t compressedSize = GetFileSize(compressedPath);
-	outputPrintf(L"File sizes are %lld and %lld.\n", originalSize, compressedSize);
 	// Require a minimum of 1% compression
 	if (compressedSize > 0 && compressedSize < (originalSize - originalSize / 100))
 	{
 		DeleteOneFile(*this, tracePath);
 		MoveFile(compressedPath.c_str(), tracePath.c_str());
+		outputPrintf(L"%s was compressed from %1.1f MB to %1.1f MB.\n",
+			tracePath.c_str(), originalSize / 1000000.0, compressedSize / 1000000.0);
 	}
 	else
 	{
+		outputPrintf(L"%s was not compressed.\n", tracePath.c_str());
 		DeleteOneFile(*this, compressedPath);
+	}
+}
+
+void CXperfUIDlg::StripChromeSymbols(const std::wstring& traceFilename)
+{
+	// Some private symbols, particularly Chrome's, must be stripped and
+	// then converted to .symcache files in order to avoid ~25 minute
+	// conversion times for the full private symbols.
+	// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
+	// Call Python script here, or recreate it in C++.
+#pragma warning(suppress:4996)
+	const wchar_t* path = _wgetenv(L"path");
+	if (path)
+	{
+		std::vector<std::wstring> pathParts = split(path, ';');
+		for (auto part : pathParts)
+		{
+			std::wstring pythonPath = part + L"\\python.exe";
+			if (PathFileExists(pythonPath.c_str()))
+			{
+				outputPrintf(L"Stripping chrome symbols - this may take a while...\n");
+				ChildProcess child(pythonPath);
+				// Must pass -u to disable Python's output buffering when printing to
+				// a pipe, in order to get timely feedback.
+				std::wstring args = L" -u \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
+				child.Run(bShowCommands_, L"python.exe" + args);
+				break;
+			}
+		}
 	}
 }
