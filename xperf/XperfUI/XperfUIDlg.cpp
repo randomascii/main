@@ -28,11 +28,6 @@ const int kRecordTraceHotKey = 1234;
 
 static CXperfUIDlg* pMainWindow;
 
-// Use #define against my better judgment. Using wchar_t is inconvenient,
-// and using std::wstring means adding global constructors/destructors.
-// Thanks C++.
-#define KERNELPROVIDER L"\"NT Kernel Logger\"" // Can also be L"\"Circular Kernel Context Logger\""
-
 void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...)
 {
 	va_list args;
@@ -488,22 +483,22 @@ HCURSOR CXperfUIDlg::OnQueryDragIcon()
 }
 
 
-std::wstring CXperfUIDlg::GetWPTDir()
+std::wstring CXperfUIDlg::GetWPTDir() const
 {
 	return L"C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
 }
 
-std::wstring CXperfUIDlg::GetXperfPath()
+std::wstring CXperfUIDlg::GetXperfPath() const
 {
 	return GetWPTDir() + L"xperf.exe";
 }
 
-std::wstring CXperfUIDlg::GetTraceDir()
+std::wstring CXperfUIDlg::GetTraceDir() const
 {
 	return traceDir_;
 }
 
-std::wstring CXperfUIDlg::GetExeDir()
+std::wstring CXperfUIDlg::GetExeDir() const
 {
 	wchar_t exePath[MAX_PATH];
 	if (GetModuleFileName(0, exePath, ARRAYSIZE(exePath)))
@@ -519,7 +514,7 @@ std::wstring CXperfUIDlg::GetExeDir()
 	exit(10);
 }
 
-std::wstring CXperfUIDlg::GetResultFile()
+std::wstring CXperfUIDlg::GetResultFile() const
 {
 	std::wstring traceDir = GetTraceDir();
 
@@ -559,22 +554,22 @@ std::wstring CXperfUIDlg::GetResultFile()
 	return GetTraceDir() + filePart + L".etl";
 }
 
-std::wstring CXperfUIDlg::GetTempTraceDir()
+std::wstring CXperfUIDlg::GetTempTraceDir() const
 {
 	return tempTraceDir_;
 }
 
-std::wstring CXperfUIDlg::GetKernelFile()
+std::wstring CXperfUIDlg::GetKernelFile() const
 {
 	return CXperfUIDlg::GetTempTraceDir() + L"kernel.etl";
 }
 
-std::wstring CXperfUIDlg::GetUserFile()
+std::wstring CXperfUIDlg::GetUserFile() const
 {
 	return GetTempTraceDir() + L"user.etl";
 }
 
-std::wstring CXperfUIDlg::GetHeapFile()
+std::wstring CXperfUIDlg::GetHeapFile() const
 {
 	return GetTempTraceDir() + L"heap.etl";
 }
@@ -604,7 +599,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	std::wstring kernelFile = L" -f \"" + GetKernelFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
 		kernelFile = L" -buffering";
-	std::wstring kernelArgs = L" -start " KERNELPROVIDER L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
+	std::wstring kernelArgs = L" -start " + GetKernelLogger() + L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
 	std::wstring userProviders = L" -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
@@ -652,15 +647,15 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		{
 			// If we are in memory tracing mode then don't actually stop tracing,
 			// just flush the buffers to disk.
-			std::wstring args = L" -flush " KERNELPROVIDER L" -f \"" + GetKernelFile() + L"\" -flush xperfuisession -f \"" + GetUserFile() + L"\"";
+			std::wstring args = L" -flush " + GetKernelLogger() + L" -f \"" + GetKernelFile() + L"\" -flush xperfuisession -f \"" + GetUserFile() + L"\"";
 			child.Run(bShowCommands_, L"xperf.exe" + args);
 		}
 		else
 		{
 			if (tracingMode_ == kHeapTracingToFile)
-				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop " KERNELPROVIDER);
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop " + GetKernelLogger());
 			else
-				child.Run(bShowCommands_, L"xperf.exe -stop xperfuiSession -stop " KERNELPROVIDER);
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfuiSession -stop " + GetKernelLogger());
 		}
 	}
 

@@ -81,17 +81,22 @@ protected:
 
 	void StopTracing(bool bSaveTrace);
 
-	std::wstring GetWPTDir();
-	std::wstring GetXperfPath();
-	std::wstring GetTraceDir();
-	std::wstring GetExeDir();
+	std::wstring GetWPTDir() const;
+	std::wstring GetXperfPath() const;
+	std::wstring GetTraceDir() const;
+	std::wstring GetExeDir() const;
 	// Note that GetResultFile() gives a time-based name, so don't expect
 	// the same result across multiple calls!
-	std::wstring GetResultFile();
-	std::wstring GetTempTraceDir();
-	std::wstring GetKernelFile();
-	std::wstring GetUserFile();
-	std::wstring GetHeapFile();
+	std::wstring GetResultFile() const;
+	std::wstring GetTempTraceDir() const;
+	std::wstring GetKernelFile() const;
+	std::wstring GetUserFile() const;
+	std::wstring GetHeapFile() const;
+
+	// Get session name for kernel logger
+	const std::wstring logger_ = L"\"NT Kernel Logger\"";
+	//const std::wstring logger_ = L"\"Circular Kernel Context Logger\"";
+	std::wstring GetKernelLogger() const { return logger_; }
 
 	int initialWidth_ = 0;
 	int initialHeight_ = 0;
@@ -99,6 +104,8 @@ protected:
 	int lastHeight_ = 0;
 
 	void SetSymbolPath();
+	// Call this to retrieve a directory from an environment variable, or use
+	// a default, and make sure it exists.
 	std::wstring GetDirectory(const wchar_t* env, const std::wstring& default);
 	void CXperfUIDlg::UpdateTraceList();
 	void RegisterProviders();
