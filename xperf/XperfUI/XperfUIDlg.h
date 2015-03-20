@@ -106,6 +106,7 @@ protected:
 
 	CToolTipCtrl toolTip_;
 
+	void CompressTrace(const std::wstring& tracePath);
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();
 	void LaunchTraceViewer(const std::wstring traceFilename);
@@ -141,4 +142,5 @@ protected:
 	afx_msg void OnOK();
 	afx_msg void OnCbnSelchangeTracingmode();
 	afx_msg void OnBnClickedSettings();
+	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 };

@@ -20,4 +20,19 @@ std::wstring GetEditControlText(HWND hwnd, int id);
 std::wstring GetListControlText(HWND hwnd, int id, int index);
 std::wstring AnsiToUnicode(const std::string& text);
 
+// Return a pointer to the character after the final '\' or final '.'
+// in the file part of a path.
+// These return a pointer to the appropriate place in the passed in string,
+// so it must remain valid. If the last character is '\' then GetFilePart
+// will point at the NUL terminator. If there is no '.' after the last '\'
+// then GetFileExt will point at the NUL terminator. They won't ever return
+// an invalid pointer. 
+const wchar_t* GetFilePart(const std::wstring& path);
+const wchar_t* GetFileExt(const std::wstring& path);
+
+int DeleteOneFile(HWND hwnd, const std::wstring& path);
+int64_t GetFileSize(const std::wstring& path);
+
+void SetClipboardText(const std::wstring& text);
+
 #endif

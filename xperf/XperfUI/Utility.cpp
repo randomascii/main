@@ -163,3 +163,87 @@ std::wstring AnsiToUnicode(const std::string& text)
 
 	return result;
 }
+
+const wchar_t* GetFilePart(const std::wstring& path)
+{
+	const wchar_t* pLastSlash = wcsrchr(path.c_str(), '\\');
+	if (pLastSlash)
+		return pLastSlash + 1;
+	return path.c_str() + path.size();
+}
+
+const wchar_t* GetFileExt(const std::wstring& path)
+{
+	const wchar_t* pFilePart = GetFilePart(path);
+	const wchar_t* pLastPeriod = wcsrchr(pFilePart, '.');
+	if (pLastPeriod)
+		return pLastPeriod + 1;
+	return pFilePart + wcslen(pFilePart);
+}
+
+int DeleteOneFile(HWND hwnd, const std::wstring& path)
+{
+	std::vector<wchar_t> fileNames;
+	// Push the file name and its NULL terminator onto the vector.
+	fileNames.insert(fileNames.end(), path.c_str(), path.c_str() + path.size());
+	fileNames.push_back(0);
+
+	// Double null-terminate.
+	fileNames.push_back(0);
+
+	SHFILEOPSTRUCT fileOp =
+	{
+		hwnd,
+		FO_DELETE,
+		&fileNames[0],
+		NULL,
+		FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION,
+	};
+	// Delete using the recycle bin.
+	int result = SHFileOperation(&fileOp);
+
+	return result;
+}
+
+void SetClipboardText(const std::wstring& text)
+{
+	BOOL cb = OpenClipboard(GetDesktopWindow());
+	if (!cb)
+		return;
+
+	EmptyClipboard();
+
+	size_t length = (text.size() + 1) * sizeof(wchar_t);
+	HANDLE hmem = GlobalAlloc(GMEM_MOVEABLE, length);
+	if (hmem)
+	{
+		void *ptr = GlobalLock(hmem);
+		if (ptr != NULL)
+		{
+			memcpy(ptr, text.c_str(), length);
+			GlobalUnlock(hmem);
+
+			SetClipboardData(CF_UNICODETEXT, hmem);
+		}
+	}
+
+	CloseClipboard();
+}
+
+int64_t GetFileSize(const std::wstring& path)
+{
+	LARGE_INTEGER result;
+	HANDLE hFile = CreateFile(path.c_str(), GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+		return 0;
+
+	if (GetFileSizeEx(hFile, &result))
+	{
+		CloseHandle(hFile);
+		return result.QuadPart;
+	}
+	CloseHandle(hFile);
+	return 0;
+}

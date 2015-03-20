@@ -29,6 +29,13 @@ Show ProcessChromeSymbols.py status as it runs so it doesn't look like it's hung
 Rename output executables and check in a renamed copy so people don't have to build it.
 StripChromeSymbols.py needs to pass the appropriate command-line to xperf to ignored dropped events and time inversions.
 Unicode support
+Trace list should let the user:
+- Delete traces
+- Compress traces
+- Explore to the trace directory
+- Copy the traces name/path to the clipboard
+
+
 
 Most important tasks:
 Copy over startup profile on first-run, and subsequent runs?
@@ -53,10 +60,8 @@ Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
 option for stacks on user events, option for DX tracing.
 Trace list should let the user:
-- delete traces
-- Explore to the trace directory
-- Copy the traces name/path to the clipboard
-- Run scripts on all traces
+- Run arbitrary scripts on all traces
+- Run StripChromeSymbols.py
 Code cleanup:
 - getenv wrapper
 - ordering code sanely
@@ -64,3 +69,4 @@ Code cleanup:
 Have xperftemptracedir default to %temp%?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
+Remove references to _T macro.

@@ -166,6 +166,7 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_WM_CLOSE()
 	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
 	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
+	ON_WM_CONTEXTMENU()
 END_MESSAGE_MAP()
 
 
@@ -849,6 +850,8 @@ void CXperfUIDlg::UpdateTraceList()
 		return;
 	traces_ = tempTraces;
 
+	// Avoid flicker by disabling redraws until the list has been rebuilt.
+	btTraces_.SetRedraw(FALSE);
 	// Erase all entries and replace them.
 	// Todo: retain the current selection index.
 	while (btTraces_.GetCount())
@@ -857,6 +860,7 @@ void CXperfUIDlg::UpdateTraceList()
 	{
 		btTraces_.AddString(name.c_str());
 	}
+	btTraces_.SetRedraw(TRUE);
 }
 
 LRESULT CXperfUIDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
@@ -1020,5 +1024,119 @@ void CXperfUIDlg::OnBnClickedSettings()
 	if (dlgAbout.DoModal() == IDOK)
 	{
 		heapTracingExe_ = dlgAbout.heapTracingExe_;
+	}
+}
+
+void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+{
+	// See if we right-clicked on the trace list.
+	if (pWnd == &btTraces_)
+	{
+		int selIndex = btTraces_.GetCurSel();
+
+		CMenu PopupMenu;
+		PopupMenu.LoadMenu(IDR_TRACESCONTEXTMENU);
+
+		CMenu *pContextMenu = PopupMenu.GetSubMenu(0);
+
+		std::wstring tracePath;
+		if (selIndex >= 0)
+		{
+			pContextMenu->SetDefaultItem(ID_TRACES_OPENTRACEINWPA);
+			tracePath = GetTraceDir() + GetListControlText(*this, IDC_TRACELIST, selIndex);;
+		}
+		else
+		{
+			// List of menu items that are disabled when no trace is selected.
+			// Those that are always available are commented out in this list.
+			int disableList[] =
+			{
+				ID_TRACES_OPENTRACEINWPA,
+				ID_TRACES_DELETETRACE,
+				ID_TRACES_COMPRESSTRACE,
+				//ID_TRACES_COMPRESSTRACES,
+				//ID_TRACES_BROWSEFOLDER,
+				ID_TRACES_STRIPCHROMESYMBOLS,
+				ID_TRACES_TRACEPATHTOCLIPBOARD,
+			};
+
+			for (auto id : disableList)
+				pContextMenu->EnableMenuItem(id, MF_BYCOMMAND | MF_GRAYED);
+		}
+
+		int selection = pContextMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON |
+			TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY,
+			point.x, point.y, pWnd, NULL);
+
+		switch (selection)
+		{
+			case ID_TRACES_OPENTRACEINWPA:
+				LaunchTraceViewer(tracePath);
+				break;
+			case ID_TRACES_DELETETRACE:
+				if (AfxMessageBox(L"Are you sure you want to delete this trace?", MB_YESNO) == IDYES)
+				{
+					if (DeleteOneFile(*this, tracePath))
+					{
+						outputPrintf(L"\nFile deletion failed.\n");
+					}
+				}
+				break;
+			case ID_TRACES_COMPRESSTRACE:
+				CompressTrace(tracePath);
+				break;
+			case ID_TRACES_COMPRESSTRACES:
+				for (auto traceName : traces_)
+				{
+					CompressTrace(GetTraceDir() + traceName);
+				}
+				break;
+			case ID_TRACES_BROWSEFOLDER:
+				ShellExecute(NULL, L"open", GetTraceDir().c_str(), NULL, GetTraceDir().c_str(), SW_SHOW);
+				break;
+			case ID_TRACES_STRIPCHROMESYMBOLS:
+				AfxMessageBox(L"Not implemented.");
+				break;
+			case ID_TRACES_TRACEPATHTOCLIPBOARD:
+				SetClipboardText(tracePath);
+				break;
+		}
+	}
+	else
+	{
+		CDialog::OnContextMenu(pWnd, point);
+	}
+}
+
+void CXperfUIDlg::CompressTrace(const std::wstring& tracePath)
+{
+	std::wstring compressedPath = tracePath + L".compressed";
+	DWORD exitCode = 0;
+	{
+		ChildProcess child(GetXperfPath());
+		std::wstring args = L" -merge \"" + tracePath + L"\" \"" + compressedPath + L"\" -compress";
+		child.Run(bShowCommands_, L"xperf.exe" + args);
+		child.WaitForCompletion();
+		exitCode = child.GetExitCode();
+	}
+
+	if (exitCode)
+	{
+		DeleteOneFile(*this, compressedPath);
+		return;
+	}
+
+	int64_t originalSize = GetFileSize(tracePath);
+	int64_t compressedSize = GetFileSize(compressedPath);
+	outputPrintf(L"File sizes are %lld and %lld.\n", originalSize, compressedSize);
+	// Require a minimum of 1% compression
+	if (compressedSize > 0 && compressedSize < (originalSize - originalSize / 100))
+	{
+		DeleteOneFile(*this, tracePath);
+		MoveFile(compressedPath.c_str(), tracePath.c_str());
+	}
+	else
+	{
+		DeleteOneFile(*this, compressedPath);
 	}
 }

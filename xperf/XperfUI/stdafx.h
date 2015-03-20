@@ -37,6 +37,7 @@
 
 // Global function for printing to the dialog output window.
 void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...);
+#include <inttypes.h>
 
 #ifdef _UNICODE
 #if defined _M_IX86
