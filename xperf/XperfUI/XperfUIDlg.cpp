@@ -720,6 +720,21 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 
 void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename)
 {
+	if (!PathFileExists(traceFilename.c_str()))
+	{
+		std::wstring zipPath = traceFilename.substr(0, traceFilename.size() - 4) + L".zip";
+		if (PathFileExists(zipPath.c_str()))
+		{
+			AfxMessageBox(L"Viewing of zipped ETL files is not yet supported.\n"
+				L"Please manually unzip the trace file.");
+		}
+		else
+		{
+			AfxMessageBox(L"That trace file does not exist.");
+		}
+		return;
+	}
+
 	std::wstring wpaPath = GetWPTDir() + L"wpa.exe";
 
 	const std::wstring args = std::wstring(L"wpa.exe \"") + traceFilename.c_str() + L"\"";
@@ -815,13 +830,15 @@ void CXperfUIDlg::OnCbnSelchangeInputtracing()
 
 void CXperfUIDlg::UpdateTraceList()
 {
-	std::wstring trimmedTraceName;
+	std::wstring selectedTraceName;
 	int curSel = btTraces_.GetCurSel();
 	if (curSel >= 0 && curSel < (int)traces_.size())
 	{
-		trimmedTraceName = traces_[curSel].substr(0, traces_[curSel].size() - 4);
+		selectedTraceName = traces_[curSel];
 	}
 
+	// Note that these will also pull in files like *.etlabc and *.zipabc.
+	// I don't want that. Filter them out later?
 	auto tempTraces = GetFileList(GetTraceDir() + L"\\*.etl");
 	auto tempZips = GetFileList(GetTraceDir() + L"\\*.zip");
 	// Why can't I use += to concatenate these?
@@ -830,7 +847,17 @@ void CXperfUIDlg::UpdateTraceList()
 	// Function to stop the temporary traces from showing up.
 	auto ifInvalid = [](const std::wstring& name) { return name == L"kernel.etl" || name == L"user.etl" || name == L"heap.etl"; };
 	tempTraces.erase(std::remove_if(tempTraces.begin(), tempTraces.end(), ifInvalid), tempTraces.end());
-	// If nothing has changed, do nothing. This avoids flicker and other ugliness.
+	for (auto& name : tempTraces)
+	{
+		// Trim off the file extension, which *should* always be in .3 form.
+		name = name.substr(0, name.size() - 4);
+	}
+	// The same trace may show up as .etl and as .zip (compressed). Delete
+	// one copy.
+	tempTraces.erase(std::unique(tempTraces.begin(), tempTraces.end()), tempTraces.end());
+
+	// If nothing has changed, do nothing. This avoids redrawing when nothing
+	// important has happened.
 	if (tempTraces == traces_)
 		return;
 	traces_ = tempTraces;
@@ -844,10 +871,8 @@ void CXperfUIDlg::UpdateTraceList()
 	for (int curIndex = 0; curIndex < (int)traces_.size(); ++curIndex)
 	{
 		const auto& name = traces_[curIndex];
-		// Trim off the .etl suffixes.
-		std::wstring trimmedName = name.substr(0, name.size() - 4);
-		btTraces_.AddString(trimmedName.c_str());
-		if (trimmedName == trimmedTraceName)
+		btTraces_.AddString(name.c_str());
+		if (name == selectedTraceName)
 		{
 			// We compare trimmed traceNames (thus ignoring extensions) so
 			// that if compressing traces changes the extension (from .etl
@@ -877,7 +902,7 @@ void CXperfUIDlg::OnLbnDblclkTracelist()
 	// This check shouldn't be necessary, but who knows?
 	if (selIndex < 0 || selIndex >= (int)traces_.size())
 		return;
-	std::wstring tracename = GetTraceDir() + traces_[selIndex];
+	std::wstring tracename = GetTraceDir() + traces_[selIndex] + L".etl";
 	LaunchTraceViewer(tracename);
 }
 
@@ -945,7 +970,7 @@ void CXperfUIDlg::UpdateNotesState()
 	{
 		btTraceNotes_.EnableWindow(true);
 		std::wstring traceName = traces_[curSel];
-		traceNoteFilename_ = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + L".txt";
+		traceNoteFilename_ = GetTraceDir() + traceName + L".txt";
 		traceNotes_ = LoadFileAsText(traceNoteFilename_);
 		SetDlgItemText(IDC_TRACENOTES, traceNotes_.c_str());
 	}
@@ -1054,7 +1079,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		{
 			pContextMenu->SetDefaultItem(ID_TRACES_OPENTRACEINWPA);
 			traceFile = traces_[selIndex];
-			tracePath = GetTraceDir() + traceFile;
+			tracePath = GetTraceDir() + traceFile + L".etl";
 		}
 		else
 		{
@@ -1087,7 +1112,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 			case ID_TRACES_DELETETRACE:
 				if (AfxMessageBox((L"Are you sure you want to delete " + traceFile + L"?").c_str(), MB_YESNO) == IDYES)
 				{
-					std::wstring pattern = tracePath.substr(0, tracePath.size() - 4) + L".*";
+					std::wstring pattern = GetTraceDir() + traceFile + L".*";
 					if (DeleteFiles(*this, GetFileList(pattern, true)))
 					{
 						outputPrintf(L"\nFile deletion failed.\n");
@@ -1103,7 +1128,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				outputPrintf(L"\nCompressing all traces - this may take a while:\n");
 				for (auto traceName : traces_)
 				{
-					CompressTrace(GetTraceDir() + traceName);
+					CompressTrace(GetTraceDir() + traceName + L".etl");
 				}
 				outputPrintf(L"Finished compressing traces.\n");
 				break;
