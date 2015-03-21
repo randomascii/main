@@ -815,9 +815,17 @@ void CXperfUIDlg::OnCbnSelchangeInputtracing()
 
 void CXperfUIDlg::UpdateTraceList()
 {
-	const std::wstring tracePath = GetTraceDir() + L"\\*.etl";
+	std::wstring trimmedTraceName;
+	int curSel = btTraces_.GetCurSel();
+	if (curSel >= 0 && curSel < (int)traces_.size())
+	{
+		trimmedTraceName = traces_[curSel].substr(0, traces_[curSel].size() - 4);
+	}
 
-	auto tempTraces = GetFileList(tracePath);
+	auto tempTraces = GetFileList(GetTraceDir() + L"\\*.etl");
+	auto tempZips = GetFileList(GetTraceDir() + L"\\*.zip");
+	// Why can't I use += to concatenate these?
+	tempTraces.insert(tempTraces.end(), tempZips.begin(), tempZips.end());
 	std::sort(tempTraces.begin(), tempTraces.end());
 	// Function to stop the temporary traces from showing up.
 	auto ifInvalid = [](const std::wstring& name) { return name == L"kernel.etl" || name == L"user.etl" || name == L"heap.etl"; };
@@ -833,12 +841,26 @@ void CXperfUIDlg::UpdateTraceList()
 	// Todo: retain the current selection index.
 	while (btTraces_.GetCount())
 		btTraces_.DeleteString(0);
-	for (auto name : traces_)
+	for (int curIndex = 0; curIndex < (int)traces_.size(); ++curIndex)
 	{
+		const auto& name = traces_[curIndex];
 		// Trim off the .etl suffixes.
-		btTraces_.AddString(name.substr(0, name.size() - 4).c_str());
+		std::wstring trimmedName = name.substr(0, name.size() - 4);
+		btTraces_.AddString(trimmedName.c_str());
+		if (trimmedName == trimmedTraceName)
+		{
+			// We compare trimmed traceNames (thus ignoring extensions) so
+			// that if compressing traces changes the extension (from .etl
+			// to .zip) we won't lose our current selection.
+			curSel = curIndex;
+		}
 	}
+	if (curSel >= (int)traces_.size())
+		curSel = (int)traces_.size() - 1;
+	btTraces_.SetCurSel(curSel);
 	btTraces_.SetRedraw(TRUE);
+
+	UpdateNotesState();
 }
 
 LRESULT CXperfUIDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
@@ -914,21 +936,29 @@ void CXperfUIDlg::SaveNotesIfNeeded()
 	}
 }
 
-void CXperfUIDlg::OnLbnSelchangeTracelist()
+void CXperfUIDlg::UpdateNotesState()
 {
+	SaveNotesIfNeeded();
+
 	int curSel = btTraces_.GetCurSel();
 	if (curSel >= 0 && curSel < (int)traces_.size())
 	{
-		SaveNotesIfNeeded();
-
 		btTraceNotes_.EnableWindow(true);
 		std::wstring traceName = traces_[curSel];
-		std::wstring notesFilename = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + L".txt";
-		std::wstring notes = LoadFileAsText(notesFilename);
-		SetDlgItemText(IDC_TRACENOTES, notes.c_str());
-		traceNotes_ = notes;
-		traceNoteFilename_ = notesFilename;
+		traceNoteFilename_ = GetTraceDir() + traceName.substr(0, traceName.size() - 4) + L".txt";
+		traceNotes_ = LoadFileAsText(traceNoteFilename_);
+		SetDlgItemText(IDC_TRACENOTES, traceNotes_.c_str());
 	}
+	else
+	{
+		btTraceNotes_.EnableWindow(false);
+		SetDlgItemText(IDC_TRACENOTES, L"");
+	}
+}
+
+void CXperfUIDlg::OnLbnSelchangeTracelist()
+{
+	UpdateNotesState();
 }
 
 
@@ -1018,11 +1048,13 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 
 		CMenu *pContextMenu = PopupMenu.GetSubMenu(0);
 
+		std::wstring traceFile;
 		std::wstring tracePath;
 		if (selIndex >= 0)
 		{
 			pContextMenu->SetDefaultItem(ID_TRACES_OPENTRACEINWPA);
-			tracePath = GetTraceDir() + traces_[selIndex];
+			traceFile = traces_[selIndex];
+			tracePath = GetTraceDir() + traceFile;
 		}
 		else
 		{
@@ -1053,12 +1085,15 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				LaunchTraceViewer(tracePath);
 				break;
 			case ID_TRACES_DELETETRACE:
-				if (AfxMessageBox(L"Are you sure you want to delete this trace?", MB_YESNO) == IDYES)
+				if (AfxMessageBox((L"Are you sure you want to delete " + traceFile + L"?").c_str(), MB_YESNO) == IDYES)
 				{
-					if (DeleteOneFile(*this, tracePath))
+					std::wstring pattern = tracePath.substr(0, tracePath.size() - 4) + L".*";
+					if (DeleteFiles(*this, GetFileList(pattern, true)))
 					{
 						outputPrintf(L"\nFile deletion failed.\n");
 					}
+					// Record that the trace notes don't need saving, even if they have changed.
+					traceNoteFilename_ = L"";
 				}
 				break;
 			case ID_TRACES_COMPRESSTRACE:

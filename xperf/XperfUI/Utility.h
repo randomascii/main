@@ -5,7 +5,9 @@
 #include <string>
 
 std::vector<std::wstring> split(const std::wstring& s, char c);
-std::vector<std::wstring> GetFileList(const std::wstring& pattern);
+// If fullPaths == true then the names returned will be full Paths to the files. Otherwise
+// they will just be the file portions.
+std::vector<std::wstring> GetFileList(const std::wstring& pattern, bool fullPaths = false);
 
 // Load an ANSI or UTF-16 file into a wstring
 std::wstring LoadFileAsText(const std::wstring& fileName);
@@ -30,6 +32,7 @@ const wchar_t* GetFilePart(const std::wstring& path);
 const wchar_t* GetFileExt(const std::wstring& path);
 
 int DeleteOneFile(HWND hwnd, const std::wstring& path);
+int DeleteFiles(HWND hwnd, const std::vector<std::wstring>& paths);
 int64_t GetFileSize(const std::wstring& path);
 
 void SetClipboardText(const std::wstring& text);

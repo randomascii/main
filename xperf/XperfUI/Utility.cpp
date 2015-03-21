@@ -21,8 +21,17 @@ std::vector<std::wstring> split(const std::wstring& s, char c)
 	return result;
 }
 
-std::vector<std::wstring> GetFileList(const std::wstring& pattern)
+std::vector<std::wstring> GetFileList(const std::wstring& pattern, bool fullPaths)
 {
+	std::wstring directory;
+	if (fullPaths)
+	{
+		const wchar_t* pFilePart = GetFilePart(pattern);
+		if (pFilePart > pattern.c_str())
+		{
+			directory = pattern.substr(0, pFilePart - pattern.c_str());
+		}
+	}
 	WIN32_FIND_DATA findData;
 	HANDLE hFindFile = FindFirstFileEx(pattern.c_str(), FindExInfoStandard,
 				&findData, FindExSearchNameMatch, NULL, 0);
@@ -32,7 +41,7 @@ std::vector<std::wstring> GetFileList(const std::wstring& pattern)
 	{
 		do
 		{
-			result.push_back(findData.cFileName);
+			result.push_back(directory + findData.cFileName);
 		} while (FindNextFile(hFindFile, &findData));
 
 		FindClose(hFindFile);
@@ -170,10 +179,20 @@ const wchar_t* GetFileExt(const std::wstring& path)
 
 int DeleteOneFile(HWND hwnd, const std::wstring& path)
 {
+	std::vector<std::wstring> paths;
+	paths.push_back(path);
+	return DeleteFiles(hwnd, paths);
+}
+
+int DeleteFiles(HWND hwnd, const std::vector<std::wstring>& paths)
+{
 	std::vector<wchar_t> fileNames;
-	// Push the file name and its NULL terminator onto the vector.
-	fileNames.insert(fileNames.end(), path.c_str(), path.c_str() + path.size());
-	fileNames.push_back(0);
+	for (auto& path : paths)
+	{
+		// Push the file name and its NULL terminator onto the vector.
+		fileNames.insert(fileNames.end(), path.c_str(), path.c_str() + path.size());
+		fileNames.push_back(0);
+	}
 
 	// Double null-terminate.
 	fileNames.push_back(0);
