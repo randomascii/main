@@ -130,19 +130,6 @@ std::wstring GetEditControlText(HWND hwnd, int id)
 	return &buffer[0];
 }
 
-std::wstring GetListControlText(HWND hwnd, int id, int index)
-{
-	std::wstring result;
-	int length = SendDlgItemMessage(hwnd, id, LB_GETTEXTLEN, index, 0);
-	if (length == LB_ERR)
-		return result;
-	std::vector<wchar_t> buffer(length + 1);
-	SendDlgItemMessage(hwnd, id, LB_GETTEXT, index, (LPARAM)&buffer[0]);
-	// Double-verify that the buffer is null-terminated.
-	buffer[buffer.size() - 1] = 0;
-	return &buffer[0];
-}
-
 std::wstring AnsiToUnicode(const std::string& text)
 {
 	// Determine number of wide characters to be allocated for the

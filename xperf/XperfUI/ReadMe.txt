@@ -36,6 +36,7 @@ Trace list should let the user:
 - Copy the traces name/path to the clipboard
 - Run StripChromeSymbols.py
 Remove references to _T macro.
+Remove .etl extension from list of traces -- it adds no value and wastes space.
 
 
 

@@ -174,7 +174,7 @@ void CXperfUIDlg::SetSymbolPath()
 #pragma warning(suppress : 4996)
 	const char* symPath = getenv("_NT_SYMBOL_PATH");
 	if (!symPath)
-		(void)_putenv("_NT_SYMBOL_PATH=SRV*c:\\symbols*\\\\symsrv\\symbols;SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols");
+		(void)_putenv("_NT_SYMBOL_PATH=SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols;SRV*c:\\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com");
 #pragma warning(suppress : 4996)
 	const char* symCachePath = getenv("_NT_SYMCACHE_PATH");
 	if (!symCachePath)
@@ -829,7 +829,8 @@ void CXperfUIDlg::UpdateTraceList()
 		btTraces_.DeleteString(0);
 	for (auto name : traces_)
 	{
-		btTraces_.AddString(name.c_str());
+		// Trim off the .etl suffixes.
+		btTraces_.AddString(name.substr(0, name.size() - 4).c_str());
 	}
 	btTraces_.SetRedraw(TRUE);
 }
@@ -845,9 +846,10 @@ LRESULT CXperfUIDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
 void CXperfUIDlg::OnLbnDblclkTracelist()
 {
 	int selIndex = btTraces_.GetCurSel();
-	CString cStringTraceName;
-	btTraces_.GetText(selIndex, cStringTraceName);
-	std::wstring tracename = GetTraceDir() + GetListControlText(*this, IDC_TRACELIST, selIndex);
+	// This check shouldn't be necessary, but who knows?
+	if (selIndex < 0 || selIndex >= (int)traces_.size())
+		return;
+	std::wstring tracename = GetTraceDir() + traces_[selIndex];
 	LaunchTraceViewer(tracename);
 }
 
@@ -1014,7 +1016,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		if (selIndex >= 0)
 		{
 			pContextMenu->SetDefaultItem(ID_TRACES_OPENTRACEINWPA);
-			tracePath = GetTraceDir() + GetListControlText(*this, IDC_TRACELIST, selIndex);;
+			tracePath = GetTraceDir() + traces_[selIndex];
 		}
 		else
 		{

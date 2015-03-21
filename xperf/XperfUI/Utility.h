@@ -17,7 +17,6 @@ void CreateRegistryKey(HKEY root, const std::wstring& subkey, const std::wstring
 
 // Various functions to hack a UNICODE build into working.
 std::wstring GetEditControlText(HWND hwnd, int id);
-std::wstring GetListControlText(HWND hwnd, int id, int index);
 std::wstring AnsiToUnicode(const std::string& text);
 
 // Return a pointer to the character after the final '\' or final '.'
