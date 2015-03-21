@@ -174,7 +174,13 @@ void CXperfUIDlg::SetSymbolPath()
 #pragma warning(suppress : 4996)
 	const char* symPath = getenv("_NT_SYMBOL_PATH");
 	if (!symPath)
-		(void)_putenv("_NT_SYMBOL_PATH=SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols;SRV*c:\\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com");
+	{
+		const std::string symbolPath = "SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols;SRV*c:\\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com";
+		(void)_putenv(("_NT_SYMBOL_PATH=" + symbolPath).c_str());
+		outputPrintf(L"Setting _NT_SYMBOL_PATH to %s (Microsoft plus Chrome). "
+			L"Set _NT_SYMBOL_PATH yourself if you want different defaults.\n",
+			AnsiToUnicode(symbolPath).c_str());
+	}
 #pragma warning(suppress : 4996)
 	const char* symCachePath = getenv("_NT_SYMCACHE_PATH");
 	if (!symCachePath)
