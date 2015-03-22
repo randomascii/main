@@ -30,42 +30,18 @@ ChildProcess::ChildProcess(std::wstring exePath)
 
 ChildProcess::~ChildProcess()
 {
-	DWORD exitCode = 0;
+	WaitForCompletion();
 	if (hProcess_)
 	{
-		WaitForCompletion();
-		exitCode = GetExitCode();
+		DWORD exitCode = GetExitCode();
+		if (exitCode)
+			outputPrintf(L"Process exit code was %08x (%d)\n", exitCode, exitCode);
 		CloseHandle(hProcess_);
 	}
-
-	// Once the process is finished we have to close the stderr/stdout
-	// handles so that the listener thread will exit. We also have to
-	// close these if the process never started.
-	if (hStdError_ != INVALID_HANDLE_VALUE)
-		CloseHandle(hStdError_);
-	if (hStdOutput_ != INVALID_HANDLE_VALUE)
-		CloseHandle(hStdOutput_);
-
-	// Wait for the listener thread to exit.
-	if (hChildThread_)
-	{
-		WaitForSingleObject(hChildThread_, INFINITE);
-		CloseHandle(hChildThread_);
-	}
-
-	// Clean up.
-	if (hPipe_)
-		CloseHandle(hPipe_);
 	if (hOutputAvailable_)
+	{
 		CloseHandle(hOutputAvailable_);
-
-	// Now that the child thread has exited we can safely
-	// read from and print the process output. Acquire the lock
-	// for consistency.
-	CSingleLock locker(&outputLock_);
-	outputPrintf(L"%s", processOutput_.c_str());
-	if (exitCode)
-		outputPrintf(L"Process exit code was %08x (%d)\n", exitCode, exitCode);
+	}
 }
 
 bool ChildProcess::IsStillRunning()
@@ -178,18 +154,52 @@ DWORD ChildProcess::GetExitCode()
 
 void ChildProcess::WaitForCompletion()
 {
-	if (!hProcess_)
-		return;
-
-	// This looks like a busy loop, but it isn't. IsStillRunning()
-	// waits until the process exits or sends more output, so this
-	// is actually an idle loop.
-	while (IsStillRunning())
+	if (hProcess_)
 	{
-		std::wstring output = RemoveOutputText();
-		outputPrintf(L"%s", output.c_str());
+		// This looks like a busy loop, but it isn't. IsStillRunning()
+		// waits until the process exits or sends more output, so this
+		// is actually an idle loop.
+		while (IsStillRunning())
+		{
+			std::wstring output = RemoveOutputText();
+			outputPrintf(L"%s", output.c_str());
+		}
+		// This isn't technically needed, but removing it would make
+		// me nervous.
+		WaitForSingleObject(hProcess_, INFINITE);
 	}
-	// This isn't technically needed, but removing it would make
-	// me nervous.
-	WaitForSingleObject(hProcess_, INFINITE);
+
+	// Once the process is finished we have to close the stderr/stdout
+	// handles so that the listener thread will exit. We also have to
+	// close these if the process never started.
+	if (hStdError_ != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hStdError_);
+		hStdError_ = INVALID_HANDLE_VALUE;
+	}
+	if (hStdOutput_ != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hStdOutput_);
+		hStdOutput_ = INVALID_HANDLE_VALUE;
+	}
+
+	// Wait for the listener thread to exit.
+	if (hChildThread_)
+	{
+		WaitForSingleObject(hChildThread_, INFINITE);
+		CloseHandle(hChildThread_);
+		hChildThread_ = 0;
+	}
+
+	// Clean up.
+	if (hPipe_)
+	{
+		CloseHandle(hPipe_);
+		hPipe_ = 0;
+	}
+
+	// Now that the child thread has exited we can finally read
+	// the last of the child-process output.
+	std::wstring output = RemoveOutputText();
+	outputPrintf(L"%s", output.c_str());
 }

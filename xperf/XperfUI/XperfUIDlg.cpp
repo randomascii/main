@@ -628,7 +628,17 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 
 	bIsTracing_ = true;
 	UpdateEnabling();
-	outputPrintf(L"Tracing is started.\n");
+
+	child.WaitForCompletion();
+	DWORD exitCode = child.GetExitCode();
+	if (exitCode)
+	{
+		outputPrintf(L"Error starting tracing. Try stopping tracing and then starting it again?\n");
+	}
+	else
+	{
+		outputPrintf(L"Tracing is started.\n");
+	}
 }
 
 void CXperfUIDlg::StopTracing(bool bSaveTrace)
