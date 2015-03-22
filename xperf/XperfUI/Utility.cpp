@@ -74,7 +74,7 @@ std::wstring LoadFileAsText(const std::wstring& fileName)
 	data[length] = 0;
 	data[length+1] = 0;
 
-	const wchar_t bom = 0xFEFF; // Always write a byte order mark
+	const wchar_t bom = 0xFEFF;
 	if (memcmp(&bom, &data[0], sizeof(bom)) == 0)
 	{
 		// Assume UTF-16, strip bom, and return.
@@ -158,6 +158,65 @@ std::wstring AnsiToUnicode(const std::string& text)
 	}
 
 	return result;
+}
+
+// Get the next/previous dialog item (next/prev in window order and tab order) allowing
+// for disabled controls, invisible controls, and wrapping at the end of the tab order.
+
+static bool ControlOK(HWND win)
+{
+	if (!win)
+		return false;
+	if (!IsWindowEnabled(win))
+		return false;
+	if (!(GetWindowLong(win, GWL_STYLE) & WS_TABSTOP))
+		return false;
+	// You have to check for visibility of the parent window because during dialog
+	// creation the parent window is invisible, which renders the child windows
+	// all invisible - not good.
+	if (!IsWindowVisible(win) && IsWindowVisible(GetParent(win)))
+		return false;
+	return true;
+}
+
+static HWND GetNextDlgItem(HWND win, bool Wrap)
+{
+	HWND next = GetWindow(win, GW_HWNDNEXT);
+	while (next != win && !ControlOK(next))
+	{
+		if (next)
+			next = GetWindow(next, GW_HWNDNEXT);
+		else
+		{
+			if (Wrap)
+				next = GetWindow(win, GW_HWNDFIRST);
+			else
+				return 0;
+		}
+	}
+	assert(!Wrap || next);
+	return next;
+}
+
+void SmartEnableWindow(HWND Win, BOOL Enable)
+{
+	assert(Win);
+	if (!Enable)
+	{
+		HWND hasfocus = GetFocus();
+		bool FocusProblem = false;
+		HWND focuscopy;
+		for (focuscopy = hasfocus; focuscopy; focuscopy = (GetParent)(focuscopy))
+			if (focuscopy == Win)
+				FocusProblem = true;
+		if (FocusProblem)
+		{
+			HWND nextctrl = GetNextDlgItem(Win, true);
+			if (nextctrl)
+				SetFocus(nextctrl);
+		}
+	}
+	::EnableWindow(Win, Enable);
 }
 
 const wchar_t* GetFilePart(const std::wstring& path)

@@ -302,7 +302,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	btTracingMode_.SetCurSel(tracingMode_);
 
 	UpdateEnabling();
-	btTraceNotes_.EnableWindow(false); // This window always starts out disabled.
+	SmartEnableWindow(btTraceNotes_, false); // This window always starts out disabled.
 
 	// Don't change traceDir_ - the DirectoryMonitorThread has a pointer to it.
 	(void)CreateThread(nullptr, 0, DirectoryMonitorThread, const_cast<wchar_t*>(traceDir_.c_str()), 0, 0);
@@ -430,13 +430,13 @@ void CXperfUIDlg::DisablePagingExecutive()
 
 void CXperfUIDlg::UpdateEnabling()
 {
-	btStartTracing_.EnableWindow(!bIsTracing_);
-	btSaveTraceBuffers_.EnableWindow(bIsTracing_);
-	btStopTracing_.EnableWindow(bIsTracing_);
-	btTracingMode_.EnableWindow(!bIsTracing_);
+	SmartEnableWindow(btStartTracing_, !bIsTracing_);
+	SmartEnableWindow(btSaveTraceBuffers_, bIsTracing_);
+	SmartEnableWindow(btStopTracing_, bIsTracing_);
+	SmartEnableWindow(btTracingMode_, !bIsTracing_);
 
-	btSampledStacks_.EnableWindow(!bIsTracing_);
-	btCswitchStacks_.EnableWindow(!bIsTracing_);
+	SmartEnableWindow(btSampledStacks_, !bIsTracing_);
+	SmartEnableWindow(btCswitchStacks_, !bIsTracing_);
 }
 
 void CXperfUIDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -978,7 +978,7 @@ void CXperfUIDlg::UpdateNotesState()
 	int curSel = btTraces_.GetCurSel();
 	if (curSel >= 0 && curSel < (int)traces_.size())
 	{
-		btTraceNotes_.EnableWindow(true);
+		SmartEnableWindow(btTraceNotes_, true);
 		std::wstring traceName = traces_[curSel];
 		traceNoteFilename_ = GetTraceDir() + traceName + L".txt";
 		traceNotes_ = LoadFileAsText(traceNoteFilename_);
@@ -986,7 +986,7 @@ void CXperfUIDlg::UpdateNotesState()
 	}
 	else
 	{
-		btTraceNotes_.EnableWindow(false);
+		SmartEnableWindow(btTraceNotes_, false);
 		SetDlgItemText(IDC_TRACENOTES, L"");
 	}
 }

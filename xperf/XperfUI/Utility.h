@@ -17,9 +17,12 @@ void WriteTextAsFile(const std::wstring& fileName, const std::wstring& text);
 void SetRegistryDWORD(HKEY root, const std::wstring& subkey, const std::wstring& valueName, DWORD value);
 void CreateRegistryKey(HKEY root, const std::wstring& subkey, const std::wstring& newKey);
 
-// Various functions to hack a UNICODE build into working.
 std::wstring GetEditControlText(HWND hwnd, int id);
 std::wstring AnsiToUnicode(const std::string& text);
+// This function checks to see whether a control has focus before
+// disabling it. If it does have focus then it moves the focus, to
+// avoid breaking keyboard mnemonics.
+void SmartEnableWindow(HWND Win, BOOL Enable);
 
 // Return a pointer to the character after the final '\' or final '.'
 // in the file part of a path.

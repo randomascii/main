@@ -37,38 +37,39 @@ Trace list should let the user:
 - Run StripChromeSymbols.py
 Remove references to _T macro.
 Remove .etl extension from list of traces -- it adds no value and wastes space.
+Make sure trace notes are disabled when no trace is selected, including when
+traces are added or deleted.
+Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
+Error checking -- checking for failures to start or stop tracing.
 
 
 
 Most important tasks:
 Copy over startup profile on first-run, and subsequent runs?
 Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
-
+Add compatibility manifest up to Windows 8.1
+Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
 Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
-
-To-do eventually:
-Error checking -- checking for failures to start or stop tracing.
-Make sure trace notes are disabled when no trace is selected, including when
-traces are added or deleted.
-Disable compress options (checkbox and menu) for Windows 7 and below.
-Allow configuring which symbols should be stripped.
-Configure a maximum time to trace for to avoid infinitely long traces.
-Transparent compression/decompression into .zip files.
-CPU frequency monitoring.
-Have a button to copy the recommended (or one of several recommended) startup profiles.
-Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
-Disable ESC as a way to close XperfUI.
 Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
 option for stacks on user events, option for DX tracing.
-Trace list should let the user:
-- Rename traces (and associated text file)
-- Run arbitrary scripts on all traces
+
+To-do eventually:
+Disable compress options (checkbox and menu) for Windows 7 and below.
+Transparent compression/decompression into .zip files.
+Have a button to copy the recommended (or one of several recommended) startup profiles. Perhaps
+a first-run configuration dialog?
+Disable ESC as a way to close XperfUI.
+Resize output window as well when sizing the window, just a bit.
 Code cleanup:
 - getenv wrapper
 - ordering code sanely
 - moving more code to separate functions/files
-Have xperftemptracedir default to %temp%?
-Add compatibility manifest up to Windows 8.1
-Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
+
+Unimportant:
+Allow configuring which symbols should be stripped.
+Configure a maximum time to trace for to avoid infinitely long traces.
+CPU frequency monitoring.
+Trace list should let the user:
+- Run arbitrary scripts on all traces
