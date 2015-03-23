@@ -134,6 +134,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_TRACELIST, btTraces_);
 	DDX_Control(pDX, IDC_TRACENOTES, btTraceNotes_);
 	DDX_Control(pDX, IDC_OUTPUT, btOutput_);
+	DDX_Control(pDX, IDC_TRACENAMEEDIT, btTraceNameEdit_);
 
 	CDialogEx::DoDataExchange(pDX);
 }
@@ -162,6 +163,7 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
 	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
 	ON_WM_CONTEXTMENU()
+	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::OnEnKillfocusTracenameedit)
 END_MESSAGE_MAP()
 
 
@@ -961,7 +963,7 @@ void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
 void CXperfUIDlg::SaveNotesIfNeeded()
 {
 	// Get the currently selected text, which might have been edited.
-	std::wstring editedNotes = GetEditControlText(*this, IDC_TRACENOTES);
+	std::wstring editedNotes = GetEditControlText(btTraceNotes_);
 	if (editedNotes != traceNotes_)
 	{
 		if (!traceNoteFilename_.empty())
@@ -1099,7 +1101,9 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 			{
 				ID_TRACES_OPENTRACEINWPA,
 				ID_TRACES_DELETETRACE,
+				ID_TRACES_RENAMETRACE,
 				ID_TRACES_COMPRESSTRACE,
+				ID_TRACES_ZIPCOMPRESSTRACE,
 				//ID_TRACES_COMPRESSTRACES,
 				//ID_TRACES_BROWSEFOLDER,
 				ID_TRACES_STRIPCHROMESYMBOLS,
@@ -1131,8 +1135,14 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 					traceNoteFilename_ = L"";
 				}
 				break;
+			case ID_TRACES_RENAMETRACE:
+				StartRenameTrace();
+				break;
 			case ID_TRACES_COMPRESSTRACE:
 				CompressTrace(tracePath);
+				break;
+			case ID_TRACES_ZIPCOMPRESSTRACE:
+				AfxMessageBox(L"Not implemented yet.");
 				break;
 			case ID_TRACES_COMPRESSTRACES:
 				outputPrintf(L"\nCompressing all traces - this may take a while:\n");
@@ -1141,6 +1151,9 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 					CompressTrace(GetTraceDir() + traceName + L".etl");
 				}
 				outputPrintf(L"Finished compressing traces.\n");
+				break;
+			case ID_TRACES_ZIPCOMPRESSALLTRACES:
+				AfxMessageBox(L"Not implemented yet.");
 				break;
 			case ID_TRACES_BROWSEFOLDER:
 				ShellExecute(NULL, L"open", GetTraceDir().c_str(), NULL, GetTraceDir().c_str(), SW_SHOW);
@@ -1220,6 +1233,43 @@ void CXperfUIDlg::StripChromeSymbols(const std::wstring& traceFilename)
 				child.Run(bShowCommands_, L"python.exe" + args);
 				break;
 			}
+		}
+	}
+}
+
+
+void CXperfUIDlg::StartRenameTrace()
+{
+	int curSel = btTraces_.GetCurSel();
+	if (curSel >= 0 && curSel < (int)traces_.size())
+	{
+		std::wstring traceName = traces_[curSel];
+		if (traceName.size() >= kPrefixLength)
+		{
+			std::wstring editablePart = traceName.substr(kPrefixLength, traceName.size());
+			btTraceNameEdit_.ShowWindow(SW_SHOWNORMAL);
+			btTraceNameEdit_.SetFocus();
+			btTraceNameEdit_.SetWindowTextW(editablePart.c_str());
+			preRenameTraceName_ = traceName;
+		}
+	}
+}
+
+
+void CXperfUIDlg::OnEnKillfocusTracenameedit()
+{
+	std::wstring newText = GetEditControlText(btTraceNameEdit_);
+	std::wstring newTraceName = preRenameTraceName_.substr(0, kPrefixLength) + newText;
+	btTraceNameEdit_.ShowWindow(SW_HIDE);
+
+	if (newTraceName != preRenameTraceName_)
+	{
+		auto oldNames = GetFileList(GetTraceDir() + preRenameTraceName_ + L".*");
+		for (auto oldName : oldNames)
+		{
+			std::wstring extension = GetFileExt(oldName);;
+			std::wstring newName = oldName.substr(0, kPrefixLength) + newText + extension;
+			MoveFile((GetTraceDir() + oldName).c_str(), (GetTraceDir() + newName).c_str());
 		}
 	}
 }

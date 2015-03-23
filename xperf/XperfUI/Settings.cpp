@@ -48,7 +48,7 @@ BOOL CSettings::OnInitDialog()
 
 void CSettings::OnOK()
 {
-	heapTracingExe_ = GetEditControlText(*this, IDC_HEAPEXE);
+	heapTracingExe_ = GetEditControlText(btHeapTracingExe_);
 	if (heapTracingExe_.size() <= 4 || heapTracingExe_.substr(heapTracingExe_.size() - 4, heapTracingExe_.size()) != L".exe")
 	{
 		AfxMessageBox(L"The heap-profiled process name must end in .exe");

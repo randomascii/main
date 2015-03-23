@@ -41,6 +41,7 @@ Make sure trace notes are disabled when no trace is selected, including when
 traces are added or deleted.
 Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
 Error checking -- checking for failures to start or stop tracing.
+Renaming of traces and associated files.
 
 
 
@@ -49,7 +50,6 @@ Copy over startup profile on first-run, and subsequent runs?
 Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
-Renaming of traces and associated files.
 Add OS specific checks for what user providers to enable.
 Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
@@ -66,6 +66,7 @@ Code cleanup:
 - getenv wrapper
 - ordering code sanely
 - moving more code to separate functions/files
+Grow the output window as well as the trace window when sizing the dialog?
 
 Unimportant:
 Allow configuring which symbols should be stripped.

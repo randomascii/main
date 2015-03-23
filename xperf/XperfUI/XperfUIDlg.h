@@ -53,6 +53,15 @@ protected:
 	CButton btFastSampling_;
 	CButton btShowCommands_;
 
+	CEdit btTraceNameEdit_;
+	std::wstring preRenameTraceName_;
+	// Typical trace names look like this:
+	// 2015-03-21_08-52-11_Bruce
+	// The first 19 characters are the date and time.
+	// The remainder are eligible for editin.
+	const size_t kPrefixLength = 19;
+	void StartRenameTrace();
+
 	KeyLoggerState InputTracing_ = kKeyLoggerAnonymized;
 	CComboBox btInputTracing_;
 	CStatic btInputTracingLabel_;
@@ -152,4 +161,5 @@ protected:
 	afx_msg void OnCbnSelchangeTracingmode();
 	afx_msg void OnBnClickedSettings();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+	afx_msg void OnEnKillfocusTracenameedit();
 };

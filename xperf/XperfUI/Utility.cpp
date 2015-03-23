@@ -125,15 +125,12 @@ void CreateRegistryKey(HKEY root, const std::wstring& subkey, const std::wstring
 	}
 }
 
-std::wstring GetEditControlText(HWND hwnd, int id)
+std::wstring GetEditControlText(HWND hEdit)
 {
 	std::wstring result;
-	HWND hEdit = GetDlgItem(hwnd, id);
-	if (!hEdit)
-		return result;
 	int length = GetWindowTextLength(hEdit);
 	std::vector<wchar_t> buffer(length + 1);
-	GetDlgItemText(hwnd, id, &buffer[0], buffer.size());
+	GetWindowText(hEdit, &buffer[0], buffer.size());
 	// Double-verify that the buffer is null-terminated.
 	buffer[buffer.size() - 1] = 0;
 	return &buffer[0];
@@ -224,7 +221,8 @@ const wchar_t* GetFilePart(const std::wstring& path)
 	const wchar_t* pLastSlash = wcsrchr(path.c_str(), '\\');
 	if (pLastSlash)
 		return pLastSlash + 1;
-	return path.c_str() + path.size();
+	// If there's no slash then the file part is the entire string.
+	return path.c_str();
 }
 
 const wchar_t* GetFileExt(const std::wstring& path)
@@ -232,7 +230,7 @@ const wchar_t* GetFileExt(const std::wstring& path)
 	const wchar_t* pFilePart = GetFilePart(path);
 	const wchar_t* pLastPeriod = wcsrchr(pFilePart, '.');
 	if (pLastPeriod)
-		return pLastPeriod + 1;
+		return pLastPeriod;
 	return pFilePart + wcslen(pFilePart);
 }
 

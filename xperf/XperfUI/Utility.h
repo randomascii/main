@@ -17,15 +17,15 @@ void WriteTextAsFile(const std::wstring& fileName, const std::wstring& text);
 void SetRegistryDWORD(HKEY root, const std::wstring& subkey, const std::wstring& valueName, DWORD value);
 void CreateRegistryKey(HKEY root, const std::wstring& subkey, const std::wstring& newKey);
 
-std::wstring GetEditControlText(HWND hwnd, int id);
+std::wstring GetEditControlText(HWND hwnd);
 std::wstring AnsiToUnicode(const std::string& text);
 // This function checks to see whether a control has focus before
 // disabling it. If it does have focus then it moves the focus, to
 // avoid breaking keyboard mnemonics.
 void SmartEnableWindow(HWND Win, BOOL Enable);
 
-// Return a pointer to the character after the final '\' or final '.'
-// in the file part of a path.
+// Return a pointer to the character after the final '\' or to the
+// final '.' in the file part of a path.
 // These return a pointer to the appropriate place in the passed in string,
 // so it must remain valid. If the last character is '\' then GetFilePart
 // will point at the NUL terminator. If there is no '.' after the last '\'
