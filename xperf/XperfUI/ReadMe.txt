@@ -42,6 +42,8 @@ traces are added or deleted.
 Move focus away from buttons before they are disabled, as when starting a trace with Alt+T.
 Error checking -- checking for failures to start or stop tracing.
 Renaming of traces and associated files.
+Need keyboard accelerators for F2 (start renaming), enter (stop renaming),
+and probably ESC (to stop it from closing the dialog).
 
 
 
@@ -54,19 +56,20 @@ Add OS specific checks for what user providers to enable.
 Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
 option for stacks on user events, option for DX tracing.
+Place the trace-name editing box appropriately.
 
 To-do eventually:
 Disable compress options (checkbox and menu) for Windows 7 and below.
-Transparent compression/decompression into .zip files.
+Transparent compression/decompression into .zip files. Note that if a trace is
+compressed and then renamed that the trace inside the .zip file will be wrong - it
+should be fixed up when the renaming happens.
 Have a button to copy the recommended (or one of several recommended) startup profiles. Perhaps
 a first-run configuration dialog?
-Disable ESC as a way to close XperfUI.
 Resize output window as well when sizing the window, just a bit.
 Code cleanup:
 - getenv wrapper
 - ordering code sanely
 - moving more code to separate functions/files
-Grow the output window as well as the trace window when sizing the dialog?
 
 Unimportant:
 Allow configuring which symbols should be stripped.

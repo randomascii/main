@@ -164,6 +164,8 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
 	ON_WM_CONTEXTMENU()
 	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::OnEnKillfocusTracenameedit)
+	ON_BN_CLICKED(ID_RENAME, &CXperfUIDlg::OnRenameKey)
+	ON_BN_CLICKED(ID_ENDRENAME, &CXperfUIDlg::OnEndRenameKey)
 END_MESSAGE_MAP()
 
 
@@ -234,6 +236,9 @@ DWORD __stdcall DirectoryMonitorThread(LPVOID voidTraceDir)
 BOOL CXperfUIDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	// Load the F2 (rename) and ESC (silently swallow ESC) accelerators
+	hAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATORS));
 
 	CRect windowRect;
 	GetWindowRect(&windowRect);
@@ -357,6 +362,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 	}
 
 	SetHeapTracing(false);
+	// Start the input logging thread with the current settings.
+	SetKeyloggingState(InputTracing_);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -1022,7 +1029,22 @@ LRESULT CXperfUIDlg::OnHotKey(WPARAM wParam, LPARAM lParam)
 BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
 {
 	toolTip_.RelayEvent(pMsg);
-
+	// Handle always-present keyboard shortcuts.
+	if (hAccelTable_)
+	{
+		if (::TranslateAccelerator(m_hWnd, hAccelTable_, pMsg))
+		{
+			return TRUE;
+		}
+	}
+	// This accelerator table is only available when renaming.
+	if (hRenameAccelTable_)
+	{
+		if (::TranslateAccelerator(m_hWnd, hRenameAccelTable_, pMsg))
+		{
+			return TRUE;
+		}
+	}
 	return CDialog::PreTranslateMessage(pMsg);
 }
 
@@ -1240,6 +1262,7 @@ void CXperfUIDlg::StripChromeSymbols(const std::wstring& traceFilename)
 
 void CXperfUIDlg::StartRenameTrace()
 {
+	SaveNotesIfNeeded();
 	int curSel = btTraces_.GetCurSel();
 	if (curSel >= 0 && curSel < (int)traces_.size())
 	{
@@ -1251,13 +1274,25 @@ void CXperfUIDlg::StartRenameTrace()
 			btTraceNameEdit_.SetFocus();
 			btTraceNameEdit_.SetWindowTextW(editablePart.c_str());
 			preRenameTraceName_ = traceName;
+			// Temporarily trap the ENTER key.
+			hRenameAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_RENAMEACCELERATORS));
 		}
 	}
+}
+
+void CXperfUIDlg::OnRenameKey()
+{
+	if (!btTraceNameEdit_.IsWindowVisible())
+		StartRenameTrace();
 }
 
 
 void CXperfUIDlg::OnEnKillfocusTracenameedit()
 {
+	// Make sure this doesn't get double-called.
+	if (!btTraceNameEdit_.IsWindowVisible())
+		return;
+	hRenameAccelTable_ = NULL;
 	std::wstring newText = GetEditControlText(btTraceNameEdit_);
 	std::wstring newTraceName = preRenameTraceName_.substr(0, kPrefixLength) + newText;
 	btTraceNameEdit_.ShowWindow(SW_HIDE);
@@ -1265,11 +1300,42 @@ void CXperfUIDlg::OnEnKillfocusTracenameedit()
 	if (newTraceName != preRenameTraceName_)
 	{
 		auto oldNames = GetFileList(GetTraceDir() + preRenameTraceName_ + L".*");
+		std::vector<std::pair<std::wstring, std::wstring>> renamed;
+		std::wstring failedSource;
 		for (auto oldName : oldNames)
 		{
 			std::wstring extension = GetFileExt(oldName);;
 			std::wstring newName = oldName.substr(0, kPrefixLength) + newText + extension;
-			MoveFile((GetTraceDir() + oldName).c_str(), (GetTraceDir() + newName).c_str());
+			BOOL result = MoveFile((GetTraceDir() + oldName).c_str(), (GetTraceDir() + newName).c_str());
+			if (!result)
+			{
+				failedSource = oldName;
+				break;
+			}
+			renamed.push_back(std::pair<std::wstring, std::wstring>(oldName, newName));
+		}
+		// If any of the renaming steps fail then undo the renames that
+		// succeeded. This should usually fail. If not, there isn't much that
+		// can be done anyway.
+		if (failedSource.empty())
+		{
+			// Record that the notes don't need saving -- the
+			// traceNoteFilename_ is out of date now. It will be updated
+			// when the directory notification fires.
+			traceNoteFilename_ = L"";
+		}
+		else
+		{
+			for (auto& renamePair : renamed)
+			{
+				(void)MoveFile((GetTraceDir() + renamePair.second).c_str(), (GetTraceDir() + renamePair.first).c_str());
+			}
+			AfxMessageBox((L"Error renaming file '" + failedSource + L"'.").c_str());
 		}
 	}
+}
+
+void CXperfUIDlg::OnEndRenameKey()
+{
+	OnEnKillfocusTracenameedit();
 }

@@ -25,7 +25,8 @@ CSettings::~CSettings()
 void CSettings::DoDataExchange(CDataExchange* pDX)
 {
 	DDX_Control(pDX, IDC_HEAPEXE, btHeapTracingExe_);
-	DDX_Control(pDX, IDC_TRACEDIR, btTraceDir_);
+	DDX_Control(pDX, IDC_EXTRAPROVIDERS, btExtraProviders_);
+	DDX_Control(pDX, IDC_EXTRASTACKWALKS, btExtraStackwalks_);
 	DDX_Control(pDX, IDC_BUFFERSIZES, btBufferSizes_);
 
 	CDialogEx::DoDataExchange(pDX);
@@ -40,7 +41,8 @@ BOOL CSettings::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	SetDlgItemText(IDC_HEAPEXE, heapTracingExe_.c_str());
-	btTraceDir_.EnableWindow(FALSE);
+	btExtraProviders_.EnableWindow(FALSE);
+	btExtraStackwalks_.EnableWindow(FALSE);
 	btBufferSizes_.EnableWindow(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control

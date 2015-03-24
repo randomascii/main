@@ -88,6 +88,9 @@ protected:
 	std::wstring output_;
 	CEdit btOutput_;
 
+	HACCEL hAccelTable_ = NULL;
+	HACCEL hRenameAccelTable_ = NULL;
+
 	void StopTracing(bool bSaveTrace);
 
 	std::wstring GetWPTDir() const;
@@ -162,4 +165,6 @@ protected:
 	afx_msg void OnBnClickedSettings();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg void OnEnKillfocusTracenameedit();
+	afx_msg void OnRenameKey();
+	afx_msg void OnEndRenameKey();
 };

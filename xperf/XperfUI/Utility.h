@@ -34,6 +34,8 @@ void SmartEnableWindow(HWND Win, BOOL Enable);
 const wchar_t* GetFilePart(const std::wstring& path);
 const wchar_t* GetFileExt(const std::wstring& path);
 
+// Delete one or more files using the shell so that errors will bring up
+// a dialog and deleted files will go to the recycle bin.
 int DeleteOneFile(HWND hwnd, const std::wstring& path);
 int DeleteFiles(HWND hwnd, const std::vector<std::wstring>& paths);
 int64_t GetFileSize(const std::wstring& path);

@@ -19,7 +19,8 @@ public:
 
 protected:
 	CEdit btHeapTracingExe_;
-	CEdit btTraceDir_;
+	CEdit btExtraProviders_;
+	CEdit btExtraStackwalks_;
 	CComboBox btBufferSizes_;
 
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
