@@ -55,7 +55,7 @@ Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/e
 Add OS specific checks for what user providers to enable.
 Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
-option for stacks on user events, option for DX tracing.
+option for stacks on user events, option for DX tracing, option for copying startup profile(s).
 Place the trace-name editing box appropriately.
 
 To-do eventually:
