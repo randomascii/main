@@ -57,6 +57,7 @@ Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
 option for stacks on user events, option for DX tracing.
 Place the trace-name editing box appropriately.
+Support for 32-bit operating systems, or at least exit cleanly with a warning.
 
 To-do eventually:
 Disable compress options (checkbox and menu) for Windows 7 and below.
