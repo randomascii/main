@@ -287,8 +287,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 	SetSymbolPath();
 
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
+	// Set the icon for this dialog. The framework does this automatically
+	// when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
@@ -365,7 +365,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	// Start the input logging thread with the current settings.
 	SetKeyloggingState(InputTracing_);
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE; // return TRUE unless you set the focus to a control
 }
 
 std::wstring CXperfUIDlg::GetDirectory(const wchar_t* env, const std::wstring& default)
@@ -412,12 +412,57 @@ void CXperfUIDlg::RegisterProviders()
 	GetSystemDirectory(systemDir, ARRAYSIZE(systemDir));
 	std::wstring wevtPath = systemDir + std::wstring(L"\\wevtutil.exe");
 
+	// Register ETWProviders.dll
 	for (int pass = 0; pass < 2; ++pass)
 	{
 		ChildProcess child(wevtPath);
 		std::wstring args = pass ? L" im" : L" um";
 		args += L" \"" + GetExeDir() + L"etwproviders.man\"";
 		child.Run(bShowCommands_, L"wevtutil.exe" + args);
+	}
+
+	// Register chrome.dll
+	{
+		std::wstring manifestSuffix = L"\\base\\trace_event\\etw_manifest\\chrome_events.man";
+		std::wstring dllSuffix = L"\\out\\Release\\chrome.dll";
+		std::wstring chromeBase1 = L"d:\\src\\chromium\\src";
+		std::wstring chromeBase2 = L"d:\\projects\\chromium\\src";
+		std::wstring chromeBase = chromeBase1;
+		if (!PathFileExists((chromeBase + manifestSuffix).c_str()))
+			chromeBase = L"d:\\projects\\chromium\\src";
+		if (!PathFileExists((chromeBase + manifestSuffix).c_str()))
+		{
+			outputPrintf(L"Couldn't find %s in %s or %s\n", manifestSuffix.c_str(), chromeBase1.c_str(), chromeBase2.c_str());
+			outputPrintf(L"Chrome providers will not be recorded.\n");
+			return;
+		}
+		if (!PathFileExists((chromeBase + dllSuffix).c_str()))
+		{
+			outputPrintf(L"Couldn't find %s in %s\n", dllSuffix.c_str(), chromeBase.c_str());
+			outputPrintf(L"Chrome providers will not be recorded.\n");
+			return;
+		}
+		for (int pass = 0; pass < 2; ++pass)
+		{
+			ChildProcess child(wevtPath);
+			std::wstring args = pass ? L" im" : L" um";
+			args += L" \"" + chromeBase + manifestSuffix + L"\"";
+			if (pass)
+			{
+				std::wstring dllPath = chromeBase + dllSuffix;
+				args += L" \"/mf:" + dllPath + L"\" \"/rf:" + dllPath + L"\"";
+			}
+			child.Run(bShowCommands_, L"wevtutil.exe" + args);
+			if (pass)
+			{
+				DWORD exitCode = child.GetExitCode();
+				if (!exitCode)
+				{
+					useChromeProviders_ = true;
+					outputPrintf(L"Chrome providers registered. Chrome providers will be recorded.\n");
+				}
+			}
+		}
 	}
 }
 
@@ -462,8 +507,8 @@ void CXperfUIDlg::OnSysCommand(UINT nID, LPARAM lParam)
 }
 
 // If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
-//  this is automatically done for you by the framework.
+// to draw the icon. For MFC applications using the document/view model,
+// this is automatically done for you by the framework.
 
 void CXperfUIDlg::OnPaint()
 {
@@ -491,7 +536,7 @@ void CXperfUIDlg::OnPaint()
 }
 
 // The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
+// the minimized window.
 HCURSOR CXperfUIDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -617,6 +662,8 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	std::wstring kernelArgs = L" -start " + GetKernelLogger() + L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
 	std::wstring userProviders = L" -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
+	if (useChromeProviders_)
+		userProviders += L"+Chrome";
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
 	std::wstring userFile = L" -f \"" + GetUserFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
@@ -638,7 +685,6 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	bIsTracing_ = true;
 	UpdateEnabling();
 
-	child.WaitForCompletion();
 	DWORD exitCode = child.GetExitCode();
 	if (exitCode)
 	{
@@ -1203,7 +1249,6 @@ void CXperfUIDlg::CompressTrace(const std::wstring& tracePath)
 		ChildProcess child(GetXperfPath());
 		std::wstring args = L" -merge \"" + tracePath + L"\" \"" + compressedPath + L"\" -compress";
 		child.Run(bShowCommands_, L"xperf.exe" + args);
-		child.WaitForCompletion();
 		exitCode = child.GetExitCode();
 	}
 

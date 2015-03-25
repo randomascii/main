@@ -62,6 +62,8 @@ protected:
 	const size_t kPrefixLength = 19;
 	void StartRenameTrace();
 
+	bool useChromeProviders_ = false;
+
 	KeyLoggerState InputTracing_ = kKeyLoggerAnonymized;
 	CComboBox btInputTracing_;
 	CStatic btInputTracingLabel_;

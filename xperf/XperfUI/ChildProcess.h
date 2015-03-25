@@ -13,8 +13,7 @@ public:
 
 	// This can be called even if the process doesn't start, but
 	// it will return zero. If the process is still running it
-	// will return STILL_ACTIVE, but don't call it in a loop
-	// waiting for a non-STILL_ACTIVE result!
+	// will wait until the process returns and then get the exit code.
 	DWORD GetExitCode();
 
 	// This can be called even if the process doesn't start, but

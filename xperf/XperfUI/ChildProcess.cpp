@@ -30,7 +30,6 @@ ChildProcess::ChildProcess(std::wstring exePath)
 
 ChildProcess::~ChildProcess()
 {
-	WaitForCompletion();
 	if (hProcess_)
 	{
 		DWORD exitCode = GetExitCode();
@@ -72,7 +71,8 @@ DWORD WINAPI ChildProcess::ListenerThreadStatic(LPVOID pVoidThis)
 
 DWORD ChildProcess::ListenerThread()
 {
-	if (ConnectNamedPipe(hPipe_, NULL) || GetLastError() == ERROR_PIPE_CONNECTED)   // wait for someone to connect to the pipe
+	// wait for someone to connect to the pipe
+	if (ConnectNamedPipe(hPipe_, NULL) || GetLastError() == ERROR_PIPE_CONNECTED)
 	{
 		// Acquire the lock while writing to processOutput_
 		char buffer[1024];
@@ -147,6 +147,8 @@ DWORD ChildProcess::GetExitCode()
 {
 	if (!hProcess_)
 		return 0;
+	// Don't allow getting the exit code unless the process has exited.
+	WaitForCompletion();
 	DWORD result;
 	(void)GetExitCodeProcess(hProcess_, &result);
 	return result;
@@ -201,5 +203,6 @@ void ChildProcess::WaitForCompletion()
 	// Now that the child thread has exited we can finally read
 	// the last of the child-process output.
 	std::wstring output = RemoveOutputText();
-	outputPrintf(L"%s", output.c_str());
+	if (!output.empty())
+		outputPrintf(L"%s", output.c_str());
 }
