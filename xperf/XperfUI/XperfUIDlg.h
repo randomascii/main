@@ -169,4 +169,5 @@ protected:
 	afx_msg void OnEnKillfocusTracenameedit();
 	afx_msg void OnRenameKey();
 	afx_msg void OnEndRenameKey();
+	afx_msg void OnEscKey();
 };

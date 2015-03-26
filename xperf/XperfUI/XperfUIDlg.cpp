@@ -166,6 +166,7 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::OnEnKillfocusTracenameedit)
 	ON_BN_CLICKED(ID_RENAME, &CXperfUIDlg::OnRenameKey)
 	ON_BN_CLICKED(ID_ENDRENAME, &CXperfUIDlg::OnEndRenameKey)
+	ON_BN_CLICKED(ID_ESCKEY, &CXperfUIDlg::OnEscKey)
 END_MESSAGE_MAP()
 
 
@@ -1383,4 +1384,14 @@ void CXperfUIDlg::OnEnKillfocusTracenameedit()
 void CXperfUIDlg::OnEndRenameKey()
 {
 	OnEnKillfocusTracenameedit();
+}
+
+void CXperfUIDlg::OnEscKey()
+{
+	if (!btTraceNameEdit_.IsWindowVisible())
+		return;
+	// If the trace name edit window is visible then hide it.
+	// That's it.
+	hRenameAccelTable_ = NULL;
+	btTraceNameEdit_.ShowWindow(SW_HIDE);
 }
