@@ -42,7 +42,7 @@ LRESULT CALLBACK LowLevelKeyboardHook(int nCode, WPARAM wParam, LPARAM lParam)
 			else if (code >= VK_NUMPAD0 && code <= VK_NUMPAD9)
 			{
 				if (!g_LogKeyboardDetails)
-					code = ' ';
+					code = '0';
 				sprintf_s(buffer, "%c", '0' + (code - VK_NUMPAD0));
 			}
 			else if (code >= VK_F1 && code <= VK_F12)
@@ -104,7 +104,7 @@ LRESULT CALLBACK LowLevelKeyboardHook(int nCode, WPARAM wParam, LPARAM lParam)
 					break;
 				}
 			}
-			ETWKeyDown(pKbdLLHook->vkCode, pLabel, 0, 0);
+			ETWKeyDown(code, pLabel, 0, 0);
 		}
 	}
 
