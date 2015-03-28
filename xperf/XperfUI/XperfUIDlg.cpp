@@ -389,21 +389,15 @@ void CXperfUIDlg::RegisterProviders()
 	// Register chrome.dll
 	{
 		std::wstring manifestPath = GetExeDir() + L"chrome_events_win.man";
-		std::wstring dllSuffix = L"\\out\\Release\\chrome.dll";
-		std::wstring chromeBase1 = L"d:\\src\\chromium\\src";
-		std::wstring chromeBase2 = L"d:\\projects\\chromium\\src";
+		std::wstring dllSuffix = L"chrome.dll";
+		std::wstring chromeBase1 = L"d:\\src\\chromium\\src\\out\\Release\\";
+		std::wstring chromeBase2 = L"d:\\projects\\chromium\\src\\out\\Release\\";
 		std::wstring chromeBase = chromeBase1;
 		if (!PathFileExists((chromeBase + dllSuffix).c_str()))
-			chromeBase = L"d:\\projects\\chromium\\src";
+			chromeBase = chromeBase2;
 		if (!PathFileExists((chromeBase + dllSuffix).c_str()))
 		{
 			outputPrintf(L"Couldn't find %s in %s or %s\n", dllSuffix.c_str(), chromeBase1.c_str(), chromeBase2.c_str());
-			outputPrintf(L"Chrome providers will not be recorded.\n");
-			return;
-		}
-		if (!PathFileExists((chromeBase + dllSuffix).c_str()))
-		{
-			outputPrintf(L"Couldn't find %s in %s\n", dllSuffix.c_str(), chromeBase.c_str());
 			outputPrintf(L"Chrome providers will not be recorded.\n");
 			return;
 		}
@@ -417,7 +411,7 @@ void CXperfUIDlg::RegisterProviders()
 				std::wstring dllPath = chromeBase + dllSuffix;
 				args += L" \"/mf:" + dllPath + L"\" \"/rf:" + dllPath + L"\"";
 			}
-			child.Run(true, L"wevtutil.exe" + args);
+			child.Run(bShowCommands_, L"wevtutil.exe" + args);
 			if (pass)
 			{
 				DWORD exitCode = child.GetExitCode();
@@ -1128,6 +1122,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				ID_TRACES_COMPRESSTRACE,
 				ID_TRACES_ZIPCOMPRESSTRACE,
 				//ID_TRACES_COMPRESSTRACES,
+				//ID_TRACES_ZIPCOMPRESSALLTRACES,
 				//ID_TRACES_BROWSEFOLDER,
 				ID_TRACES_STRIPCHROMESYMBOLS,
 				ID_TRACES_TRACEPATHTOCLIPBOARD,
