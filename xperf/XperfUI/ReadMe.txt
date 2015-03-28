@@ -52,16 +52,17 @@ Copy over startup profile on first-run, and subsequent runs?
 Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
-Add OS specific checks for what user providers to enable.
+Add OS specific checks for what user providers to enable, compression options, etc.
+Add DX provider.
+Support for 32-bit operating systems, or at least exit cleanly with a warning.
 Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
 option for stacks on user events, option for DX tracing, option for copying startup profile(s).
-Place the trace-name editing box appropriately.
-Support for 32-bit operating systems, or at least exit cleanly with a warning.
 Detect and handle trace files that lack the date component -- synthesize?
-Give the user a chance to rename trace before launching viewer
 
 To-do eventually:
+Place the trace-name editing box appropriately.
+Give the user a chance to rename trace before launching viewer
 Disable compress options (checkbox and menu) for Windows 7 and below.
 Transparent compression/decompression into .zip files. Note that if a trace is
 compressed and then renamed that the trace inside the .zip file will be wrong - it
