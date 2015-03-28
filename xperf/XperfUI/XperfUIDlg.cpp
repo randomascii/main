@@ -132,6 +132,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CPUSAMPLINGCALLSTACKS, btSampledStacks_);
 	DDX_Control(pDX, IDC_CONTEXTSWITCHCALLSTACKS, btCswitchStacks_);
 	DDX_Control(pDX, IDC_FASTSAMPLING, btFastSampling_);
+	DDX_Control(pDX, IDC_DIRECTXTRACING, btDirectXTracing_);
 	DDX_Control(pDX, IDC_SHOWCOMMANDS, btShowCommands_);
 
 	DDX_Control(pDX, IDC_INPUTTRACING, btInputTracing_);
@@ -170,10 +171,13 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
 	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
 	ON_WM_CONTEXTMENU()
+	ON_BN_CLICKED(ID_TRACES_OPENTRACEINWPA, &CXperfUIDlg::OnOpenTraceWPA)
+	ON_BN_CLICKED(ID_TRACES_OPENTRACEINGPUVIEW, &CXperfUIDlg::OnOpenTraceGPUView)
 	ON_BN_CLICKED(ID_RENAME, &CXperfUIDlg::OnRenameKey)
 	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::FinishTraceRename)
 	ON_BN_CLICKED(ID_ENDRENAME, &CXperfUIDlg::FinishTraceRename)
 	ON_BN_CLICKED(ID_ESCKEY, &CXperfUIDlg::OnEscKey)
+	ON_BN_CLICKED(IDC_DIRECTXTRACING, &CXperfUIDlg::OnBnClickedDirectxtracing)
 END_MESSAGE_MAP()
 
 
@@ -450,6 +454,7 @@ void CXperfUIDlg::UpdateEnabling()
 
 	SmartEnableWindow(btSampledStacks_, !bIsTracing_);
 	SmartEnableWindow(btCswitchStacks_, !bIsTracing_);
+	SmartEnableWindow(btDirectXTracing_, !bIsTracing_);
 }
 
 void CXperfUIDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -613,6 +618,8 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	std::wstring userProviders = L" -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
 	if (useChromeProviders_)
 		userProviders += L"+Chrome";
+	if (bDirectXTracing_)
+		userProviders += L"+DX:0x2F";
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
 	std::wstring userFile = L" -f \"" + GetUserFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
@@ -732,7 +739,7 @@ void CXperfUIDlg::OnBnClickedStoptracing()
 	StopTracing(false);
 }
 
-void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename)
+void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename, const std::wstring viewer)
 {
 	if (!PathFileExists(traceFilename.c_str()))
 	{
@@ -749,16 +756,17 @@ void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename)
 		return;
 	}
 
-	std::wstring wpaPath = GetWPTDir() + L"wpa.exe";
+	std::wstring viewerPath = GetWPTDir() + viewer;
+	std::wstring viewerName = GetFilePart(viewer);
 
-	const std::wstring args = std::wstring(L"wpa.exe \"") + traceFilename.c_str() + L"\"";
+	const std::wstring args = std::wstring(viewerName + L" \"") + traceFilename.c_str() + L"\"";
 
 	// Wacky CreateProcess rules say args has to be writable!
 	std::vector<wchar_t> argsCopy(args.size() + 1);
 	wcscpy_s(&argsCopy[0], argsCopy.size(), args.c_str());
 	STARTUPINFO startupInfo = {};
 	PROCESS_INFORMATION processInfo = {};
-	BOOL result = CreateProcess(wpaPath.c_str(), &argsCopy[0], nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo);
+	BOOL result = CreateProcess(viewerPath.c_str(), &argsCopy[0], nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &processInfo);
 	if (result)
 	{
 		// Close the handles to avoid leaks.
@@ -817,6 +825,12 @@ void CXperfUIDlg::OnBnClickedFastsampling()
 	std::wstring profInt = bFastSampling_ ? L"1221" : L"9001";
 	std::wstring args = L" -setprofint " + profInt + L" cached";
 	child.Run(bShowCommands_, L"xperf.exe" + args);
+}
+
+
+void CXperfUIDlg::OnBnClickedDirectxtracing()
+{
+	bDirectXTracing_ = !bDirectXTracing_;
 }
 
 
@@ -1117,6 +1131,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 			int disableList[] =
 			{
 				ID_TRACES_OPENTRACEINWPA,
+				ID_TRACES_OPENTRACEINGPUVIEW,
 				ID_TRACES_DELETETRACE,
 				ID_TRACES_RENAMETRACE,
 				ID_TRACES_COMPRESSTRACE,
@@ -1140,6 +1155,9 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		{
 			case ID_TRACES_OPENTRACEINWPA:
 				LaunchTraceViewer(tracePath);
+				break;
+			case ID_TRACES_OPENTRACEINGPUVIEW:
+				LaunchTraceViewer(tracePath, L"gpuview\\GPUView.exe");
 				break;
 			case ID_TRACES_DELETETRACE:
 				if (AfxMessageBox((L"Are you sure you want to delete " + traceFile + L"?").c_str(), MB_YESNO) == IDYES)
@@ -1188,6 +1206,28 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	else
 	{
 		CDialog::OnContextMenu(pWnd, point);
+	}
+}
+
+void CXperfUIDlg::OnOpenTraceWPA()
+{
+	int selIndex = btTraces_.GetCurSel();
+
+	if (selIndex >= 0)
+	{
+		std::wstring tracePath = GetTraceDir() + traces_[selIndex] + L".etl";
+		LaunchTraceViewer(tracePath);
+	}
+}
+
+void CXperfUIDlg::OnOpenTraceGPUView()
+{
+	int selIndex = btTraces_.GetCurSel();
+
+	if (selIndex >= 0)
+	{
+		std::wstring tracePath = GetTraceDir() + traces_[selIndex] + L".etl";
+		LaunchTraceViewer(tracePath, L"gpuview\\GPUView.exe");
 	}
 }
 

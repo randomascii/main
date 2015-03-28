@@ -39,11 +39,13 @@ private:
 	bool bCswitchStacks_ = true;
 	bool bSampledStacks_ = true;
 	bool bFastSampling_ = false;
+	bool bDirectXTracing_ = false;
 	bool bShowCommands_ = false;
 	CButton btCompress_;
 	CButton btCswitchStacks_;
 	CButton btSampledStacks_;
 	CButton btFastSampling_;
+	CButton btDirectXTracing_;
 	CButton btShowCommands_;
 
 	CEdit btTraceNameEdit_;
@@ -127,7 +129,7 @@ private:
 	void UpdateEnabling();
 	void UpdateNotesState();
 	void StripChromeSymbols(const std::wstring& traceFilename);
-	void LaunchTraceViewer(const std::wstring traceFilename);
+	void LaunchTraceViewer(const std::wstring traceFilename, const std::wstring viewer = L"wpa.exe");
 	void SaveNotesIfNeeded();
 	void ShutdownTasks();
 	bool bShutdownCompleted_ = false;
@@ -164,4 +166,8 @@ private:
 	afx_msg void OnRenameKey();
 	afx_msg void FinishTraceRename();
 	afx_msg void OnEscKey();
+	afx_msg void OnOpenTraceWPA();
+	afx_msg void OnOpenTraceGPUView();
+public:
+	afx_msg void OnBnClickedDirectxtracing();
 };
