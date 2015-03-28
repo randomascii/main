@@ -58,6 +58,8 @@ Implement settings dialog - configure trace directories, buffer sizes, heap-trac
 option for stacks on user events, option for DX tracing, option for copying startup profile(s).
 Place the trace-name editing box appropriately.
 Support for 32-bit operating systems, or at least exit cleanly with a warning.
+Detect and handle trace files that lack the date component -- synthesize?
+Give the user a chance to rename trace before launching viewer
 
 To-do eventually:
 Disable compress options (checkbox and menu) for Windows 7 and below.

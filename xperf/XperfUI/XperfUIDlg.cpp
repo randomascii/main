@@ -80,6 +80,8 @@ CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
 
 CXperfUIDlg::~CXperfUIDlg()
 {
+	// Shut down key logging.
+	SetKeyloggingState(kKeyLoggerOff);
 }
 
 void CXperfUIDlg::ShutdownTasks()

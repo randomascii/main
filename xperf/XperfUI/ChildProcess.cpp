@@ -5,13 +5,10 @@
 #include <assert.h>
 #include <vector>
 
-const wchar_t* kPipeName = L"\\\\.\\PIPE\\xperfUIPipe";
+static const wchar_t* kPipeName = L"\\\\.\\PIPE\\xperfUIPipe";
 
 ChildProcess::ChildProcess(std::wstring exePath)
 	: exePath_(std::move(exePath))
-	, hProcess_(0)
-	, hStdOutput_(INVALID_HANDLE_VALUE)
-	, hStdError_(INVALID_HANDLE_VALUE)
 {
 	// Create the pipe here so that it is guaranteed to be created before
 	// we try starting the process.
@@ -194,10 +191,10 @@ void ChildProcess::WaitForCompletion()
 	}
 
 	// Clean up.
-	if (hPipe_)
+	if (hPipe_ != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(hPipe_);
-		hPipe_ = 0;
+		hPipe_ = INVALID_HANDLE_VALUE;
 	}
 
 	// Now that the child thread has exited we can finally read

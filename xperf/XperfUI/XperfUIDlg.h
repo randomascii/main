@@ -1,7 +1,3 @@
-
-// XperfUIDlg.h : header file
-//
-
 #pragma once
 
 #include <string>
@@ -16,10 +12,8 @@ enum TracingMode
 	kHeapTracingToFile
 };
 
-// CXperfUIDlg dialog
 class CXperfUIDlg : public CDialogEx
 {
-// Construction
 public:
 	CXperfUIDlg(CWnd* pParent = NULL);	// standard constructor
 	~CXperfUIDlg();
@@ -29,11 +23,9 @@ public:
 
 	void vprintf(const wchar_t* pFormat, va_list marker);
 
-protected:
+private:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
-// Implementation
-protected:
 	HICON m_hIcon;
 
 	bool bIsTracing_ = false;

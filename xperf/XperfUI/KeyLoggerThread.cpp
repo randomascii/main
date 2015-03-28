@@ -2,110 +2,107 @@
 #include <assert.h>
 #include "KeyLoggerThread.h"
 #include "ETWProviders\etwprof.h"
+#include <atomic>
 
 namespace
 {
 
-volatile bool g_LoggingEnabled = true;
-volatile bool g_LogKeyboardDetails = false;
+std::atomic<bool> g_LogKeyboardDetails = false;
 
 LRESULT CALLBACK LowLevelKeyboardHook(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	assert(nCode == HC_ACTION);
 	// wParam is WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, or WM_SYSKEYUP
 
-	if (g_LoggingEnabled)
-	{
-		KBDLLHOOKSTRUCT* pKbdLLHook = (KBDLLHOOKSTRUCT*)lParam;
+	KBDLLHOOKSTRUCT* pKbdLLHook = (KBDLLHOOKSTRUCT*)lParam;
 
-		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+	if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
+	{
+		// Translate some of the keys to character names to make them easier to read
+		// in the trace. Note that having the character codes means that this is a
+		// true key logger. Consider checking g_LogKeyboardDetails if this is a
+		// concern.
+		char buffer[20];
+		const char* pLabel = buffer;
+		DWORD code = pKbdLLHook->vkCode;
+		if ((code >= 'A' && code <= 'Z') || (code >= '0' && code <= '9') || code == ' ')
 		{
-			// Translate some of the keys to character names to make them easier to read
-			// in the trace. Note that having the character codes means that this is a
-			// true key logger. Consider checking g_LogKeyboardDetails if this is a
-			// concern.
-			char buffer[20];
-			const char* pLabel = buffer;
-			DWORD code = pKbdLLHook->vkCode;
-			if ((code >= 'A' && code <= 'Z') || (code >= '0' && code <= '9') || code == ' ')
+			if (!g_LogKeyboardDetails)
 			{
-				if (!g_LogKeyboardDetails)
-				{
-					// Make letters and numbers generic, for privacy.
-					if (code >= 'A' && code <= 'Z')
-						code = 'A';
-					else if (code >= '0' && code <= '9')
-						code = '0';
-				}
-				sprintf_s(buffer, "%c", code);
-			}
-			else if (code >= VK_NUMPAD0 && code <= VK_NUMPAD9)
-			{
-				if (!g_LogKeyboardDetails)
+				// Make letters and numbers generic, for privacy.
+				if (code >= 'A' && code <= 'Z')
+					code = 'A';
+				else if (code >= '0' && code <= '9')
 					code = '0';
-				sprintf_s(buffer, "%c", '0' + (code - VK_NUMPAD0));
 			}
-			else if (code >= VK_F1 && code <= VK_F12)
-			{
-				sprintf_s(buffer, "F%d", code + 1 - VK_F1);
-			}
-			else
-			{
-				switch (code)
-				{
-				case VK_BACK:
-					pLabel = "backspace";
-					break;
-				case VK_TAB:
-					pLabel = "tab";
-					break;
-				case VK_RETURN:
-					pLabel = "enter";
-					break;
-				case VK_LEFT:
-					pLabel = "left";
-					break;
-				case VK_UP:
-					pLabel = "up";
-					break;
-				case VK_RIGHT:
-					pLabel = "right";
-					break;
-				case VK_DOWN:
-					pLabel = "down";
-					break;
-				case VK_SHIFT:
-				case VK_LSHIFT:
-				case VK_RSHIFT:
-					pLabel = "shift";
-					break;
-				case VK_CONTROL:
-				case VK_LCONTROL:
-				case VK_RCONTROL:
-					pLabel = "control";
-					break;
-				case VK_MENU:
-				case VK_LMENU:
-				case VK_RMENU:
-					pLabel = "alt";
-					break;
-				case VK_ESCAPE:
-					pLabel = "esc";
-					break;
-				case VK_LWIN:
-				case VK_RWIN:
-					pLabel = "Win";
-					break;
-				case VK_OEM_PERIOD:
-					pLabel = ".";
-					break;
-				default:
-					pLabel = "<unknown key>";
-					break;
-				}
-			}
-			ETWKeyDown(code, pLabel, 0, 0);
+			sprintf_s(buffer, "%c", code);
 		}
+		else if (code >= VK_NUMPAD0 && code <= VK_NUMPAD9)
+		{
+			if (!g_LogKeyboardDetails)
+				code = '0';
+			sprintf_s(buffer, "%c", '0' + (code - VK_NUMPAD0));
+		}
+		else if (code >= VK_F1 && code <= VK_F12)
+		{
+			sprintf_s(buffer, "F%d", code + 1 - VK_F1);
+		}
+		else
+		{
+			switch (code)
+			{
+			case VK_BACK:
+				pLabel = "backspace";
+				break;
+			case VK_TAB:
+				pLabel = "tab";
+				break;
+			case VK_RETURN:
+				pLabel = "enter";
+				break;
+			case VK_LEFT:
+				pLabel = "left";
+				break;
+			case VK_UP:
+				pLabel = "up";
+				break;
+			case VK_RIGHT:
+				pLabel = "right";
+				break;
+			case VK_DOWN:
+				pLabel = "down";
+				break;
+			case VK_SHIFT:
+			case VK_LSHIFT:
+			case VK_RSHIFT:
+				pLabel = "shift";
+				break;
+			case VK_CONTROL:
+			case VK_LCONTROL:
+			case VK_RCONTROL:
+				pLabel = "control";
+				break;
+			case VK_MENU:
+			case VK_LMENU:
+			case VK_RMENU:
+				pLabel = "alt";
+				break;
+			case VK_ESCAPE:
+				pLabel = "esc";
+				break;
+			case VK_LWIN:
+			case VK_RWIN:
+				pLabel = "Win";
+				break;
+			case VK_OEM_PERIOD:
+				pLabel = ".";
+				break;
+			default:
+				pLabel = "<unknown key>";
+				break;
+			}
+		}
+		ETWKeyDown(code, pLabel, 0, 0);
 	}
 
 	return CallNextHookEx(0, nCode, wParam, lParam);
@@ -115,61 +112,58 @@ LRESULT CALLBACK LowLevelMouseHook(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	assert(nCode == HC_ACTION);
 
-	if (g_LoggingEnabled)
+	MSLLHOOKSTRUCT* pMouseLLHook = (MSLLHOOKSTRUCT*)lParam;
+
+	int whichButton = -1;
+	bool pressed = true;
+
+	switch (wParam)
 	{
-		MSLLHOOKSTRUCT* pMouseLLHook = (MSLLHOOKSTRUCT*)lParam;
+	case WM_LBUTTONDOWN:
+		whichButton = 0;
+		break;
+	case WM_MBUTTONDOWN:
+		whichButton = 1;
+		break;
+	case WM_RBUTTONDOWN:
+		whichButton = 2;
+		break;
+	case WM_LBUTTONUP:
+		whichButton = 0;
+		pressed = false;
+		break;
+	case WM_MBUTTONUP:
+		whichButton = 1;
+		pressed = false;
+		break;
+	case WM_RBUTTONUP:
+		whichButton = 2;
+		pressed = false;
+		break;
+	}
 
-		int whichButton = -1;
-		bool pressed = true;
-
-		switch (wParam)
+	if (whichButton >= 0)
+	{
+		if (pressed)
 		{
-		case WM_LBUTTONDOWN:
-			whichButton = 0;
-			break;
-		case WM_MBUTTONDOWN:
-			whichButton = 1;
-			break;
-		case WM_RBUTTONDOWN:
-			whichButton = 2;
-			break;
-		case WM_LBUTTONUP:
-			whichButton = 0;
-			pressed = false;
-			break;
-		case WM_MBUTTONUP:
-			whichButton = 1;
-			pressed = false;
-			break;
-		case WM_RBUTTONUP:
-			whichButton = 2;
-			pressed = false;
-			break;
-		}
-
-		if (whichButton >= 0)
-		{
-			if (pressed)
-			{
-				ETWMouseDown(whichButton, 0, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
-			}
-			else
-			{
-				ETWMouseUp(whichButton, 0, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
-			}
+			ETWMouseDown(whichButton, 0, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
 		}
 		else
 		{
-			if (wParam == WM_MOUSEWHEEL)
-			{
-				int wheelDelta = GET_WHEEL_DELTA_WPARAM(pMouseLLHook->mouseData);
-				ETWMouseWheel(0, wheelDelta, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
-			}
+			ETWMouseUp(whichButton, 0, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
+		}
+	}
+	else
+	{
+		if (wParam == WM_MOUSEWHEEL)
+		{
+			int wheelDelta = GET_WHEEL_DELTA_WPARAM(pMouseLLHook->mouseData);
+			ETWMouseWheel(0, wheelDelta, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
+		}
 
-			if (wParam == WM_MOUSEMOVE)
-			{
-				ETWMouseMove(0, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
-			}
+		if (wParam == WM_MOUSEMOVE)
+		{
+			ETWMouseMove(0, pMouseLLHook->pt.x, pMouseLLHook->pt.y);
 		}
 	}
 
@@ -223,28 +217,37 @@ DWORD __stdcall InputThread(LPVOID)
 
 void SetKeyloggingState(enum KeyLoggerState state)
 {
-	static bool s_initialized = false;
-	if (!s_initialized)
+	static HANDLE s_hThread = 0;
+	static DWORD s_threadID;
+
+	// If key logging should be off then terminate the thead
+	// if it is running.
+	if (state == kKeyLoggerOff)
 	{
-		HANDLE hThread = CreateThread(NULL, 0, InputThread, NULL, 0, NULL);
-		if (hThread)
-			CloseHandle(hThread);
-		s_initialized = true;
+		if (s_hThread)
+		{
+			PostThreadMessage(s_threadID, WM_QUIT, 0, 0);
+			WaitForSingleObject(s_hThread, INFINITE);
+			CloseHandle(s_hThread);
+			s_hThread = 0;
+		}
+		return;
+	}
+
+	// If key logging should be on then start the thread if
+	// it isn't running.
+	if (!s_hThread)
+	{
+		s_hThread = CreateThread(NULL, 0, InputThread, NULL, 0, &s_threadID);
 	}
 
 	switch (state)
 	{
-	case kKeyLoggerOff:
-		g_LoggingEnabled = false;
-		break;
 	case kKeyLoggerAnonymized:
-		g_LoggingEnabled = true;
 		g_LogKeyboardDetails = false;
 		break;
 	case kKeyLoggerFull:
-		g_LoggingEnabled = true;
 		g_LogKeyboardDetails = true;
 		break;
-
 	}
 }
