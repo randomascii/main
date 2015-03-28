@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include "KeyLoggerThread.h"
+#include "DirectoryMonitor.h"
 
 enum TracingMode
 {
@@ -69,6 +70,8 @@ private:
 	std::vector<std::wstring> traces_;
 	CListBox btTraces_;
 
+	DirectoryMonitor monitorThread_;
+
 	// This contains the notes for the selected trace, as loaded from disk.
 	std::wstring traceNotes_;
 	std::wstring traceNoteFilename_;
@@ -88,8 +91,8 @@ private:
 	void StopTracing(bool bSaveTrace);
 
 	std::wstring GetWPTDir() const;
-	std::wstring GetXperfPath() const;
-	std::wstring GetTraceDir() const;
+	std::wstring GetXperfPath() const { return GetWPTDir() + L"xperf.exe"; }
+	std::wstring GetTraceDir() const { return traceDir_; }
 	std::wstring GetExeDir() const;
 	// Note that GetResultFile() gives a time-based name, so don't expect
 	// the same result across multiple calls!
@@ -158,8 +161,7 @@ private:
 	afx_msg void OnCbnSelchangeTracingmode();
 	afx_msg void OnBnClickedSettings();
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-	afx_msg void OnEnKillfocusTracenameedit();
 	afx_msg void OnRenameKey();
-	afx_msg void OnEndRenameKey();
+	afx_msg void FinishTraceRename();
 	afx_msg void OnEscKey();
 };

@@ -120,6 +120,7 @@
   <ItemGroup>
     <ClInclude Include="About.h" />
     <ClInclude Include="ChildProcess.h" />
+    <ClInclude Include="DirectoryMonitor.h" />
     <ClInclude Include="KeyLoggerThread.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="Settings.h" />
@@ -132,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="About.cpp" />
     <ClCompile Include="ChildProcess.cpp" />
+    <ClCompile Include="DirectoryMonitor.cpp" />
     <ClCompile Include="KeyLoggerThread.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="stdafx.cpp">

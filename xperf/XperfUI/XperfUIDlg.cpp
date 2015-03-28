@@ -17,17 +17,15 @@
 #define new DEBUG_NEW
 #endif
 
-// Send this when the list of traces needs to be updated.
-const int WM_UPDATETRACELIST = WM_USER + 10;
-
 const int kRecordTraceHotKey = 1234;
 
-
-// CXperfUIDlg dialog
-
-
+// This static pointer to the main window is used by the global
+// outputPrintf function.
 static CXperfUIDlg* pMainWindow;
 
+// This convenient hack function is so that the ChildProcess code can
+// print to the main output window. This function can only be called
+// from the main thread.
 void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...)
 {
 	va_list args;
@@ -73,6 +71,7 @@ void CXperfUIDlg::vprintf(const wchar_t* pFormat, va_list args)
 
 CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CXperfUIDlg::IDD, pParent)
+	, monitorThread_(this)
 {
 	pMainWindow = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -84,31 +83,34 @@ CXperfUIDlg::~CXperfUIDlg()
 	SetKeyloggingState(kKeyLoggerOff);
 }
 
+// Shutdown tasks that must be completed before the dialog
+// closes should go here.
 void CXperfUIDlg::ShutdownTasks()
 {
 	if (bShutdownCompleted_)
 		return;
 	bShutdownCompleted_ = true;
+	// Save any in-progress trace-notes edits.
 	SaveNotesIfNeeded();
+	// Stop ETW tracing when we shut down.
 	if (bIsTracing_)
 	{
 		StopTracing(false);
 	}
 
+	// Forcibly clear the heap tracin registry keys.
 	SetHeapTracing(true);
 }
 
 void CXperfUIDlg::OnCancel()
 {
 	ShutdownTasks();
-
 	CDialog::OnCancel();
 }
 
 void CXperfUIDlg::OnClose()
 {
 	ShutdownTasks();
-
 	CDialog::OnClose();
 }
 
@@ -118,6 +120,8 @@ void CXperfUIDlg::OnOK()
 	CDialog::OnOK();
 }
 
+// Hook up dialog controls to classes that represent them,
+// for easier manipulation of those controls.
 void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 {
 	DDX_Control(pDX, IDC_STARTTRACING, btStartTracing_);
@@ -141,6 +145,7 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 }
 
+// Hook up functions to messages from buttons, menus, etc.
 BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
@@ -165,14 +170,12 @@ BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
 	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
 	ON_WM_CONTEXTMENU()
-	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::OnEnKillfocusTracenameedit)
 	ON_BN_CLICKED(ID_RENAME, &CXperfUIDlg::OnRenameKey)
-	ON_BN_CLICKED(ID_ENDRENAME, &CXperfUIDlg::OnEndRenameKey)
+	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::FinishTraceRename)
+	ON_BN_CLICKED(ID_ENDRENAME, &CXperfUIDlg::FinishTraceRename)
 	ON_BN_CLICKED(ID_ESCKEY, &CXperfUIDlg::OnEscKey)
 END_MESSAGE_MAP()
 
-
-// CXperfUIDlg message handlers
 
 void CXperfUIDlg::SetSymbolPath()
 {
@@ -192,47 +195,6 @@ void CXperfUIDlg::SetSymbolPath()
 	const char* symCachePath = getenv("_NT_SYMCACHE_PATH");
 	if (!symCachePath)
 		(void)_putenv("_NT_SYMCACHE_PATH=c:\\symcache");
-}
-
-
-// This function monitors the traceDir_ directory and sends a message to the main thread
-// whenever anything changes. That's it. All UI work is done in the main thread.
-DWORD __stdcall DirectoryMonitorThread(LPVOID voidTraceDir)
-{
-	const wchar_t* traceDir = reinterpret_cast<const wchar_t*>(voidTraceDir);
-
-	HANDLE hChangeHandle = FindFirstChangeNotification(traceDir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
-
-	if (hChangeHandle == INVALID_HANDLE_VALUE)
-	{
-		assert(0);
-		return 0;
-	}
-
-	for (;;)
-	{
-		DWORD dwWaitStatus = WaitForSingleObject(hChangeHandle, INFINITE);
-
-		switch (dwWaitStatus)
-		{
-		case WAIT_OBJECT_0:
-			pMainWindow->PostMessage(WM_UPDATETRACELIST, 0, 0);
-			if (FindNextChangeNotification(hChangeHandle) == FALSE)
-			{
-				assert(0);
-				return 0;
-			}
-			break;
-
-		default:
-			assert(0);
-			return 0;
-		}
-	}
-
-	assert(0);
-
-	return 0;
 }
 
 
@@ -314,8 +276,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 	UpdateEnabling();
 	SmartEnableWindow(btTraceNotes_, false); // This window always starts out disabled.
 
-	// Don't change traceDir_ - the DirectoryMonitorThread has a pointer to it.
-	(void)CreateThread(nullptr, 0, DirectoryMonitorThread, const_cast<wchar_t*>(traceDir_.c_str()), 0, 0);
+	// Don't change traceDir_ because the monitor thread has a pointer to it.
+	monitorThread_.StartThread(&traceDir_);
 
 	RegisterProviders();
 	DisablePagingExecutive();
@@ -549,16 +511,6 @@ HCURSOR CXperfUIDlg::OnQueryDragIcon()
 std::wstring CXperfUIDlg::GetWPTDir() const
 {
 	return L"C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
-}
-
-std::wstring CXperfUIDlg::GetXperfPath() const
-{
-	return GetWPTDir() + L"xperf.exe";
-}
-
-std::wstring CXperfUIDlg::GetTraceDir() const
-{
-	return traceDir_;
 }
 
 std::wstring CXperfUIDlg::GetExeDir() const
@@ -1335,7 +1287,7 @@ void CXperfUIDlg::OnRenameKey()
 }
 
 
-void CXperfUIDlg::OnEnKillfocusTracenameedit()
+void CXperfUIDlg::FinishTraceRename()
 {
 	// Make sure this doesn't get double-called.
 	if (!btTraceNameEdit_.IsWindowVisible())
@@ -1381,11 +1333,6 @@ void CXperfUIDlg::OnEnKillfocusTracenameedit()
 			AfxMessageBox((L"Error renaming file '" + failedSource + L"'.").c_str());
 		}
 	}
-}
-
-void CXperfUIDlg::OnEndRenameKey()
-{
-	OnEnKillfocusTracenameedit();
 }
 
 void CXperfUIDlg::OnEscKey()
