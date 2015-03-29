@@ -318,3 +318,31 @@ bool Is64BitWindows()
 	bool bIsWin64 = IsWow64Process(GetCurrentProcess(), &f64) && f64;
 	return bIsWin64;
 }
+
+WindowsVersion GetWindowsVersion()
+{
+	OSVERSIONINFO verInfo = { sizeof(OSVERSIONINFO) };
+#pragma warning(suppress : 4996)	// warning C4996: 'GetVersionExA': was declared deprecated
+	GetVersionEx(&verInfo);
+
+	// Windows 10 preview has major version 10, if you have a compatibility
+	// manifest for that OS, which XperfUI should have.
+	if (verInfo.dwMajorVersion > 6)
+		return kWindowsVersion10;	// Or higher, I guess.
+
+	// Windows 8.1 will only be returned if there is an appropriate
+	// compatibility manifest.
+	if (verInfo.dwMajorVersion == 6 && verInfo.dwMinorVersion >= 3)
+		return kWindowsVersion8_1;
+
+	if (verInfo.dwMajorVersion == 6 && verInfo.dwMinorVersion >= 2)
+		return kWindowsVersion8;
+
+	if (verInfo.dwMajorVersion == 6 && verInfo.dwMinorVersion >= 1)
+		return kWindowsVersion7;
+
+	if (verInfo.dwMajorVersion == 6)
+		return kWindowsVersionVista;
+
+	return kWindowsVersionXP;
+}

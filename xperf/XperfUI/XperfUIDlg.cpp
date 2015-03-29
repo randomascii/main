@@ -280,6 +280,13 @@ BOOL CXperfUIDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
+	WindowsVersion winver = GetWindowsVersion();
+	if (winver <= kWindowsVersion7)
+	{
+		bCompress_ = false; // ETW trace compression requires Windows 8.0
+		SmartEnableWindow(btCompress_, false);
+	}
+
 	CheckDlgButton(IDC_COMPRESSTRACE, bCompress_);
 	CheckDlgButton(IDC_CONTEXTSWITCHCALLSTACKS, bCswitchStacks_);
 	CheckDlgButton(IDC_CPUSAMPLINGCALLSTACKS, bSampledStacks_);

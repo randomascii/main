@@ -42,6 +42,17 @@ int64_t GetFileSize(const std::wstring& path);
 
 void SetClipboardText(const std::wstring& text);
 
+enum WindowsVersion
+{
+	kWindowsVersionXP,
+	kWindowsVersionVista,
+	kWindowsVersion7,
+	kWindowsVersion8,
+	kWindowsVersion8_1,
+	kWindowsVersion10,
+};
+
 bool Is64BitWindows();
+WindowsVersion GetWindowsVersion();
 
 #endif
