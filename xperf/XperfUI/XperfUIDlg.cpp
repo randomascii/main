@@ -309,6 +309,9 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 	if (toolTip_.Create(this))
 	{
+		toolTip_.SetMaxTipWidth(400);
+		toolTip_.Activate(TRUE);
+
 		toolTip_.AddTool(&btStartTracing_, L"Start ETW tracing.");
 
 		toolTip_.AddTool(&btCompress_, L"Only uncheck this if you record traces on Windows 8 and above and want to analyze "
@@ -326,6 +329,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 					L"~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces "
 					L"but can make investigating brief CPU-bound performance problems (such as a single long frame) "
 					L"more practical.");
+		toolTip_.AddTool(&btDirectXTracing_, L"Check this to record the DX:0x2F provider to allow seein GPU usage "
+					L"in WPA, and more data in GPUView.");
 		toolTip_.AddTool(&btShowCommands_, L"This tells XperfUI to display the xperf.exe and other commands being "
 					L"executed. This can be helpful for diagnostic purposes but is not normally needed.");
 
@@ -343,10 +348,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 					L"documents\\xperftraces.");
 		toolTip_.AddTool(&btTraceNotes_, L"Trace notes are intended for recording information about ETW traces, such "
 					L"as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text "
-					L"file - just type your analysis.");
-
-		toolTip_.SetMaxTipWidth(400);
-		toolTip_.Activate(TRUE);
+					L"file - just type your analysis. The notes files will be renamed when you rename traces "
+					L"through the trace-list context menu.");
 	}
 
 	SetHeapTracing(false);
@@ -1115,7 +1118,7 @@ void CXperfUIDlg::OnCbnSelchangeTracingmode()
 
 void CXperfUIDlg::OnBnClickedSettings()
 {
-	CSettings dlgAbout;
+	CSettings dlgAbout(nullptr, GetExeDir(), GetWPTDir());
 	dlgAbout.heapTracingExe_ = heapTracingExe_;
 	if (dlgAbout.DoModal() == IDOK)
 	{

@@ -10,9 +10,9 @@
       <AnalysisView.UISessionRef>
         <UISessionRef Index="0" xmlns="clr-namespace:Microsoft.Performance.Shell;assembly=Microsoft.Performance.Shell" />
       </AnalysisView.UISessionRef>
-      <GenericEventsGraphTreeItem DataTableHeight="0" GraphHeight="74" Color="#FF005DE0" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
+      <GenericEventsGraphTreeItem DataTableHeight="290" GraphHeight="73" LayoutStyleFree="All" Color="#FF005DE0" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
         <GenericEventsGraphTreeItem.HdvViewModelPreset>
-          <HdvViewModelPreset Name="Randomascii Events" GraphColumnCount="26" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="25" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
+          <HdvViewModelPreset Name="Chrome and Multi Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:*&quot;Multi-.*|Chrome.*&quot;" InitialSelectionQuery="" InitialExpansionQuery="" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
             <HdvViewModelPreset.ColumnMetadataEntries>
               <ColumnMetadataEntry Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" ColumnMetadata="EndThreadId" />
               <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="StartTime" />
@@ -43,6 +43,12 @@
               <HdvColumnViewModelPreset Guid="94e48f22-d499-5227-bb04-be011b4159b0" Name="Field 5" IsVisible="True" SortPriority="9" Width="80" />
               <HdvColumnViewModelPreset Guid="c1054028-424a-59ba-e760-6d30abbd69c5" Name="Field 6" IsVisible="True" SortPriority="10" Width="80" />
               <HdvColumnViewModelPreset Guid="5cbc4b58-2de1-5449-55b2-4651d4edf90a" Name="Field 7" IsVisible="True" SortPriority="11" Width="80" />
+              <HdvColumnViewModelPreset Guid="fc01e6c9-a43b-51a1-fd2e-112ba48aff65" Name="Field 8" IsVisible="True" SortPriority="12" Width="80" />
+              <HdvColumnViewModelPreset Guid="e3dcf300-46e2-5c43-ef4b-2c3db489ec25" Name="Field 9" IsVisible="True" SortPriority="13" Width="80" />
+              <HdvColumnViewModelPreset Guid="87c21ddb-4b29-58e3-5ddc-f114c5ca209a" Name="Field 10" IsVisible="True" SortPriority="14" Width="80" />
+              <HdvColumnViewModelPreset Guid="65f8fe42-ad02-5016-3521-f93329c76227" Name="Field 11" IsVisible="True" SortPriority="15" Width="80" />
+              <HdvColumnViewModelPreset Guid="03d48fd3-0fe4-57f5-a477-49beb0d70a1f" Name="Field 12" IsVisible="True" SortPriority="16" Width="80" />
+              <HdvColumnViewModelPreset Guid="998f8e2d-0f5a-5a54-0133-226e2de62c0b" Name="Field 13" IsVisible="True" SortPriority="17" Width="80" />
               <HdvColumnViewModelPreset Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" IsVisible="True" SortPriority="29" Width="80" />
             </HdvViewModelPreset.ConfigurableColumns>
           </HdvViewModelPreset>
@@ -407,7 +413,87 @@
         </HdvViewModelPresetCollection>
         <HdvViewModelPresetCollection Name="04f69f98-176e-4d1c-b44e-97f734996ab8">
           <HdvViewModelPresetCollection.UserPresets>
-            <HdvViewModelPreset Name="Randomascii Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="">
+            <HdvViewModelPreset Name="Multi Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:~&lt;&quot;Multi-&quot;" InitialSelectionQuery="" InitialExpansionQuery="">
+              <HdvViewModelPreset.ColumnMetadataEntries>
+                <ColumnMetadataEntry Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" ColumnMetadata="EndThreadId" />
+                <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="StartTime" />
+                <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="EndTime" />
+              </HdvViewModelPreset.ColumnMetadataEntries>
+              <HdvViewModelPreset.HighlightEntries />
+              <HdvViewModelPreset.ConfigurableColumns>
+                <HdvColumnViewModelPreset Guid="7ee6a5ff-1faf-428a-a7c2-7d2cb2b5cf26" Name="Process" IsVisible="True" SortPriority="28" Width="186" />
+                <HdvColumnViewModelPreset Guid="8b4c40f8-0d99-437d-86ab-56ec200137dc" Name="Provider Name" IsVisible="True" SortPriority="18" Width="135" />
+                <HdvColumnViewModelPreset Guid="2a23f9b1-65d6-46d2-87b2-72f3606b7f75" Name="Provider Id" SortPriority="23" Width="100" />
+                <HdvColumnViewModelPreset Guid="511777f7-30ef-4e86-bd0b-0facaf23a0d3" Name="Task Name" IsVisible="True" SortPriority="19" Width="80" />
+                <HdvColumnViewModelPreset Guid="5b51716b-b88f-443a-a396-c6316296d5f8" Name="Opcode Name" IsVisible="True" SortPriority="20" Width="100" />
+                <HdvColumnViewModelPreset Guid="c72e1c5a-f6db-4c84-8c0b-85989e514075" Name="Id" SortPriority="21" Width="80" />
+                <HdvColumnViewModelPreset Guid="d446a182-5203-4a29-aca1-4ab9bea0d1b5" Name="Version" SortPriority="1" Width="80" />
+                <HdvColumnViewModelPreset Guid="cb796d44-2927-5ac1-d231-4b71904c18f5" Name="Thread Name" SortPriority="2" Width="80" />
+                <HdvColumnViewModelPreset Guid="82ddfdff-ee93-5f35-08ac-4705069618dc" Name="Thread Activity Tag" SortPriority="3" Width="80" />
+                <HdvColumnViewModelPreset Guid="2818954f-2d30-5569-4510-dade0a5a605c" Name="Annotation" SortPriority="4" Width="80" />
+                <HdvColumnViewModelPreset Guid="90fe0b49-e3bb-440f-b829-5813c42108a1" Name="Event Name" SortPriority="22" Width="239" />
+                <HdvColumnViewModelPreset Guid="72892fbe-0f55-426a-9aa1-26b6baf09ffb" Name="Provider Type" SortPriority="24" Width="100" />
+                <HdvColumnViewModelPreset Guid="0734f1a4-fbd9-4ff6-aec0-cf43875c8253" Name="Message" SortPriority="25" Width="100" />
+                <HdvColumnViewModelPreset Guid="3be8610c-babb-4154-9970-1b2210928024" Name="Cpu" SortPriority="26" Width="45" />
+                <HdvColumnViewModelPreset Guid="342f7677-17b2-4c7e-b9ec-e89612c49792" Name="Count" AggregationMode="Sum" IsVisible="True" SortOrder="Descending" Width="80" />
+                <HdvColumnViewModelPreset Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" IsVisible="True" SortPriority="27" Width="63" />
+                <HdvColumnViewModelPreset Guid="0c5cf8cd-9b9e-5798-1a5d-09d429f7fa3c" Name="Field 1" IsVisible="True" SortPriority="5" Width="111" />
+                <HdvColumnViewModelPreset Guid="71badd11-26e5-56bc-44ec-12f4cc6a8f3e" Name="Field 2" IsVisible="True" SortPriority="6" Width="80" />
+                <HdvColumnViewModelPreset Guid="411dba2d-5d6e-5272-8287-636d0841768c" Name="Field 3" IsVisible="True" SortPriority="7" Width="80" />
+                <HdvColumnViewModelPreset Guid="048f5050-1f17-59b3-fa22-4b0781ee630b" Name="Field 4" IsVisible="True" SortPriority="8" Width="80" />
+                <HdvColumnViewModelPreset Guid="94e48f22-d499-5227-bb04-be011b4159b0" Name="Field 5" IsVisible="True" SortPriority="9" Width="80" />
+                <HdvColumnViewModelPreset Guid="c1054028-424a-59ba-e760-6d30abbd69c5" Name="Field 6" IsVisible="True" SortPriority="10" Width="80" />
+                <HdvColumnViewModelPreset Guid="5cbc4b58-2de1-5449-55b2-4651d4edf90a" Name="Field 7" IsVisible="True" SortPriority="11" Width="80" />
+                <HdvColumnViewModelPreset Guid="fc01e6c9-a43b-51a1-fd2e-112ba48aff65" Name="Field 8" IsVisible="True" SortPriority="12" Width="80" />
+                <HdvColumnViewModelPreset Guid="e3dcf300-46e2-5c43-ef4b-2c3db489ec25" Name="Field 9" IsVisible="True" SortPriority="13" Width="80" />
+                <HdvColumnViewModelPreset Guid="87c21ddb-4b29-58e3-5ddc-f114c5ca209a" Name="Field 10" IsVisible="True" SortPriority="14" Width="80" />
+                <HdvColumnViewModelPreset Guid="65f8fe42-ad02-5016-3521-f93329c76227" Name="Field 11" IsVisible="True" SortPriority="15" Width="80" />
+                <HdvColumnViewModelPreset Guid="03d48fd3-0fe4-57f5-a477-49beb0d70a1f" Name="Field 12" IsVisible="True" SortPriority="16" Width="80" />
+                <HdvColumnViewModelPreset Guid="998f8e2d-0f5a-5a54-0133-226e2de62c0b" Name="Field 13" IsVisible="True" SortPriority="17" Width="80" />
+                <HdvColumnViewModelPreset Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" IsVisible="True" SortPriority="29" Width="80" />
+              </HdvViewModelPreset.ConfigurableColumns>
+            </HdvViewModelPreset>
+            <HdvViewModelPreset Name="Chrome Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:~&lt;&quot;Chrome&quot;" InitialSelectionQuery="" InitialExpansionQuery="">
+              <HdvViewModelPreset.ColumnMetadataEntries>
+                <ColumnMetadataEntry Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" ColumnMetadata="EndThreadId" />
+                <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="StartTime" />
+                <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="EndTime" />
+              </HdvViewModelPreset.ColumnMetadataEntries>
+              <HdvViewModelPreset.HighlightEntries />
+              <HdvViewModelPreset.ConfigurableColumns>
+                <HdvColumnViewModelPreset Guid="7ee6a5ff-1faf-428a-a7c2-7d2cb2b5cf26" Name="Process" IsVisible="True" SortPriority="28" Width="186" />
+                <HdvColumnViewModelPreset Guid="8b4c40f8-0d99-437d-86ab-56ec200137dc" Name="Provider Name" IsVisible="True" SortPriority="18" Width="135" />
+                <HdvColumnViewModelPreset Guid="2a23f9b1-65d6-46d2-87b2-72f3606b7f75" Name="Provider Id" SortPriority="23" Width="100" />
+                <HdvColumnViewModelPreset Guid="511777f7-30ef-4e86-bd0b-0facaf23a0d3" Name="Task Name" IsVisible="True" SortPriority="19" Width="80" />
+                <HdvColumnViewModelPreset Guid="5b51716b-b88f-443a-a396-c6316296d5f8" Name="Opcode Name" IsVisible="True" SortPriority="20" Width="100" />
+                <HdvColumnViewModelPreset Guid="c72e1c5a-f6db-4c84-8c0b-85989e514075" Name="Id" SortPriority="21" Width="80" />
+                <HdvColumnViewModelPreset Guid="d446a182-5203-4a29-aca1-4ab9bea0d1b5" Name="Version" SortPriority="1" Width="80" />
+                <HdvColumnViewModelPreset Guid="cb796d44-2927-5ac1-d231-4b71904c18f5" Name="Thread Name" SortPriority="2" Width="80" />
+                <HdvColumnViewModelPreset Guid="82ddfdff-ee93-5f35-08ac-4705069618dc" Name="Thread Activity Tag" SortPriority="3" Width="80" />
+                <HdvColumnViewModelPreset Guid="2818954f-2d30-5569-4510-dade0a5a605c" Name="Annotation" SortPriority="4" Width="80" />
+                <HdvColumnViewModelPreset Guid="90fe0b49-e3bb-440f-b829-5813c42108a1" Name="Event Name" SortPriority="22" Width="239" />
+                <HdvColumnViewModelPreset Guid="72892fbe-0f55-426a-9aa1-26b6baf09ffb" Name="Provider Type" SortPriority="24" Width="100" />
+                <HdvColumnViewModelPreset Guid="0734f1a4-fbd9-4ff6-aec0-cf43875c8253" Name="Message" SortPriority="25" Width="100" />
+                <HdvColumnViewModelPreset Guid="3be8610c-babb-4154-9970-1b2210928024" Name="Cpu" SortPriority="26" Width="45" />
+                <HdvColumnViewModelPreset Guid="342f7677-17b2-4c7e-b9ec-e89612c49792" Name="Count" AggregationMode="Sum" IsVisible="True" SortOrder="Descending" Width="80" />
+                <HdvColumnViewModelPreset Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" IsVisible="True" SortPriority="27" Width="63" />
+                <HdvColumnViewModelPreset Guid="0c5cf8cd-9b9e-5798-1a5d-09d429f7fa3c" Name="Field 1" IsVisible="True" SortPriority="5" Width="111" />
+                <HdvColumnViewModelPreset Guid="71badd11-26e5-56bc-44ec-12f4cc6a8f3e" Name="Field 2" IsVisible="True" SortPriority="6" Width="80" />
+                <HdvColumnViewModelPreset Guid="411dba2d-5d6e-5272-8287-636d0841768c" Name="Field 3" IsVisible="True" SortPriority="7" Width="80" />
+                <HdvColumnViewModelPreset Guid="048f5050-1f17-59b3-fa22-4b0781ee630b" Name="Field 4" IsVisible="True" SortPriority="8" Width="80" />
+                <HdvColumnViewModelPreset Guid="94e48f22-d499-5227-bb04-be011b4159b0" Name="Field 5" IsVisible="True" SortPriority="9" Width="80" />
+                <HdvColumnViewModelPreset Guid="c1054028-424a-59ba-e760-6d30abbd69c5" Name="Field 6" IsVisible="True" SortPriority="10" Width="80" />
+                <HdvColumnViewModelPreset Guid="5cbc4b58-2de1-5449-55b2-4651d4edf90a" Name="Field 7" IsVisible="True" SortPriority="11" Width="80" />
+                <HdvColumnViewModelPreset Guid="fc01e6c9-a43b-51a1-fd2e-112ba48aff65" Name="Field 8" IsVisible="True" SortPriority="12" Width="80" />
+                <HdvColumnViewModelPreset Guid="e3dcf300-46e2-5c43-ef4b-2c3db489ec25" Name="Field 9" IsVisible="True" SortPriority="13" Width="80" />
+                <HdvColumnViewModelPreset Guid="87c21ddb-4b29-58e3-5ddc-f114c5ca209a" Name="Field 10" IsVisible="True" SortPriority="14" Width="80" />
+                <HdvColumnViewModelPreset Guid="65f8fe42-ad02-5016-3521-f93329c76227" Name="Field 11" IsVisible="True" SortPriority="15" Width="80" />
+                <HdvColumnViewModelPreset Guid="03d48fd3-0fe4-57f5-a477-49beb0d70a1f" Name="Field 12" IsVisible="True" SortPriority="16" Width="80" />
+                <HdvColumnViewModelPreset Guid="998f8e2d-0f5a-5a54-0133-226e2de62c0b" Name="Field 13" IsVisible="True" SortPriority="17" Width="80" />
+                <HdvColumnViewModelPreset Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" IsVisible="True" SortPriority="29" Width="80" />
+              </HdvViewModelPreset.ConfigurableColumns>
+            </HdvViewModelPreset>
+            <HdvViewModelPreset Name="Chrome and Multi Events" GraphColumnCount="32" KeyColumnCount="8" LeftFrozenColumnCount="7" RightFrozenColumnCount="31" InitialFilterQuery="[Provider Name]:*&quot;Multi-.*|Chrome.*&quot;" InitialSelectionQuery="" InitialExpansionQuery="">
               <HdvViewModelPreset.ColumnMetadataEntries>
                 <ColumnMetadataEntry Guid="edf01e5d-3644-4dbc-ab9d-f8954e6db6ea" Name="ThreadId" ColumnMetadata="EndThreadId" />
                 <ColumnMetadataEntry Guid="bbfc990a-b6c9-4dcd-858b-f040ab4a1efe" Name="Time (s)" ColumnMetadata="StartTime" />

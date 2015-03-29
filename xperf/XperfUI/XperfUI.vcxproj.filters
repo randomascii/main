@@ -51,9 +51,6 @@
     <ClInclude Include="DirectoryMonitor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Support.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XperfUI.cpp">

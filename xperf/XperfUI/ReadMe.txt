@@ -45,20 +45,21 @@ Renaming of traces and associated files.
 Need keyboard accelerators for F2 (start renaming), enter (stop renaming),
 and probably ESC (to stop it from closing the dialog).
 Add DX provider.
+Copy over startup profile on first-run, and subsequent runs?
+Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
+Remember settings.
 
 
 
 Most important tasks:
-Copy over startup profile on first-run, and subsequent runs?
-Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
 Add OS specific checks for what user providers to enable, compression options, etc.
+Remember more settings -- heap executable, and ???
 Increase the user-provider buffer counts when doing DX profiling.
 Support for 32-bit operating systems, or at least exit cleanly with a warning.
-Remember settings.
-Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,
-option for stacks on user events, option for DX tracing, option for copying startup profile(s).
+Implement settings dialog - configure trace directories, buffer sizes,
+option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?
 
 To-do eventually:
