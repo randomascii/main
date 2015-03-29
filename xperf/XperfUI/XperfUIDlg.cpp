@@ -250,6 +250,12 @@ BOOL CXperfUIDlg::OnInitDialog()
 		}
 	}
 
+	if (GetWindowsVersion() == kWindowsVersionXP)
+	{
+		AfxMessageBox(L"ETW tracing requires Windows Vista or above.");
+		exit(10);
+	}
+
 	// The WPT 8.1 installer is always a 32-bit installer, so on 64-bit
 	// Windows it ends up in the (x86) directory.
 	if (Is64BitWindows())
@@ -621,12 +627,44 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 		kernelFile = L" -buffering";
 	std::wstring kernelArgs = L" -start " + GetKernelLogger() + L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
-	std::wstring userProviders = L" -on Microsoft-Windows-Win32k+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
+	WindowsVersion winver = GetWindowsVersion();
+	std::wstring userProviders = L" -on Microsoft-Windows-Win32k";
+	if (winver <= kWindowsVersionVista)
+		userProviders = L" -on Microsoft-Windows-LUA"; // Because Microsoft-Windows-Win32k doesn't work on Vista.
+	userProviders += L"+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
+
+	// DWM providers can be helpful also. Uncomment to enable.
+	//userProviders += L"+Microsoft-Windows-Dwm-Dwm";
+	// Theoretically better power monitoring data, Windows 7+, but it doesn't
+	// seem to work.
+	//userProviders += L"+Microsoft-Windows-Kernel-Processor-Power+Microsoft-Windows-Kernel-Power";
+
 	if (useChromeProviders_)
 		userProviders += L"+Chrome";
+
 	if (bDirectXTracing_)
-		userProviders += L"+DX:0x2F";
+	{
+		// Apparently we need a different provider for graphics profiling
+		// on Windows 8 and above.
+		// The 0x2F mask was copied from GPUView's log.cmd batch file.
+		// Adjust as needed?
+		if (winver >= kWindowsVersion8)
+		{
+			userProviders += L"+Microsoft-Windows-DxgKrnl";
+			if (!IsWindowsServer())
+			{
+				// Present events on Windows 8 + -- non-server SKUs only.
+				userProviders += L"+Microsoft-Windows-MediaEngine";
+			}
+		}
+		else
+			userProviders += L"+DX:0x2F";
+	}
+
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
+	// Increase the user buffer sizes when doing graphics tracing.
+	if (bDirectXTracing_)
+		userBuffers = L" -buffersize 1024 -minbuffers 200 -maxbuffers 200";
 	std::wstring userFile = L" -f \"" + GetUserFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
 		userFile = L" -buffering";
