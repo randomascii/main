@@ -35,6 +35,8 @@ private:
 	CButton btSaveTraceBuffers_;
 	CButton btStopTracing_;
 
+	void TransferSettings(bool saving);
+
 	bool bCompress_ = true;
 	bool bCswitchStacks_ = true;
 	bool bSampledStacks_ = true;
@@ -53,7 +55,7 @@ private:
 	// Typical trace names look like this:
 	// 2015-03-21_08-52-11_Bruce
 	// The first 19 characters are the date and time.
-	// The remainder are eligible for editin.
+	// The remainder are eligible for editing.
 	const size_t kPrefixLength = 19;
 	void StartRenameTrace();
 
@@ -72,6 +74,8 @@ private:
 	std::vector<std::wstring> traces_;
 	CListBox btTraces_;
 
+	// This starts and stops a thread that watches for changes to the
+	// trace directory and sends a message when one is detected.
 	DirectoryMonitor monitorThread_;
 
 	// This contains the notes for the selected trace, as loaded from disk.
@@ -89,6 +93,8 @@ private:
 
 	HACCEL hAccelTable_ = NULL;
 	HACCEL hRenameAccelTable_ = NULL;
+
+	void SetSamplingSpeed();
 
 	void StopTracing(bool bSaveTrace);
 

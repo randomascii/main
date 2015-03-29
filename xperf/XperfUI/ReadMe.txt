@@ -44,6 +44,7 @@ Error checking -- checking for failures to start or stop tracing.
 Renaming of traces and associated files.
 Need keyboard accelerators for F2 (start renaming), enter (stop renaming),
 and probably ESC (to stop it from closing the dialog).
+Add DX provider.
 
 
 
@@ -53,7 +54,7 @@ Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
 Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
 Add OS specific checks for what user providers to enable, compression options, etc.
-Add DX provider.
+Increase the user-provider buffer counts when doing DX profiling.
 Support for 32-bit operating systems, or at least exit cleanly with a warning.
 Remember settings.
 Implement settings dialog - configure trace directories, buffer sizes, heap-tracing executable,

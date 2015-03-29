@@ -37,7 +37,13 @@
 
 // Global function for printing to the dialog output window.
 void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...);
+// Needed for int64_t and friends
 #include <inttypes.h>
+
+// Using #define NOMINMAX would be nice but gdiplustypes.h *depends*
+// on min/max macros, so the best I can do is to undefine them here.
+#undef min
+#undef max
 
 // Send this when the list of traces needs to be updated.
 const int WM_UPDATETRACELIST = WM_USER + 10;

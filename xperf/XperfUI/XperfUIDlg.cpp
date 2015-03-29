@@ -69,18 +69,24 @@ void CXperfUIDlg::vprintf(const wchar_t* pFormat, va_list args)
 	PeekMessage(&msg, *this, 0, 0, PM_NOREMOVE);
 }
 
+
 CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CXperfUIDlg::IDD, pParent)
 	, monitorThread_(this)
 {
 	pMainWindow = this;
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	TransferSettings(false);
 }
 
 CXperfUIDlg::~CXperfUIDlg()
 {
 	// Shut down key logging.
 	SetKeyloggingState(kKeyLoggerOff);
+
+	// Save settings.
+	TransferSettings(true);
 }
 
 // Shutdown tasks that must be completed before the dialog
@@ -98,8 +104,15 @@ void CXperfUIDlg::ShutdownTasks()
 		StopTracing(false);
 	}
 
-	// Forcibly clear the heap tracin registry keys.
+	// Forcibly clear the heap tracing registry keys.
 	SetHeapTracing(true);
+
+	// Make sure the sampling speed is set to normal on the way out.
+	// Don't change bFastSampling because it needs to get saved.
+	bool bOldSpeed = bFastSampling_;
+	bFastSampling_ = false;
+	SetSamplingSpeed();
+	bFastSampling_ = bOldSpeed;
 }
 
 void CXperfUIDlg::OnCancel()
@@ -262,10 +275,16 @@ BOOL CXperfUIDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	CheckDlgButton(IDC_COMPRESSTRACE, bCompress_);
-	CheckDlgButton(IDC_CPUSAMPLINGCALLSTACKS, bSampledStacks_);
 	CheckDlgButton(IDC_CONTEXTSWITCHCALLSTACKS, bCswitchStacks_);
+	CheckDlgButton(IDC_CPUSAMPLINGCALLSTACKS, bSampledStacks_);
+	CheckDlgButton(IDC_FASTSAMPLING, bFastSampling_);
+	CheckDlgButton(IDC_DIRECTXTRACING, bDirectXTracing_);
+	CheckDlgButton(IDC_SHOWCOMMANDS, bShowCommands_);
 
-
+	// If a fast sampling speed is requested then set it now. Note that
+	// this assumes that the speed will otherwise be normal.
+	if (bFastSampling_)
+		SetSamplingSpeed();
 
 	btInputTracing_.AddString(L"Off");
 	btInputTracing_.AddString(L"Private");
@@ -803,28 +822,28 @@ void CXperfUIDlg::OnBnClickedShowcommands()
 }
 
 
-void CXperfUIDlg::OnBnClickedFastsampling()
+void CXperfUIDlg::SetSamplingSpeed()
 {
-	bFastSampling_ = !bFastSampling_;
-	const wchar_t* message = nullptr;
-	const char* narrowMessage = nullptr;
-	if (bFastSampling_)
-	{
-		message = L"Setting CPU sampling speed to 8 KHz, for finer resolution.";
-		narrowMessage = "Setting CPU sampling speed to 8 KHz, for finer resolution.";
-	}
-	else
-	{
-		message = L"Setting CPU sampling speed to 1 KHz, for lower overhead.";
-		narrowMessage = "Setting CPU sampling speed to 1 KHz, for lower overhead.";
-	}
-	outputPrintf(L"%s\n", message);
-	// Record the CPU sampling frequency change in the trace, if one is being recorded.
-	ETWMark(narrowMessage);
 	ChildProcess child(GetXperfPath());
 	std::wstring profInt = bFastSampling_ ? L"1221" : L"9001";
 	std::wstring args = L" -setprofint " + profInt + L" cached";
 	child.Run(bShowCommands_, L"xperf.exe" + args);
+}
+
+void CXperfUIDlg::OnBnClickedFastsampling()
+{
+	bFastSampling_ = !bFastSampling_;
+	const wchar_t* message = nullptr;
+	if (bFastSampling_)
+	{
+		message = L"Setting CPU sampling speed to 8 KHz, for finer resolution.";
+	}
+	else
+	{
+		message = L"Setting CPU sampling speed to 1 KHz, for lower overhead.";
+	}
+	outputPrintf(L"%s\n", message);
+	SetSamplingSpeed();
 }
 
 
