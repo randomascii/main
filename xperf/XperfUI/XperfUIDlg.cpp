@@ -277,6 +277,13 @@ BOOL CXperfUIDlg::OnInitDialog()
 	std::wstring defaultTraceDir = documents + std::wstring(L"\\xperftraces\\");
 	traceDir_ = GetDirectory(L"xperftracedir", defaultTraceDir);
 
+	std::wstring wpaStartup = documents + std::wstring(L"\\WPA Files\\Startup.wpaProfile");
+	if (!PathFileExists(wpaStartup.c_str()))
+	{
+		// Auto-copy a startup profile if there isn't one.
+		CopyFile((GetExeDir() + L"Startup.wpaProfile").c_str(), wpaStartup.c_str(), TRUE);
+	}
+
 	tempTraceDir_ = GetDirectory(L"temp", traceDir_);
 
 	SetSymbolPath();

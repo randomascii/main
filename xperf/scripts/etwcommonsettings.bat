@@ -12,11 +12,13 @@
 @xcopy /y %~dp0Startup.wpaProfile "%startupProfileDest%"
 :StartupDone
 
+@rem Skip this because it misbehaves on 32-bit Windows and it is
+@rem best handled through XperfUI.
 @rem Copy over known-good dbghelp.dll and symsrv.dll
-@if not exist %~dp0x64\dbghelp.dll goto NoDbgHelp
-@xcopy /y %~dp0x64\dbghelp.dll "c:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit"
-@xcopy /y %~dp0x64\symsrv.dll "c:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit"
-:NoDbgHelp
+@rem @if not exist %~dp0x64\dbghelp.dll goto NoDbgHelp
+@rem @xcopy /y %~dp0x64\dbghelp.dll "c:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit"
+@rem @xcopy /y %~dp0x64\symsrv.dll "c:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit"
+@rem :NoDbgHelp
 
 @rem Set _NT_SYMBOL_PATH if it is not already set
 
