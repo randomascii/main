@@ -48,15 +48,15 @@ Add DX provider.
 Copy over startup profile on first-run, and subsequent runs?
 Optionally copy over 64-bit dbghelp.dll and symsrv.dll?
 Remember all settings.
+Support for 32-bit operating systems.
 
 
 
 Most important tasks:
-Add compatibility manifest up to Windows 8.1
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
+Add compatibility manifest up to Windows 8.1
 Add OS specific checks for what user providers to enable, compression options, etc.
 Increase the user-provider buffer counts when doing DX profiling.
-Support for 32-bit operating systems, or at least exit cleanly with a warning.
 Implement settings dialog - configure trace directories, buffer sizes,
 option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?

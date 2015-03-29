@@ -310,3 +310,11 @@ int64_t GetFileSize(const std::wstring& path)
 	CloseHandle(hFile);
 	return 0;
 }
+
+bool Is64BitWindows()
+{
+	// http://blogs.msdn.com/b/oldnewthing/archive/2005/02/01/364563.aspx
+	BOOL f64 = FALSE;
+	bool bIsWin64 = IsWow64Process(GetCurrentProcess(), &f64) && f64;
+	return bIsWin64;
+}

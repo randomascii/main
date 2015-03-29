@@ -250,6 +250,12 @@ BOOL CXperfUIDlg::OnInitDialog()
 		}
 	}
 
+	// The WPT 8.1 installer is always a 32-bit installer, so on 64-bit
+	// Windows it ends up in the (x86) directory.
+	if (Is64BitWindows())
+		wptDir_ = L"C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
+	else
+		wptDir_ = L"C:\\Program Files\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
 	if (!PathFileExists(GetXperfPath().c_str()))
 	{
 		AfxMessageBox((GetXperfPath() + L" does not exist. Please install WPT 8.1. Exiting.").c_str());
@@ -456,11 +462,7 @@ void CXperfUIDlg::RegisterProviders()
 // stack walking will work. Just do it -- don't ask.
 void CXperfUIDlg::DisablePagingExecutive()
 {
-	// http://blogs.msdn.com/b/oldnewthing/archive/2005/02/01/364563.aspx
-	BOOL f64 = FALSE;
-	bool bIsWin64 = IsWow64Process(GetCurrentProcess(), &f64) && f64;
-
-	if (bIsWin64)
+	if (Is64BitWindows())
 	{
 		const wchar_t* keyName = L"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management";
 		SetRegistryDWORD(HKEY_LOCAL_MACHINE, keyName, L"DisablePagingExecutive", 1);
@@ -529,11 +531,6 @@ HCURSOR CXperfUIDlg::OnQueryDragIcon()
 }
 
 
-std::wstring CXperfUIDlg::GetWPTDir() const
-{
-	return L"C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\";
-}
-
 std::wstring CXperfUIDlg::GetExeDir() const
 {
 	wchar_t exePath[MAX_PATH];
@@ -588,26 +585,6 @@ std::wstring CXperfUIDlg::GetResultFile() const
 	}
 
 	return GetTraceDir() + filePart + L".etl";
-}
-
-std::wstring CXperfUIDlg::GetTempTraceDir() const
-{
-	return tempTraceDir_;
-}
-
-std::wstring CXperfUIDlg::GetKernelFile() const
-{
-	return CXperfUIDlg::GetTempTraceDir() + L"kernel.etl";
-}
-
-std::wstring CXperfUIDlg::GetUserFile() const
-{
-	return GetTempTraceDir() + L"user.etl";
-}
-
-std::wstring CXperfUIDlg::GetHeapFile() const
-{
-	return GetTempTraceDir() + L"heap.etl";
 }
 
 void CXperfUIDlg::OnBnClickedStarttracing()

@@ -122,8 +122,7 @@ void CSettings::OnBnClickedCopysymboldlls()
 		L"symsrv.dll",
 	};
 
-	BOOL f64 = FALSE;
-	bool bIsWin64 = IsWow64Process(GetCurrentProcess(), &f64) && f64;
+	bool bIsWin64 = Is64BitWindows();
 
 	bool failed = false;
 	for (size_t i = 0; i < ARRAYSIZE(fileNames); ++i)

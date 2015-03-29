@@ -87,6 +87,7 @@ private:
 	// this string object, so don't change it without adding synchronization.
 	std::wstring traceDir_;
 	std::wstring tempTraceDir_;
+	std::wstring wptDir_;
 
 	std::wstring output_;
 	CEdit btOutput_;
@@ -98,22 +99,22 @@ private:
 
 	void StopTracing(bool bSaveTrace);
 
-	std::wstring GetWPTDir() const;
+	std::wstring GetWPTDir() const { return wptDir_; }
 	std::wstring GetXperfPath() const { return GetWPTDir() + L"xperf.exe"; }
 	std::wstring GetTraceDir() const { return traceDir_; }
 	std::wstring GetExeDir() const;
 	// Note that GetResultFile() gives a time-based name, so don't expect
 	// the same result across multiple calls!
 	std::wstring GetResultFile() const;
-	std::wstring GetTempTraceDir() const;
-	std::wstring GetKernelFile() const;
-	std::wstring GetUserFile() const;
-	std::wstring GetHeapFile() const;
+	std::wstring GetTempTraceDir() const { return tempTraceDir_; }
+	std::wstring GetKernelFile() const { return CXperfUIDlg::GetTempTraceDir() + L"kernel.etl"; }
+	std::wstring GetUserFile() const { return GetTempTraceDir() + L"user.etl"; }
+	std::wstring GetHeapFile() const { return GetTempTraceDir() + L"heap.etl"; }
 
 	// Get session name for kernel logger
-	const std::wstring logger_ = L"\"NT Kernel Logger\"";
+	const std::wstring kernelLogger_ = L"\"NT Kernel Logger\"";
 	//const std::wstring logger_ = L"\"Circular Kernel Context Logger\"";
-	std::wstring GetKernelLogger() const { return logger_; }
+	std::wstring GetKernelLogger() const { return kernelLogger_; }
 
 	int initialWidth_ = 0;
 	int initialHeight_ = 0;

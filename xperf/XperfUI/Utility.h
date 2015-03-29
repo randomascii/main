@@ -42,4 +42,6 @@ int64_t GetFileSize(const std::wstring& path);
 
 void SetClipboardText(const std::wstring& text);
 
+bool Is64BitWindows();
+
 #endif
