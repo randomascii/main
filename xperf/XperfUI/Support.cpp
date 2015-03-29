@@ -23,6 +23,12 @@ struct NameToRangedInt
 	int min, max;
 };
 
+struct NameToString
+{
+	const wchar_t* pName;
+	std::wstring* pSetting;
+};
+
 void CXperfUIDlg::TransferSettings(bool saving)
 {
 	CWinApp* pApp = AfxGetApp();
@@ -65,6 +71,22 @@ void CXperfUIDlg::TransferSettings(bool saving)
 			if (temp > m.max)
 				temp = m.max;
 			*m.pSetting = temp;
+		}
+	}
+
+	NameToString strings[] =
+	{
+		{ L"HeapProfiledProcess", &heapTracingExe_ },
+	};
+
+	for (auto& m : strings)
+	{
+		if (saving)
+			pApp->WriteProfileStringW(pSettings, m.pName, m.pSetting->c_str());
+		else
+		{
+			CString result = pApp->GetProfileStringW(pSettings, m.pName, m.pSetting->c_str());
+			*m.pSetting = result;
 		}
 	}
 }
