@@ -52,6 +52,7 @@ Support for 32-bit operating systems.
 Add compatibility manifest up to Windows 8.1
 Add OS specific checks for what user providers to enable, compression options, etc.
 Increase the user-provider buffer counts when doing DX profiling.
+Disable compress options (checkbox and menu) for Windows 7 and below.
 
 
 
@@ -64,7 +65,6 @@ Detect and handle trace files that lack the date component -- synthesize?
 To-do eventually:
 Place the trace-name editing box appropriately.
 Give the user a chance to rename trace before launching viewer
-Disable compress options (checkbox and menu) for Windows 7 and below.
 Transparent compression/decompression into .zip files. Note that if a trace is
 compressed and then renamed that the trace inside the .zip file will be wrong - it
 should be fixed up when the renaming happens.

@@ -1198,6 +1198,14 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				pContextMenu->EnableMenuItem(id, MF_BYCOMMAND | MF_GRAYED);
 		}
 
+		if (GetWindowsVersion() < kWindowsVersion8)
+		{
+			// Disable ETW trace compress options on Windows 7 and below
+			// since they don't work there.
+			pContextMenu->EnableMenuItem(ID_TRACES_COMPRESSTRACE, MF_BYCOMMAND | MF_GRAYED);
+			pContextMenu->EnableMenuItem(ID_TRACES_COMPRESSTRACES, MF_BYCOMMAND | MF_GRAYED);
+		}
+
 		int selection = pContextMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON |
 			TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY,
 			point.x, point.y, pWnd, NULL);
