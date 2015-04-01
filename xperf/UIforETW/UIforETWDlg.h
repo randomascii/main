@@ -131,11 +131,15 @@ private:
 
 	CToolTipCtrl toolTip_;
 
+	bool chromeDeveloper_ = true;
+
 	void CompressTrace(const std::wstring& tracePath);
 	// Update the enabled/disabled states of buttons.
 	void UpdateEnabling();
 	void UpdateNotesState();
+	std::wstring FindPython(); // Returns a full path to python or nothing.
 	void StripChromeSymbols(const std::wstring& traceFilename);
+	void PreprocessTrace(const std::wstring& traceFilename);
 	void LaunchTraceViewer(const std::wstring traceFilename, const std::wstring viewer = L"wpa.exe");
 	void SaveNotesIfNeeded();
 	void ShutdownTasks();

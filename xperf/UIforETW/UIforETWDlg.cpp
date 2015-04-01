@@ -779,6 +779,7 @@ void CUIforETWDlg::StopTracing(bool bSaveTrace)
 	if (bSaveTrace)
 	{
 		StripChromeSymbols(traceFilename);
+		PreprocessTrace(traceFilename);
 
 		LaunchTraceViewer(traceFilename);
 	}
@@ -1265,7 +1266,8 @@ void CUIforETWDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				StripChromeSymbols(tracePath);
 				break;
 			case ID_TRACES_TRACEPATHTOCLIPBOARD:
-				SetClipboardText(tracePath);
+				// Comma delimited for easy pasting into DOS commands.
+				SetClipboardText(L"\"" + tracePath + L"\"");
 				break;
 		}
 	}
@@ -1331,13 +1333,9 @@ void CUIforETWDlg::CompressTrace(const std::wstring& tracePath)
 	}
 }
 
-void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
+
+std::wstring CUIforETWDlg::FindPython()
 {
-	// Some private symbols, particularly Chrome's, must be stripped and
-	// then converted to .symcache files in order to avoid ~25 minute
-	// conversion times for the full private symbols.
-	// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
-	// Call Python script here, or recreate it in C++.
 #pragma warning(suppress:4996)
 	const wchar_t* path = _wgetenv(L"path");
 	if (path)
@@ -1348,14 +1346,51 @@ void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
 			std::wstring pythonPath = part + L"\\python.exe";
 			if (PathFileExists(pythonPath.c_str()))
 			{
-				outputPrintf(L"Stripping chrome symbols - this may take a while...\n");
-				ChildProcess child(pythonPath);
-				// Must pass -u to disable Python's output buffering when printing to
-				// a pipe, in order to get timely feedback.
-				std::wstring args = L" -u \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
-				child.Run(bShowCommands_, L"python.exe" + args);
-				break;
+				return pythonPath;
 			}
+		}
+	}
+	// No python found.
+	return L"";
+}
+
+
+void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
+{
+	// Some private symbols, particularly Chrome's, must be stripped and
+	// then converted to .symcache files in order to avoid ~25 minute
+	// conversion times for the full private symbols.
+	// https://randomascii.wordpress.com/2014/11/04/slow-symbol-loading-in-microsofts-profiler-take-two/
+	// Call Python script here, or recreate it in C++.
+	std::wstring pythonPath = FindPython();
+	if (!pythonPath.empty())
+	{
+		outputPrintf(L"Stripping chrome symbols - this may take a while...\n");
+		ChildProcess child(pythonPath);
+		// Must pass -u to disable Python's output buffering when printing to
+		// a pipe, in order to get timely feedback.
+		std::wstring args = L" -u \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
+		child.Run(bShowCommands_, L"python.exe" + args);
+	}
+}
+
+
+void CUIforETWDlg::PreprocessTrace(const std::wstring& traceFilename)
+{
+	std::wstring pythonPath = FindPython();
+	if (!pythonPath.empty())
+	{
+		if (chromeDeveloper_)
+		{
+			outputPrintf(L"Preprocessing Chrome trace...\n");
+			ChildProcess child(pythonPath);
+			std::wstring args = L" -u \"" + GetExeDir() + L"IdentifyChromeProcesses.py\" \"" + traceFilename + L"\"";
+			child.Run(bShowCommands_, L"python.exe" + args);
+			std::wstring output = child.GetOutput();
+			// The output of the script is written to the trace description file.
+			// Ideally it would be appended, but good enough for now.
+			std::wstring textFilename = traceFilename.substr(0, traceFilename.size() - 4) + L".txt";
+			WriteTextAsFile(textFilename, output);
 		}
 	}
 }

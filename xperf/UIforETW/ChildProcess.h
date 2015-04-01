@@ -28,6 +28,11 @@ public:
 	// will wait until the process returns and then get the exit code.
 	DWORD GetExitCode();
 
+	// Normally all output is printed as it is received. If this function
+	// is called after Run() then all output will be returned, and not
+	// printed.
+	std::wstring GetOutput();
+
 private:
 	// Path to the executable to be run, and its process handle.
 	std::wstring exePath_;
@@ -67,5 +72,5 @@ private:
 	// it will just return immediately. Otherwise it will wait
 	// for the process to end. This is called by the destructor
 	// so calling this is strictly optional.
-	void WaitForCompletion();
+	void WaitForCompletion(bool printOutput);
 };

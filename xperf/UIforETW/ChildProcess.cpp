@@ -145,13 +145,21 @@ DWORD ChildProcess::GetExitCode()
 	if (!hProcess_)
 		return 0;
 	// Don't allow getting the exit code unless the process has exited.
-	WaitForCompletion();
+	WaitForCompletion(true);
 	DWORD result;
 	(void)GetExitCodeProcess(hProcess_, &result);
 	return result;
 }
 
-void ChildProcess::WaitForCompletion()
+std::wstring ChildProcess::GetOutput()
+{
+	if (!hProcess_)
+		return L"";
+	WaitForCompletion(false);
+	return RemoveOutputText();
+}
+
+void ChildProcess::WaitForCompletion(bool printOutput)
 {
 	if (hProcess_)
 	{
@@ -160,8 +168,11 @@ void ChildProcess::WaitForCompletion()
 		// is actually an idle loop.
 		while (IsStillRunning())
 		{
-			std::wstring output = RemoveOutputText();
-			outputPrintf(L"%s", output.c_str());
+			if (printOutput)
+			{
+				std::wstring output = RemoveOutputText();
+				outputPrintf(L"%s", output.c_str());
+			}
 		}
 		// This isn't technically needed, but removing it would make
 		// me nervous.
@@ -197,9 +208,12 @@ void ChildProcess::WaitForCompletion()
 		hPipe_ = INVALID_HANDLE_VALUE;
 	}
 
-	// Now that the child thread has exited we can finally read
-	// the last of the child-process output.
-	std::wstring output = RemoveOutputText();
-	if (!output.empty())
-		outputPrintf(L"%s", output.c_str());
+	if (printOutput)
+	{
+		// Now that the child thread has exited we can finally read
+		// the last of the child-process output.
+		std::wstring output = RemoveOutputText();
+		if (!output.empty())
+			outputPrintf(L"%s", output.c_str());
+	}
 }

@@ -63,6 +63,12 @@ option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?
 
 To-do eventually:
+Should have a Chrome developer checkbox.
+Should have the option to run arbitrary scripts after each trace is recorded.
+PreprocessTrace should append to the trace text file.
+Should have an option to put an entire process tree in the trace text file.
+ChildProcess or PreprocessTrace should convert from LF to CRLF for the edit control.
+Try using the -cancel option for more efficient stopping of traces without recording. See xperf -help stop
 Place the trace-name editing box appropriately.
 Give the user a chance to rename trace before launching viewer
 Transparent compression/decompression into .zip files. Note that if a trace is
