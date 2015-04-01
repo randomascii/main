@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "XperfUI.h"
+#include "UIforETW.h"
 #include "About.h"
 
 #ifdef _DEBUG

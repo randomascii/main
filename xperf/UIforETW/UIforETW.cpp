@@ -1,26 +1,22 @@
-
-// XperfUI.cpp : Defines the class behaviors for the application.
-//
-
 #include "stdafx.h"
-#include "XperfUI.h"
-#include "XperfUIDlg.h"
+#include "UIforETW.h"
+#include "UIforETWDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
 
-// CXperfUIApp
+// CUIforETWApp
 
-BEGIN_MESSAGE_MAP(CXperfUIApp, CWinApp)
+BEGIN_MESSAGE_MAP(CUIforETWApp, CWinApp)
 	ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
 
-// CXperfUIApp construction
+// CUIforETWApp construction
 
-CXperfUIApp::CXperfUIApp()
+CUIforETWApp::CUIforETWApp()
 {
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
@@ -30,14 +26,14 @@ CXperfUIApp::CXperfUIApp()
 }
 
 
-// The one and only CXperfUIApp object
+// The one and only CUIforETWApp object
 
-CXperfUIApp theApp;
+CUIforETWApp theApp;
 
 
-// CXperfUIApp initialization
+// CUIforETWApp initialization
 
-BOOL CXperfUIApp::InitInstance()
+BOOL CUIforETWApp::InitInstance()
 {
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
@@ -63,7 +59,7 @@ BOOL CXperfUIApp::InitInstance()
 
 	SetRegistryKey(L"RandomASCII");
 
-	CXperfUIDlg dlg;
+	CUIforETWDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == -1)

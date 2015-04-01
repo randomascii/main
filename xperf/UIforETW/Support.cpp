@@ -1,11 +1,11 @@
 #include "stdafx.h"
-#include "XperfUI.h"
-#include "XperfUIDlg.h"
+#include "UIforETW.h"
+#include "UIforETWDlg.h"
 
 /*
 Helper file to put random big messy functions in, to avoid clutter
-in XperfUIDlg.cpp. In other words, a second implementation file
-for CXperfUIDlg.
+in UIforETWDlg.cpp. In other words, a second implementation file
+for CUIforETWDlg.
 */
 
 static const wchar_t* pSettings = L"Settings";
@@ -29,7 +29,7 @@ struct NameToString
 	std::wstring* pSetting;
 };
 
-void CXperfUIDlg::TransferSettings(bool saving)
+void CUIforETWDlg::TransferSettings(bool saving)
 {
 	CWinApp* pApp = AfxGetApp();
 

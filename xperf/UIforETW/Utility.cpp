@@ -326,7 +326,7 @@ WindowsVersion GetWindowsVersion()
 	GetVersionEx(&verInfo);
 
 	// Windows 10 preview has major version 10, if you have a compatibility
-	// manifest for that OS, which XperfUI should have.
+	// manifest for that OS, which this program should have.
 	if (verInfo.dwMajorVersion > 6)
 		return kWindowsVersion10;	// Or higher, I guess.
 

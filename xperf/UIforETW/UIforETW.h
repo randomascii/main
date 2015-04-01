@@ -1,5 +1,5 @@
 
-// XperfUI.h : main header file for the PROJECT_NAME application
+// UIforETW.h : main header file for the PROJECT_NAME application
 //
 
 #pragma once
@@ -11,14 +11,14 @@
 #include "resource.h"		// main symbols
 
 
-// CXperfUIApp:
-// See XperfUI.cpp for the implementation of this class
+// CUIforETWApp:
+// See UIforETW.cpp for the implementation of this class
 //
 
-class CXperfUIApp : public CWinApp
+class CUIforETWApp : public CWinApp
 {
 public:
-	CXperfUIApp();
+	CUIforETWApp();
 
 // Overrides
 public:
@@ -29,4 +29,4 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-extern CXperfUIApp theApp;
+extern CUIforETWApp theApp;

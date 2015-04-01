@@ -1,4 +1,4 @@
-This is the to-do list for XperfUI, a UI to wrap recording ETW traces with xperf.exe.
+This is the to-do list for UIforETW, a UI to wrap recording ETW traces with xperf.exe.
 
 Done:
 Get appropriate default for tracedir.
@@ -58,7 +58,7 @@ Disable compress options (checkbox and menu) for Windows 7 and below.
 
 Most important tasks:
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
-Implement settings dialog - configure trace directories, buffer sizes,
+Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?
 

@@ -18,10 +18,10 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="XperfUI.h">
+    <ClInclude Include="UIforETW.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="XperfUIDlg.h">
+    <ClInclude Include="UIforETWDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -53,10 +53,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="XperfUI.cpp">
+    <ClCompile Include="UIforETW.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="XperfUIDlg.cpp">
+    <ClCompile Include="UIforETWDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -85,17 +85,17 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="XperfUI.rc">
+    <ResourceCompile Include="UIforETW.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\XperfUI.rc2">
+    <None Include="res\UIforETW.rc2">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\XperfUI.ico">
+    <Image Include="res\UIforETW.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

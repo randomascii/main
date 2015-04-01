@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <vector>
 
-static const wchar_t* kPipeName = L"\\\\.\\PIPE\\xperfUIPipe";
+static const wchar_t* kPipeName = L"\\\\.\\PIPE\\UIforETWPipe";
 
 ChildProcess::ChildProcess(std::wstring exePath)
 	: exePath_(std::move(exePath))

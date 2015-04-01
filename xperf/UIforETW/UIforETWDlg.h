@@ -13,14 +13,14 @@ enum TracingMode
 	kHeapTracingToFile
 };
 
-class CXperfUIDlg : public CDialogEx
+class CUIforETWDlg : public CDialogEx
 {
 public:
-	CXperfUIDlg(CWnd* pParent = NULL);	// standard constructor
-	~CXperfUIDlg();
+	CUIforETWDlg(CWnd* pParent = NULL);	// standard constructor
+	~CUIforETWDlg();
 
 // Dialog Data
-	enum { IDD = IDD_XPERFUI_DIALOG };
+	enum { IDD = IDD_UIFORETW_DIALOG };
 
 	void vprintf(const wchar_t* pFormat, va_list marker);
 
@@ -107,7 +107,7 @@ private:
 	// the same result across multiple calls!
 	std::wstring GetResultFile() const;
 	std::wstring GetTempTraceDir() const { return tempTraceDir_; }
-	std::wstring GetKernelFile() const { return CXperfUIDlg::GetTempTraceDir() + L"kernel.etl"; }
+	std::wstring GetKernelFile() const { return CUIforETWDlg::GetTempTraceDir() + L"kernel.etl"; }
 	std::wstring GetUserFile() const { return GetTempTraceDir() + L"user.etl"; }
 	std::wstring GetHeapFile() const { return GetTempTraceDir() + L"heap.etl"; }
 
@@ -125,7 +125,7 @@ private:
 	// Call this to retrieve a directory from an environment variable, or use
 	// a default, and make sure it exists.
 	std::wstring GetDirectory(const wchar_t* env, const std::wstring& default);
-	void CXperfUIDlg::UpdateTraceList();
+	void CUIforETWDlg::UpdateTraceList();
 	void RegisterProviders();
 	void DisablePagingExecutive();
 

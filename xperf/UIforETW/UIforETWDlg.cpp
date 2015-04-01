@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "XperfUI.h"
-#include "XperfUIDlg.h"
+#include "UIforETW.h"
+#include "UIforETWDlg.h"
 
 #include "About.h"
 #include "afxdialogex.h"
@@ -21,7 +21,7 @@ const int kRecordTraceHotKey = 1234;
 
 // This static pointer to the main window is used by the global
 // outputPrintf function.
-static CXperfUIDlg* pMainWindow;
+static CUIforETWDlg* pMainWindow;
 
 // This convenient hack function is so that the ChildProcess code can
 // print to the main output window. This function can only be called
@@ -34,7 +34,7 @@ void outputPrintf(_Printf_format_string_ const wchar_t* pFormat, ...)
 	va_end(args);
 }
 
-void CXperfUIDlg::vprintf(const wchar_t* pFormat, va_list args)
+void CUIforETWDlg::vprintf(const wchar_t* pFormat, va_list args)
 {
 	wchar_t buffer[5000];
 	_vsnwprintf_s(buffer, _TRUNCATE, pFormat, args);
@@ -70,8 +70,8 @@ void CXperfUIDlg::vprintf(const wchar_t* pFormat, va_list args)
 }
 
 
-CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(CXperfUIDlg::IDD, pParent)
+CUIforETWDlg::CUIforETWDlg(CWnd* pParent /*=NULL*/)
+	: CDialogEx(CUIforETWDlg::IDD, pParent)
 	, monitorThread_(this)
 {
 	pMainWindow = this;
@@ -80,7 +80,7 @@ CXperfUIDlg::CXperfUIDlg(CWnd* pParent /*=NULL*/)
 	TransferSettings(false);
 }
 
-CXperfUIDlg::~CXperfUIDlg()
+CUIforETWDlg::~CUIforETWDlg()
 {
 	// Shut down key logging.
 	SetKeyloggingState(kKeyLoggerOff);
@@ -91,7 +91,7 @@ CXperfUIDlg::~CXperfUIDlg()
 
 // Shutdown tasks that must be completed before the dialog
 // closes should go here.
-void CXperfUIDlg::ShutdownTasks()
+void CUIforETWDlg::ShutdownTasks()
 {
 	if (bShutdownCompleted_)
 		return;
@@ -115,19 +115,19 @@ void CXperfUIDlg::ShutdownTasks()
 	bFastSampling_ = bOldSpeed;
 }
 
-void CXperfUIDlg::OnCancel()
+void CUIforETWDlg::OnCancel()
 {
 	ShutdownTasks();
 	CDialog::OnCancel();
 }
 
-void CXperfUIDlg::OnClose()
+void CUIforETWDlg::OnClose()
 {
 	ShutdownTasks();
 	CDialog::OnClose();
 }
 
-void CXperfUIDlg::OnOK()
+void CUIforETWDlg::OnOK()
 {
 	ShutdownTasks();
 	CDialog::OnOK();
@@ -135,7 +135,7 @@ void CXperfUIDlg::OnOK()
 
 // Hook up dialog controls to classes that represent them,
 // for easier manipulation of those controls.
-void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
+void CUIforETWDlg::DoDataExchange(CDataExchange* pDX)
 {
 	DDX_Control(pDX, IDC_STARTTRACING, btStartTracing_);
 	DDX_Control(pDX, IDC_SAVETRACEBUFFERS, btSaveTraceBuffers_);
@@ -160,41 +160,41 @@ void CXperfUIDlg::DoDataExchange(CDataExchange* pDX)
 }
 
 // Hook up functions to messages from buttons, menus, etc.
-BEGIN_MESSAGE_MAP(CXperfUIDlg, CDialogEx)
+BEGIN_MESSAGE_MAP(CUIforETWDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_STARTTRACING, &CXperfUIDlg::OnBnClickedStarttracing)
-	ON_BN_CLICKED(IDC_STOPTRACING, &CXperfUIDlg::OnBnClickedStoptracing)
-	ON_BN_CLICKED(IDC_COMPRESSTRACE, &CXperfUIDlg::OnBnClickedCompresstrace)
-	ON_BN_CLICKED(IDC_CPUSAMPLINGCALLSTACKS, &CXperfUIDlg::OnBnClickedCpusamplingcallstacks)
-	ON_BN_CLICKED(IDC_CONTEXTSWITCHCALLSTACKS, &CXperfUIDlg::OnBnClickedContextswitchcallstacks)
-	ON_BN_CLICKED(IDC_SHOWCOMMANDS, &CXperfUIDlg::OnBnClickedShowcommands)
-	ON_BN_CLICKED(IDC_FASTSAMPLING, &CXperfUIDlg::OnBnClickedFastsampling)
-	ON_CBN_SELCHANGE(IDC_INPUTTRACING, &CXperfUIDlg::OnCbnSelchangeInputtracing)
+	ON_BN_CLICKED(IDC_STARTTRACING, &CUIforETWDlg::OnBnClickedStarttracing)
+	ON_BN_CLICKED(IDC_STOPTRACING, &CUIforETWDlg::OnBnClickedStoptracing)
+	ON_BN_CLICKED(IDC_COMPRESSTRACE, &CUIforETWDlg::OnBnClickedCompresstrace)
+	ON_BN_CLICKED(IDC_CPUSAMPLINGCALLSTACKS, &CUIforETWDlg::OnBnClickedCpusamplingcallstacks)
+	ON_BN_CLICKED(IDC_CONTEXTSWITCHCALLSTACKS, &CUIforETWDlg::OnBnClickedContextswitchcallstacks)
+	ON_BN_CLICKED(IDC_SHOWCOMMANDS, &CUIforETWDlg::OnBnClickedShowcommands)
+	ON_BN_CLICKED(IDC_FASTSAMPLING, &CUIforETWDlg::OnBnClickedFastsampling)
+	ON_CBN_SELCHANGE(IDC_INPUTTRACING, &CUIforETWDlg::OnCbnSelchangeInputtracing)
 	ON_MESSAGE(WM_UPDATETRACELIST, UpdateTraceListHandler)
-	ON_LBN_DBLCLK(IDC_TRACELIST, &CXperfUIDlg::OnLbnDblclkTracelist)
+	ON_LBN_DBLCLK(IDC_TRACELIST, &CUIforETWDlg::OnLbnDblclkTracelist)
 	ON_WM_GETMINMAXINFO()
 	ON_WM_SIZE()
-	ON_LBN_SELCHANGE(IDC_TRACELIST, &CXperfUIDlg::OnLbnSelchangeTracelist)
-	ON_BN_CLICKED(IDC_ABOUT, &CXperfUIDlg::OnBnClickedAbout)
-	ON_BN_CLICKED(IDC_SAVETRACEBUFFERS, &CXperfUIDlg::OnBnClickedSavetracebuffers)
+	ON_LBN_SELCHANGE(IDC_TRACELIST, &CUIforETWDlg::OnLbnSelchangeTracelist)
+	ON_BN_CLICKED(IDC_ABOUT, &CUIforETWDlg::OnBnClickedAbout)
+	ON_BN_CLICKED(IDC_SAVETRACEBUFFERS, &CUIforETWDlg::OnBnClickedSavetracebuffers)
 	ON_MESSAGE(WM_HOTKEY, OnHotKey)
 	ON_WM_CLOSE()
-	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CXperfUIDlg::OnCbnSelchangeTracingmode)
-	ON_BN_CLICKED(IDC_SETTINGS, &CXperfUIDlg::OnBnClickedSettings)
+	ON_CBN_SELCHANGE(IDC_TRACINGMODE, &CUIforETWDlg::OnCbnSelchangeTracingmode)
+	ON_BN_CLICKED(IDC_SETTINGS, &CUIforETWDlg::OnBnClickedSettings)
 	ON_WM_CONTEXTMENU()
-	ON_BN_CLICKED(ID_TRACES_OPENTRACEINWPA, &CXperfUIDlg::OnOpenTraceWPA)
-	ON_BN_CLICKED(ID_TRACES_OPENTRACEINGPUVIEW, &CXperfUIDlg::OnOpenTraceGPUView)
-	ON_BN_CLICKED(ID_RENAME, &CXperfUIDlg::OnRenameKey)
-	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CXperfUIDlg::FinishTraceRename)
-	ON_BN_CLICKED(ID_ENDRENAME, &CXperfUIDlg::FinishTraceRename)
-	ON_BN_CLICKED(ID_ESCKEY, &CXperfUIDlg::OnEscKey)
-	ON_BN_CLICKED(IDC_DIRECTXTRACING, &CXperfUIDlg::OnBnClickedDirectxtracing)
+	ON_BN_CLICKED(ID_TRACES_OPENTRACEINWPA, &CUIforETWDlg::OnOpenTraceWPA)
+	ON_BN_CLICKED(ID_TRACES_OPENTRACEINGPUVIEW, &CUIforETWDlg::OnOpenTraceGPUView)
+	ON_BN_CLICKED(ID_RENAME, &CUIforETWDlg::OnRenameKey)
+	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CUIforETWDlg::FinishTraceRename)
+	ON_BN_CLICKED(ID_ENDRENAME, &CUIforETWDlg::FinishTraceRename)
+	ON_BN_CLICKED(ID_ESCKEY, &CUIforETWDlg::OnEscKey)
+	ON_BN_CLICKED(IDC_DIRECTXTRACING, &CUIforETWDlg::OnBnClickedDirectxtracing)
 END_MESSAGE_MAP()
 
 
-void CXperfUIDlg::SetSymbolPath()
+void CUIforETWDlg::SetSymbolPath()
 {
 	// Make sure that the symbol paths are set.
 
@@ -215,7 +215,7 @@ void CXperfUIDlg::SetSymbolPath()
 }
 
 
-BOOL CXperfUIDlg::OnInitDialog()
+BOOL CUIforETWDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
@@ -274,8 +274,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 		assert(!"Failed to find My Documents directory.\n");
 		exit(10);
 	}
-	std::wstring defaultTraceDir = documents + std::wstring(L"\\xperftraces\\");
-	traceDir_ = GetDirectory(L"xperftracedir", defaultTraceDir);
+	std::wstring defaultTraceDir = documents + std::wstring(L"\\etwtraces\\");
+	traceDir_ = GetDirectory(L"etwtracedir", defaultTraceDir);
 
 	std::wstring wpaStartup = documents + std::wstring(L"\\WPA Files\\Startup.wpaProfile");
 	if (!PathFileExists(wpaStartup.c_str()))
@@ -357,7 +357,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 					L"more practical.");
 		toolTip_.AddTool(&btDirectXTracing_, L"Check this to record the DX:0x2F provider to allow seein GPU usage "
 					L"in WPA, and more data in GPUView.");
-		toolTip_.AddTool(&btShowCommands_, L"This tells XperfUI to display the xperf.exe and other commands being "
+		toolTip_.AddTool(&btShowCommands_, L"This tells UIforETW to display the commands being "
 					L"executed. This can be helpful for diagnostic purposes but is not normally needed.");
 
 		const TCHAR* pInputTip = L"Input tracing inserts custom ETW events into traces which can be helpful when "
@@ -370,8 +370,8 @@ BOOL CXperfUIDlg::OnInitDialog()
 
 		toolTip_.AddTool(&btTracingMode_, L"Select whether to trace straight to disk or to in-memory circular buffers.");
 
-		toolTip_.AddTool(&btTraces_, L"This is a list of all traces found in %xperftracedir%, which defaults to "
-					L"documents\\xperftraces.");
+		toolTip_.AddTool(&btTraces_, L"This is a list of all traces found in %etwtracedir%, which defaults to "
+					L"documents\\etwtraces.");
 		toolTip_.AddTool(&btTraceNotes_, L"Trace notes are intended for recording information about ETW traces, such "
 					L"as an analysis of what was discovered in the trace. Trace notes are auto-saved to a parallel text "
 					L"file - just type your analysis. The notes files will be renamed when you rename traces "
@@ -385,7 +385,7 @@ BOOL CXperfUIDlg::OnInitDialog()
 	return TRUE; // return TRUE unless you set the focus to a control
 }
 
-std::wstring CXperfUIDlg::GetDirectory(const wchar_t* env, const std::wstring& default)
+std::wstring CUIforETWDlg::GetDirectory(const wchar_t* env, const std::wstring& default)
 {
 	// Get a directory (from an environment variable, if set) and make sure it exists.
 	std::wstring result = default;
@@ -410,7 +410,7 @@ std::wstring CXperfUIDlg::GetDirectory(const wchar_t* env, const std::wstring& d
 	return result;
 }
 
-void CXperfUIDlg::RegisterProviders()
+void CUIforETWDlg::RegisterProviders()
 {
 	std::wstring dllSource = GetExeDir() + L"ETWProviders.dll";
 #pragma warning(suppress:4996)
@@ -480,7 +480,7 @@ void CXperfUIDlg::RegisterProviders()
 
 // Tell Windows to keep 64-bit kernel metadata in memory so that
 // stack walking will work. Just do it -- don't ask.
-void CXperfUIDlg::DisablePagingExecutive()
+void CUIforETWDlg::DisablePagingExecutive()
 {
 	if (Is64BitWindows())
 	{
@@ -489,7 +489,7 @@ void CXperfUIDlg::DisablePagingExecutive()
 	}
 }
 
-void CXperfUIDlg::UpdateEnabling()
+void CUIforETWDlg::UpdateEnabling()
 {
 	SmartEnableWindow(btStartTracing_, !bIsTracing_);
 	SmartEnableWindow(btSaveTraceBuffers_, bIsTracing_);
@@ -501,7 +501,7 @@ void CXperfUIDlg::UpdateEnabling()
 	SmartEnableWindow(btDirectXTracing_, !bIsTracing_);
 }
 
-void CXperfUIDlg::OnSysCommand(UINT nID, LPARAM lParam)
+void CUIforETWDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
 	{
@@ -518,7 +518,7 @@ void CXperfUIDlg::OnSysCommand(UINT nID, LPARAM lParam)
 // to draw the icon. For MFC applications using the document/view model,
 // this is automatically done for you by the framework.
 
-void CXperfUIDlg::OnPaint()
+void CUIforETWDlg::OnPaint()
 {
 	if (IsIconic())
 	{
@@ -545,13 +545,13 @@ void CXperfUIDlg::OnPaint()
 
 // The system calls this function to obtain the cursor to display while the user drags
 // the minimized window.
-HCURSOR CXperfUIDlg::OnQueryDragIcon()
+HCURSOR CUIforETWDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
 
-std::wstring CXperfUIDlg::GetExeDir() const
+std::wstring CUIforETWDlg::GetExeDir() const
 {
 	wchar_t exePath[MAX_PATH];
 	if (GetModuleFileName(0, exePath, ARRAYSIZE(exePath)))
@@ -567,7 +567,7 @@ std::wstring CXperfUIDlg::GetExeDir() const
 	exit(10);
 }
 
-std::wstring CXperfUIDlg::GetResultFile() const
+std::wstring CUIforETWDlg::GetResultFile() const
 {
 	std::wstring traceDir = GetTraceDir();
 
@@ -593,7 +593,7 @@ std::wstring CXperfUIDlg::GetResultFile() const
 	}
 	else
 	{
-		wcscpy_s(fileName, L"xperfui");
+		wcscpy_s(fileName, L"UIforETW");
 	}
 
 	std::wstring filePart = fileName;
@@ -607,7 +607,7 @@ std::wstring CXperfUIDlg::GetResultFile() const
 	return GetTraceDir() + filePart + L".etl";
 }
 
-void CXperfUIDlg::OnBnClickedStarttracing()
+void CUIforETWDlg::OnBnClickedStarttracing()
 {
 	if (tracingMode_ == kTracingToFile)
 		outputPrintf(L"\nStarting tracing to disk...\n");
@@ -675,7 +675,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	std::wstring userFile = L" -f \"" + GetUserFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
 		userFile = L" -buffering";
-	std::wstring userArgs = L" -start xperfuiSession" + userProviders + userBuffers + userFile;
+	std::wstring userArgs = L" -start UIforETWSession" + userProviders + userBuffers + userFile;
 
 	// Heap tracing settings -- only used for heap tracing.
 	// Could also record stacks on HeapFree
@@ -703,7 +703,7 @@ void CXperfUIDlg::OnBnClickedStarttracing()
 	}
 }
 
-void CXperfUIDlg::StopTracing(bool bSaveTrace)
+void CUIforETWDlg::StopTracing(bool bSaveTrace)
 {
 	std::wstring traceFilename = GetResultFile();
 	if (bSaveTrace)
@@ -725,15 +725,15 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 		{
 			// If we are in memory tracing mode then don't actually stop tracing,
 			// just flush the buffers to disk.
-			std::wstring args = L" -flush " + GetKernelLogger() + L" -f \"" + GetKernelFile() + L"\" -flush xperfuisession -f \"" + GetUserFile() + L"\"";
+			std::wstring args = L" -flush " + GetKernelLogger() + L" -f \"" + GetKernelFile() + L"\" -flush UIforETWSession -f \"" + GetUserFile() + L"\"";
 			child.Run(bShowCommands_, L"xperf.exe" + args);
 		}
 		else
 		{
 			if (tracingMode_ == kHeapTracingToFile)
-				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop xperfuiSession -stop " + GetKernelLogger());
+				child.Run(bShowCommands_, L"xperf.exe -stop xperfHeapSession -stop UIforETWSession -stop " + GetKernelLogger());
 			else
-				child.Run(bShowCommands_, L"xperf.exe -stop xperfuiSession -stop " + GetKernelLogger());
+				child.Run(bShowCommands_, L"xperf.exe -stop UIforETWSession -stop " + GetKernelLogger());
 		}
 	}
 
@@ -780,17 +780,17 @@ void CXperfUIDlg::StopTracing(bool bSaveTrace)
 }
 
 
-void CXperfUIDlg::OnBnClickedSavetracebuffers()
+void CUIforETWDlg::OnBnClickedSavetracebuffers()
 {
 	StopTracing(true);
 }
 
-void CXperfUIDlg::OnBnClickedStoptracing()
+void CUIforETWDlg::OnBnClickedStoptracing()
 {
 	StopTracing(false);
 }
 
-void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename, const std::wstring viewer)
+void CUIforETWDlg::LaunchTraceViewer(const std::wstring traceFilename, const std::wstring viewer)
 {
 	if (!PathFileExists(traceFilename.c_str()))
 	{
@@ -830,31 +830,31 @@ void CXperfUIDlg::LaunchTraceViewer(const std::wstring traceFilename, const std:
 	}
 }
 
-void CXperfUIDlg::OnBnClickedCompresstrace()
+void CUIforETWDlg::OnBnClickedCompresstrace()
 {
 	bCompress_ = !bCompress_;
 }
 
 
-void CXperfUIDlg::OnBnClickedCpusamplingcallstacks()
+void CUIforETWDlg::OnBnClickedCpusamplingcallstacks()
 {
 	bSampledStacks_ = !bSampledStacks_;
 }
 
 
-void CXperfUIDlg::OnBnClickedContextswitchcallstacks()
+void CUIforETWDlg::OnBnClickedContextswitchcallstacks()
 {
 	bCswitchStacks_ = !bCswitchStacks_;
 }
 
 
-void CXperfUIDlg::OnBnClickedShowcommands()
+void CUIforETWDlg::OnBnClickedShowcommands()
 {
 	bShowCommands_ = !bShowCommands_;
 }
 
 
-void CXperfUIDlg::SetSamplingSpeed()
+void CUIforETWDlg::SetSamplingSpeed()
 {
 	ChildProcess child(GetXperfPath());
 	std::wstring profInt = bFastSampling_ ? L"1221" : L"9001";
@@ -862,7 +862,7 @@ void CXperfUIDlg::SetSamplingSpeed()
 	child.Run(bShowCommands_, L"xperf.exe" + args);
 }
 
-void CXperfUIDlg::OnBnClickedFastsampling()
+void CUIforETWDlg::OnBnClickedFastsampling()
 {
 	bFastSampling_ = !bFastSampling_;
 	const wchar_t* message = nullptr;
@@ -879,13 +879,13 @@ void CXperfUIDlg::OnBnClickedFastsampling()
 }
 
 
-void CXperfUIDlg::OnBnClickedDirectxtracing()
+void CUIforETWDlg::OnBnClickedDirectxtracing()
 {
 	bDirectXTracing_ = !bDirectXTracing_;
 }
 
 
-void CXperfUIDlg::OnCbnSelchangeInputtracing()
+void CUIforETWDlg::OnCbnSelchangeInputtracing()
 {
 	InputTracing_ = (KeyLoggerState)btInputTracing_.GetCurSel();
 	switch (InputTracing_)
@@ -907,7 +907,7 @@ void CXperfUIDlg::OnCbnSelchangeInputtracing()
 	SetKeyloggingState(InputTracing_);
 }
 
-void CXperfUIDlg::UpdateTraceList()
+void CUIforETWDlg::UpdateTraceList()
 {
 	std::wstring selectedTraceName;
 	int curSel = btTraces_.GetCurSel();
@@ -967,7 +967,7 @@ void CXperfUIDlg::UpdateTraceList()
 	UpdateNotesState();
 }
 
-LRESULT CXperfUIDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
+LRESULT CUIforETWDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
 {
 	UpdateTraceList();
 
@@ -975,7 +975,7 @@ LRESULT CXperfUIDlg::UpdateTraceListHandler(WPARAM wParam, LPARAM lParam)
 }
 
 
-void CXperfUIDlg::OnLbnDblclkTracelist()
+void CUIforETWDlg::OnLbnDblclkTracelist()
 {
 	int selIndex = btTraces_.GetCurSel();
 	// This check shouldn't be necessary, but who knows?
@@ -985,7 +985,7 @@ void CXperfUIDlg::OnLbnDblclkTracelist()
 	LaunchTraceViewer(tracename);
 }
 
-void CXperfUIDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
+void CUIforETWDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
 	if (!initialWidth_)
 		return;
@@ -996,7 +996,7 @@ void CXperfUIDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 }
 
 
-void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
+void CUIforETWDlg::OnSize(UINT nType, int cx, int cy)
 {
 	if (nType == SIZE_RESTORED && initialWidth_)
 	{
@@ -1027,7 +1027,7 @@ void CXperfUIDlg::OnSize(UINT nType, int cx, int cy)
 	}
 }
 
-void CXperfUIDlg::SaveNotesIfNeeded()
+void CUIforETWDlg::SaveNotesIfNeeded()
 {
 	// Get the currently selected text, which might have been edited.
 	std::wstring editedNotes = GetEditControlText(btTraceNotes_);
@@ -1040,7 +1040,7 @@ void CXperfUIDlg::SaveNotesIfNeeded()
 	}
 }
 
-void CXperfUIDlg::UpdateNotesState()
+void CUIforETWDlg::UpdateNotesState()
 {
 	SaveNotesIfNeeded();
 
@@ -1060,19 +1060,19 @@ void CXperfUIDlg::UpdateNotesState()
 	}
 }
 
-void CXperfUIDlg::OnLbnSelchangeTracelist()
+void CUIforETWDlg::OnLbnSelchangeTracelist()
 {
 	UpdateNotesState();
 }
 
 
-void CXperfUIDlg::OnBnClickedAbout()
+void CUIforETWDlg::OnBnClickedAbout()
 {
 	CAboutDlg dlgAbout;
 	dlgAbout.DoModal();
 }
 
-LRESULT CXperfUIDlg::OnHotKey(WPARAM wParam, LPARAM lParam)
+LRESULT CUIforETWDlg::OnHotKey(WPARAM wParam, LPARAM lParam)
 {
 	switch (wParam)
 	{
@@ -1086,7 +1086,7 @@ LRESULT CXperfUIDlg::OnHotKey(WPARAM wParam, LPARAM lParam)
 
 
 // Magic sauce to make tooltips work.
-BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
+BOOL CUIforETWDlg::PreTranslateMessage(MSG* pMsg)
 {
 	toolTip_.RelayEvent(pMsg);
 	// Handle always-present keyboard shortcuts.
@@ -1109,7 +1109,7 @@ BOOL CXperfUIDlg::PreTranslateMessage(MSG* pMsg)
 }
 
 
-void CXperfUIDlg::SetHeapTracing(bool forceOff)
+void CUIforETWDlg::SetHeapTracing(bool forceOff)
 {
 	std::wstring targetKey = L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
 	DWORD tracingFlags = tracingMode_ == kHeapTracingToFile ? 1 : 0;
@@ -1120,7 +1120,7 @@ void CXperfUIDlg::SetHeapTracing(bool forceOff)
 	SetRegistryDWORD(HKEY_LOCAL_MACHINE, targetKey, L"TracingFlags", tracingFlags);
 }
 
-void CXperfUIDlg::OnCbnSelchangeTracingmode()
+void CUIforETWDlg::OnCbnSelchangeTracingmode()
 {
 	tracingMode_ = (TracingMode)btTracingMode_.GetCurSel();
 	switch (tracingMode_)
@@ -1145,7 +1145,7 @@ void CXperfUIDlg::OnCbnSelchangeTracingmode()
 }
 
 
-void CXperfUIDlg::OnBnClickedSettings()
+void CUIforETWDlg::OnBnClickedSettings()
 {
 	CSettings dlgAbout(nullptr, GetExeDir(), GetWPTDir());
 	dlgAbout.heapTracingExe_ = heapTracingExe_;
@@ -1155,7 +1155,7 @@ void CXperfUIDlg::OnBnClickedSettings()
 	}
 }
 
-void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
+void CUIforETWDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 {
 	// See if we right-clicked on the trace list.
 	if (pWnd == &btTraces_)
@@ -1268,7 +1268,7 @@ void CXperfUIDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 	}
 }
 
-void CXperfUIDlg::OnOpenTraceWPA()
+void CUIforETWDlg::OnOpenTraceWPA()
 {
 	int selIndex = btTraces_.GetCurSel();
 
@@ -1279,7 +1279,7 @@ void CXperfUIDlg::OnOpenTraceWPA()
 	}
 }
 
-void CXperfUIDlg::OnOpenTraceGPUView()
+void CUIforETWDlg::OnOpenTraceGPUView()
 {
 	int selIndex = btTraces_.GetCurSel();
 
@@ -1290,7 +1290,7 @@ void CXperfUIDlg::OnOpenTraceGPUView()
 	}
 }
 
-void CXperfUIDlg::CompressTrace(const std::wstring& tracePath)
+void CUIforETWDlg::CompressTrace(const std::wstring& tracePath)
 {
 	std::wstring compressedPath = tracePath + L".compressed";
 	DWORD exitCode = 0;
@@ -1324,7 +1324,7 @@ void CXperfUIDlg::CompressTrace(const std::wstring& tracePath)
 	}
 }
 
-void CXperfUIDlg::StripChromeSymbols(const std::wstring& traceFilename)
+void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
 {
 	// Some private symbols, particularly Chrome's, must be stripped and
 	// then converted to .symcache files in order to avoid ~25 minute
@@ -1354,7 +1354,7 @@ void CXperfUIDlg::StripChromeSymbols(const std::wstring& traceFilename)
 }
 
 
-void CXperfUIDlg::StartRenameTrace()
+void CUIforETWDlg::StartRenameTrace()
 {
 	SaveNotesIfNeeded();
 	int curSel = btTraces_.GetCurSel();
@@ -1374,14 +1374,14 @@ void CXperfUIDlg::StartRenameTrace()
 	}
 }
 
-void CXperfUIDlg::OnRenameKey()
+void CUIforETWDlg::OnRenameKey()
 {
 	if (!btTraceNameEdit_.IsWindowVisible())
 		StartRenameTrace();
 }
 
 
-void CXperfUIDlg::FinishTraceRename()
+void CUIforETWDlg::FinishTraceRename()
 {
 	// Make sure this doesn't get double-called.
 	if (!btTraceNameEdit_.IsWindowVisible())
@@ -1429,7 +1429,7 @@ void CXperfUIDlg::FinishTraceRename()
 	}
 }
 
-void CXperfUIDlg::OnEscKey()
+void CUIforETWDlg::OnEscKey()
 {
 	if (!btTraceNameEdit_.IsWindowVisible())
 		return;

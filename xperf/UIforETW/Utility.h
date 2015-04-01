@@ -1,5 +1,4 @@
-#ifndef XPERFUI_UTILITY_H
-#define XPERFUI_UTILITY_H
+#pragma once
 
 #include <vector>
 #include <string>
@@ -55,5 +54,3 @@ enum WindowsVersion
 bool Is64BitWindows();
 WindowsVersion GetWindowsVersion();
 bool IsWindowsServer();
-
-#endif

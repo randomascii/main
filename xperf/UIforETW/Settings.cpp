@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#include "XperfUI.h"
+#include "UIforETW.h"
 #include "Settings.h"
 #include "Utility.h"
 #include "afxdialogex.h"

@@ -1,5 +1,4 @@
-#ifndef XPERFUI_ABOUT_H
-#define XPERFUI_ABOUT_H
+#pragma once
 
 // CAboutDlg dialog used for App About
 
@@ -18,5 +17,3 @@ protected:
 protected:
 	DECLARE_MESSAGE_MAP()
 };
-
-#endif // XPERFUI_ABOUT_H
