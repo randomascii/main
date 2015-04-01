@@ -77,6 +77,35 @@
           </HdvViewModelPreset>
         </Core4SummaryTableFillerGraphTreeItem.HdvViewModelPreset>
       </Core4SummaryTableFillerGraphTreeItem>
+      <Core4SummaryTableFillerGraphTreeItem GraphHeight="83" Color="#FFFFA500" ClsID="b859d131-dfb5-4605-be19-810b298b6975" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
+        <Core4SummaryTableFillerGraphTreeItem.HdvViewModelPreset>
+          <HdvViewModelPreset Name="GPU by Process" GraphChartType="StackedLine" GraphColumnCount="18" KeyColumnCount="5" RightFrozenColumnCount="17" InitialFilterQuery="" InitialSelectionQuery="" InitialExpansionQuery="" GraphFilterColumnName="GPU Time (us)" GraphFilterColumnGuid="267ef705-7c6d-11e2-be78-b4b52fe06835" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
+            <HdvViewModelPreset.ColumnMetadataEntries>
+              <ColumnMetadataEntry Guid="267ef708-7c6d-11e2-be78-b4b52fe06835" Name="Start Execution (s)" ColumnMetadata="StartTime" />
+              <ColumnMetadataEntry Guid="267ef705-7c6d-11e2-be78-b4b52fe06835" Name="GPU Time (us)" ColumnMetadata="Duration" />
+            </HdvViewModelPreset.ColumnMetadataEntries>
+            <HdvViewModelPreset.HighlightEntries />
+            <HdvViewModelPreset.ConfigurableColumns>
+              <HdvColumnViewModelPreset Guid="267ef701-7c6d-11e2-be78-b4b52fe06835" Name="Process Name" SortPriority="-1" Width="140" />
+              <HdvColumnViewModelPreset Guid="267ef702-7c6d-11e2-be78-b4b52fe06835" Name="Process" IsVisible="True" SortPriority="-1" Width="140" />
+              <HdvColumnViewModelPreset Guid="267ef700-7c6d-11e2-be78-b4b52fe06835" Name="Type" IsVisible="True" SortPriority="-1" Width="100" />
+              <HdvColumnViewModelPreset Guid="267ef703-7c6d-11e2-be78-b4b52fe06835" Name="ThreadId" SortPriority="-1" TextAlignment="Right" Width="60" />
+              <HdvColumnViewModelPreset Guid="cb796d44-2927-5ac1-d231-4b71904c18f5" Name="Thread Name" Width="80" />
+              <HdvColumnViewModelPreset Guid="82ddfdff-ee93-5f35-08ac-4705069618dc" Name="Thread Activity Tag" Width="80" />
+              <HdvColumnViewModelPreset Guid="2818954f-2d30-5569-4510-dade0a5a605c" Name="Annotation" Width="80" />
+              <HdvColumnViewModelPreset Guid="267ef704-7c6d-11e2-be78-b4b52fe06835" Name="Count" AggregationMode="Count" IsVisible="True" SortPriority="-1" TextAlignment="Right" Width="40" />
+              <HdvColumnViewModelPreset Guid="267ef705-7c6d-11e2-be78-b4b52fe06835" Name="GPU Time (us)" AggregationMode="Sum" IsVisible="True" SortOrder="Descending" SortPriority="-1" TextAlignment="Right" Width="90" />
+              <HdvColumnViewModelPreset Guid="267ef706-7c6d-11e2-be78-b4b52fe06835" Name="Initialized (s)" AggregationMode="Min" IsVisible="True" SortOrder="Ascending" SortPriority="-1" TextAlignment="Right" Width="90" />
+              <HdvColumnViewModelPreset Guid="267ef707-7c6d-11e2-be78-b4b52fe06835" Name="Submitted To HW(s)" AggregationMode="Min" IsVisible="True" SortPriority="-1" TextAlignment="Right" Width="130" />
+              <HdvColumnViewModelPreset Guid="267ef708-7c6d-11e2-be78-b4b52fe06835" Name="Start Execution (s)" AggregationMode="Min" IsVisible="True" SortPriority="-1" TextAlignment="Right" Width="130" />
+              <HdvColumnViewModelPreset Guid="267ef709-7c6d-11e2-be78-b4b52fe06835" Name="Finished (s)" AggregationMode="Max" IsVisible="True" SortPriority="-1" TextAlignment="Right" Width="90" />
+              <HdvColumnViewModelPreset Guid="267ef70a-7c6d-11e2-be78-b4b52fe06835" Name="A/N/E" IsVisible="True" SortPriority="-1" Width="50" />
+              <HdvColumnViewModelPreset Guid="267ef70b-7c6d-11e2-be78-b4b52fe06835" Name="Percentage" AggregationMode="Sum" IsVisible="True" SortPriority="-1" TextAlignment="Right" Width="150" />
+              <HdvColumnViewModelPreset Guid="267ef705-7c6d-11e2-be78-b4b52fe06835" Name="GPU Time (us)" AggregationMode="Sum" IsVisible="True" SortOrder="Descending" SortPriority="-1" TextAlignment="Right" Width="90" />
+            </HdvViewModelPreset.ConfigurableColumns>
+          </HdvViewModelPreset>
+        </Core4SummaryTableFillerGraphTreeItem.HdvViewModelPreset>
+      </Core4SummaryTableFillerGraphTreeItem>
       <CpuSchedulingWithReadyThreadGraphTreeItem DataTableHeight="0" Color="#FFFF0000" xmlns="clr-namespace:Microsoft.Performance.Shell.Tables;assembly=Microsoft.Performance.Shell">
         <CpuSchedulingWithReadyThreadGraphTreeItem.HdvViewModelPreset>
           <HdvViewModelPreset Name="Randomascii Wait Analysis" GraphColumnCount="61" KeyColumnCount="13" RightFrozenColumnCount="59" InitialFilterQuery="" InitialSelectionQuery="([Series Name]:=&quot;NewProcess&quot; AND NOT ([NewProcess]:=&quot;Idle (0)&quot;))" GraphFilterColumnGuid="17a03387-5d14-405a-a5b2-0201c934f917" xmlns="clr-namespace:Microsoft.Performance.UI.DataEngine.ViewModelPresets;assembly=Microsoft.Performance.UI.DataEngine">
