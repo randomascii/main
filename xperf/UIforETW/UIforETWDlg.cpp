@@ -619,7 +619,7 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 		outputPrintf(L"\nStarting heap tracing to disk of %s...\n", heapTracingExe_.c_str());
 	else
 		assert(0);
-	ChildProcess child(GetXperfPath());
+
 	std::wstring kernelProviders = L" Latency+POWER+DISPATCHER+FILE_IO+FILE_IO_INIT+VIRT_ALLOC";
 	std::wstring kernelStackWalk = L"";
 	if (bSampledStacks_ && bCswitchStacks_)
@@ -637,9 +637,9 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 	std::wstring kernelArgs = L" -start " + GetKernelLogger() + L" -on" + kernelProviders + kernelStackWalk + kernelBuffers + kernelFile;
 
 	WindowsVersion winver = GetWindowsVersion();
-	std::wstring userProviders = L" -on Microsoft-Windows-Win32k";
+	std::wstring userProviders = L"Microsoft-Windows-Win32k";
 	if (winver <= kWindowsVersionVista)
-		userProviders = L" -on Microsoft-Windows-LUA"; // Because Microsoft-Windows-Win32k doesn't work on Vista.
+		userProviders = L"Microsoft-Windows-LUA"; // Because Microsoft-Windows-Win32k doesn't work on Vista.
 	userProviders += L"+Multi-MAIN+Multi-FrameRate+Multi-Input+Multi-Worker";
 
 	// DWM providers can be helpful also. Uncomment to enable.
@@ -657,18 +657,16 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 		// on Windows 8 and above.
 		if (winver >= kWindowsVersion8)
 		{
-			// Though some sources recommend using this provider for GPU
-			// profiling on Windows 8, it doesn't actually work with GPUView
-			// or the WPA GPU Usage graph.
-			//userProviders += L"+Microsoft-Windows-DxgKrnl";
+			// This provider is needed for GPU profiling on Windows 8+
+			userProviders += L"+Microsoft-Windows-DxgKrnl:0xFFFF:5";
 			if (!IsWindowsServer())
 			{
 				// Present events on Windows 8 + -- non-server SKUs only.
 				userProviders += L"+Microsoft-Windows-MediaEngine";
 			}
 		}
-		// The 0x2F mask was copied from GPUView's log.cmd batch file.
-		// Adjust as needed.
+		// Necessary providers for a minimal GPU profiling setup.
+		// DirectX logger:
 		userProviders += L"+DX:0x2F";
 	}
 
@@ -679,7 +677,7 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 	std::wstring userFile = L" -f \"" + GetUserFile() + L"\"";
 	if (tracingMode_ == kTracingToMemory)
 		userFile = L" -buffering";
-	std::wstring userArgs = L" -start UIforETWSession" + userProviders + userBuffers + userFile;
+	std::wstring userArgs = L" -start UIforETWSession -on " + userProviders + userBuffers + userFile;
 
 	// Heap tracing settings -- only used for heap tracing.
 	// Could also record stacks on HeapFree
@@ -688,23 +686,37 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 	std::wstring heapStackWalk = L" -stackwalk HeapCreate+HeapDestroy+HeapAlloc+HeapRealloc";
 	std::wstring heapArgs = L" -start xperfHeapSession -heap -Pids 0" + heapStackWalk + heapBuffers + heapFile;
 
-	if (tracingMode_ == kHeapTracingToFile)
-		child.Run(bShowCommands_, L"xperf.exe" + kernelArgs + userArgs + heapArgs);
-	else
-		child.Run(bShowCommands_, L"xperf.exe" + kernelArgs + userArgs);
+	{
+		ChildProcess child(GetXperfPath());
+		if (tracingMode_ == kHeapTracingToFile)
+			child.Run(bShowCommands_, L"xperf.exe" + kernelArgs + userArgs + heapArgs);
+		else
+			child.Run(bShowCommands_, L"xperf.exe" + kernelArgs + userArgs);
 
+		DWORD exitCode = child.GetExitCode();
+		if (exitCode)
+		{
+			outputPrintf(L"Error starting tracing. Try stopping tracing and then starting it again?\n");
+		}
+		else
+		{
+			outputPrintf(L"Tracing is started.\n");
+		}
+	}
+
+	{
+		// Run -capturestate on the user-mode loggers, for reliable captures.
+		// If this step is skipped then GPU usage data will not be recorded on
+		// Windows 8. Contrary to the xperf documentation this is needed for file
+		// based recording as well as when -buffering is used.
+		ChildProcess child(GetXperfPath());
+		std::wstring captureArgs = L" -capturestate UIforETWSession " + userProviders;
+		child.Run(bShowCommands_, L"xperf.exe" + captureArgs);
+	}
+
+	// Set this whether starting succeeds or not, to allow forced-stopping.
 	bIsTracing_ = true;
 	UpdateEnabling();
-
-	DWORD exitCode = child.GetExitCode();
-	if (exitCode)
-	{
-		outputPrintf(L"Error starting tracing. Try stopping tracing and then starting it again?\n");
-	}
-	else
-	{
-		outputPrintf(L"Tracing is started.\n");
-	}
 }
 
 void CUIforETWDlg::StopTracing(bool bSaveTrace)
