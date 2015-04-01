@@ -109,10 +109,12 @@ void CUIforETWDlg::ShutdownTasks()
 
 	// Make sure the sampling speed is set to normal on the way out.
 	// Don't change bFastSampling because it needs to get saved.
-	bool bOldSpeed = bFastSampling_;
-	bFastSampling_ = false;
-	SetSamplingSpeed();
-	bFastSampling_ = bOldSpeed;
+	if (bFastSampling_)
+	{
+		bFastSampling_ = false;
+		SetSamplingSpeed();
+		bFastSampling_ = true;
+	}
 }
 
 void CUIforETWDlg::OnCancel()
@@ -653,19 +655,21 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 	{
 		// Apparently we need a different provider for graphics profiling
 		// on Windows 8 and above.
-		// The 0x2F mask was copied from GPUView's log.cmd batch file.
-		// Adjust as needed?
 		if (winver >= kWindowsVersion8)
 		{
-			userProviders += L"+Microsoft-Windows-DxgKrnl";
+			// Though some sources recommend using this provider for GPU
+			// profiling on Windows 8, it doesn't actually work with GPUView
+			// or the WPA GPU Usage graph.
+			//userProviders += L"+Microsoft-Windows-DxgKrnl";
 			if (!IsWindowsServer())
 			{
 				// Present events on Windows 8 + -- non-server SKUs only.
 				userProviders += L"+Microsoft-Windows-MediaEngine";
 			}
 		}
-		else
-			userProviders += L"+DX:0x2F";
+		// The 0x2F mask was copied from GPUView's log.cmd batch file.
+		// Adjust as needed.
+		userProviders += L"+DX:0x2F";
 	}
 
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";
