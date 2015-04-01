@@ -355,7 +355,7 @@ BOOL CUIforETWDlg::OnInitDialog()
 					L"~1 KHz to the maximum speed of ~8 KHz. This increases the data rate and thus the size of traces "
 					L"but can make investigating brief CPU-bound performance problems (such as a single long frame) "
 					L"more practical.");
-		toolTip_.AddTool(&btDirectXTracing_, L"Check this to record the DX:0x2F provider to allow seein GPU usage "
+		toolTip_.AddTool(&btDirectXTracing_, L"Check this to record the DX:0x2F provider to allow seeing GPU usage "
 					L"in WPA, and more data in GPUView.");
 		toolTip_.AddTool(&btShowCommands_, L"This tells UIforETW to display the commands being "
 					L"executed. This can be helpful for diagnostic purposes but is not normally needed.");
