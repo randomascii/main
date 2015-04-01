@@ -716,6 +716,9 @@ void CUIforETWDlg::StopTracing(bool bSaveTrace)
 	// https://randomascii.wordpress.com/2015/03/02/profiling-the-profiler-working-around-a-six-minute-xperf-hang/
 	const wchar_t* const compatFile = L"c:\\Windows\\AppCompat\\Programs\\Amcache.hve";
 	const wchar_t* const compatFileTemp = L"c:\\Windows\\AppCompat\\Programs\\Amcache_temp.hve";
+	// Delete any previously existing Amcache_temp.hve file that might have
+	// been left behind by a previous failed tracing attempt.
+	DeleteFile(compatFileTemp);
 	BOOL moveSuccess = MoveFile(compatFile, compatFileTemp);
 
 	{

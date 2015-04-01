@@ -69,7 +69,7 @@ tempdirs = []
 pdbRe = re.compile(r'"\[RSDS\] PdbSig: {(.*-.*-.*-.*-.*)}; Age: (.*); Pdb: (.*)"')
 pdbCachedRe = re.compile(r"Found symbol file - placed it in (.*)")
 
-print "Pre-translating chrome DLL symbols from stripped PDBs to avoid 10-15 minute translation times."
+print "Pre-translating chrome symbols from stripped PDBs to avoid 10-15 minute translation times."
 
 symcacheFiles = []
 # Keep track of the local symbol files so that we can temporarily rename them
@@ -77,7 +77,8 @@ symcacheFiles = []
 localSymbolFiles = []
 
 command = 'xperf -i "%s" -tle -tti -a symcache -dbgid' % tracename
-print command
+print "> %s" % command
+foundUncached = False
 for line in os.popen(command).readlines():
   if line.count("chrome.dll") > 0 or line.count("chrome_child.dll") > 0:
     match = pdbRe.match(line)
@@ -90,11 +91,14 @@ for line in os.popen(command).readlines():
         #print "Symcache file %s already exists. Skipping." % symcacheFile
         continue
       # Only print messages for chrome PDBs that aren't in the symcache
+      foundUncached = True
       print "Found uncached reference to %s: %s - %s" % (filepart, guid, age, )
       symcacheFiles.append(symcacheFile)
       pdbCachePath = None
-      for subline in os.popen("RetrieveSymbols.exe %s %s %s" % (guid, age, filepart)):
-      	print subline.strip()
+      retrieveCommand = "RetrieveSymbols.exe %s %s %s" % (guid, age, filepart)
+      print "> %s" % retrieveCommand
+      for subline in os.popen(retrieveCommand):
+        print subline.strip()
         cacheMatch = pdbCachedRe.match(subline.strip())
         if cacheMatch:
           pdbCachePath = cacheMatch.groups()[0]
@@ -122,7 +126,7 @@ if tempdirs:
     print "Renaming %s to %s to stop unstripped PDBs from being used." % (localPDB, tempName)
     os.rename(localPDB, tempName)
   genCommand = 'xperf -i "%s" -symbols -tle -tti -a symcache -build' % tracename
-  print "Running: %s" % genCommand
+  print "> %s" % genCommand
   for line in os.popen(genCommand).readlines():
     pass # Don't print line
   for localPDB in localSymbolFiles:
@@ -142,4 +146,7 @@ if tempdirs:
     for dir in tempdirs:
       shutil.rmtree(dir, ignore_errors=True)
 else:
-  print "No PDBs copied, nothing to do."
+  if foundUncached:
+    print "No PDBs copied, nothing to do."
+  else:
+    print "No uncached PDBS found, nothing to do."
