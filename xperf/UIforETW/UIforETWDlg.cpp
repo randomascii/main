@@ -12,6 +12,7 @@
 #include <direct.h>
 #include <ETWProviders\etwprof.h>
 #include <vector>
+#include <map>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1368,10 +1369,12 @@ void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
 
 void CUIforETWDlg::PreprocessTrace(const std::wstring& traceFilename)
 {
-	std::wstring pythonPath = FindPython();
-	if (!pythonPath.empty())
+	if (chromeDeveloper_)
 	{
-		if (chromeDeveloper_)
+		outputPrintf(L"Preprocessing trace to identify Chrome processes...\n");
+#ifdef IDENTIFY_CHROME_PROCESSES_IN_PYTHON
+		std::wstring pythonPath = FindPython();
+		if (!pythonPath.empty())
 		{
 			outputPrintf(L"Preprocessing Chrome trace...\n");
 			ChildProcess child(pythonPath);
@@ -1383,6 +1386,60 @@ void CUIforETWDlg::PreprocessTrace(const std::wstring& traceFilename)
 			std::wstring textFilename = traceFilename.substr(0, traceFilename.size() - 4) + L".txt";
 			WriteTextAsFile(textFilename, output);
 		}
+#else
+		ChildProcess child(GetXperfPath());
+		// Typical output of the process action looks like this (large parts
+		// elided):
+		// ... chrome.exe (3456), ... \chrome.exe" --type=renderer ...
+		std::wstring args = L" -i \"" + traceFilename + L"\" -tle -tti -a process -withcmdline";
+		child.Run(bShowCommands_, L"xperf.exe" + args);
+		std::wstring output = child.GetOutput();
+		std::map<std::wstring, std::vector<DWORD>> pidsByType;
+		for (auto& line : split(output, '\n'))
+		{
+			if (wcsstr(line.c_str(), L"chrome.exe"))
+			{
+				std::wstring type = L"browser";
+				const wchar_t* typeLabel = L" --type=";
+				const wchar_t* typeFound = wcsstr(line.c_str(), typeLabel);
+				if (typeFound)
+				{
+					typeFound += wcslen(typeLabel);
+					const wchar_t* typeEnd = wcschr(typeFound, ' ');
+					if (typeEnd)
+					{
+						type = std::wstring(typeFound).substr(0, typeEnd - typeFound);
+					}
+				}
+				DWORD pid = 0;
+				const wchar_t* pidstr = wcschr(line.c_str(), '(');
+				if (pidstr)
+				{
+					swscanf_s(pidstr + 1, L"%lu", &pid);
+				}
+				if (pid)
+				{
+					pidsByType[type].push_back(pid);
+				}
+			}
+		}
+#pragma warning(suppress : 4996)
+		FILE* pFile = _wfopen((traceFilename.substr(0, traceFilename.size() - 4) + L".txt").c_str(), L"a");
+		if (pFile)
+		{
+			fwprintf(pFile, L"Chrome PIDs by process type:\n");
+			for (auto& types : pidsByType)
+			{
+				fwprintf(pFile, L"%-10s:", types.first.c_str());
+				for (auto& pid : types.second)
+				{
+					fwprintf(pFile, L" %lu", pid);
+				}
+				fwprintf(pFile, L"\n");
+			}
+			fclose(pFile);
+		}
+#endif
 	}
 }
 
