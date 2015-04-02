@@ -36,6 +36,12 @@ if len(sys.argv) < 2:
   print "Usage: %s trace.etl" % sys.argv[0]
   sys.exit(0)
 
+# Add the third_party directory to the path so that we can call
+# pdbcopy.exe.
+scriptPath = os.path.split(sys.argv[0])[0]
+thirdParty = os.path.realpath(os.path.join(scriptPath, r"..\third_party"))
+os.environ["path"] += ";" + thirdParty
+
 symbolPath = os.environ.get("_NT_SYMBOL_PATH", "")
 if symbolPath.count("chromium-browser-symsrv") == 0:
   print "Chromium symbol server is not in _NT_SYMBOL_PATH. No symbol stripping needed."

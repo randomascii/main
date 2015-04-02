@@ -125,11 +125,12 @@ void CSettings::OnBnClickedCopysymboldlls()
 	bool bIsWin64 = Is64BitWindows();
 
 	bool failed = false;
+	std::wstring third_party = exeDir_ + L"..\\third_party\\";
 	for (size_t i = 0; i < ARRAYSIZE(fileNames); ++i)
 	{
-		std::wstring source = exeDir_ + fileNames[i];
+		std::wstring source = third_party + fileNames[i];
 		if (bIsWin64)
-			source = exeDir_ + L"x64\\" + fileNames[i];
+			source = third_party + L"x64\\" + fileNames[i];
 
 		std::wstring dest = wptDir_ + fileNames[i];
 		if (!CopyFile(source.c_str(), dest.c_str(), FALSE))

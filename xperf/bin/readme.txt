@@ -26,7 +26,7 @@ if you are using the Chromium symbol server.
 - x86 versions of dbghelp.dll and symsrv.dll are used by RetrieveSymbols.exe
 which is used by StripChromeSymbols.py which is used by etwrecord.bat if you
 are using the Chromium symbol server.
-- x64 versions of dbghelp.dll and symsrv.dll will be copied to the WPT install
+- x64 versions of dbghelp.dll and symsrv.dll can be copied to the WPT install
 directory if they are found in an effort to alleviate the slow or failed
 symbol processing issues described at:
 https://randomascii.wordpress.com/2012/10/04/xperf-symbol-loading-pitfalls/
