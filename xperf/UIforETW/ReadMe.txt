@@ -53,6 +53,7 @@ Add compatibility manifest up to Windows 8.1
 Add OS specific checks for what user providers to enable, compression options, etc.
 Increase the user-provider buffer counts when doing DX profiling.
 Disable compress options (checkbox and menu) for Windows 7 and below.
+- Move GetPython function to utility.cpp
 
 
 
@@ -61,6 +62,7 @@ Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/e
 Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?
+Move ETWEventDemo out of bin directory.
 
 To-do eventually:
 Should have a Chrome developer checkbox.
@@ -81,6 +83,7 @@ Code cleanup:
 - getenv wrapper
 - ordering code sanely
 - moving more code to separate functions/files
+- Correct usage of bool as function parameters to choose behaviors
 
 Unimportant:
 Allow configuring which symbols should be stripped.

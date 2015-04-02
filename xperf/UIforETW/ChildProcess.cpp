@@ -76,6 +76,7 @@ DWORD ChildProcess::ListenerThread()
 		DWORD dwRead;
 		while (ReadFile(hPipe_, buffer, sizeof(buffer) - 1, &dwRead, NULL) != FALSE)
 		{
+			if (dwRead > 0)
 			{
 				CSingleLock locker(&outputLock_);
 				buffer[dwRead] = 0;

@@ -355,3 +355,25 @@ bool IsWindowsServer()
 	bool result = !VerifyVersionInfoW(&osvi, VER_PRODUCT_TYPE, dwlConditionMask);
 	return result;
 }
+
+
+
+std::wstring FindPython()
+{
+#pragma warning(suppress:4996)
+	const wchar_t* path = _wgetenv(L"path");
+	if (path)
+	{
+		std::vector<std::wstring> pathParts = split(path, ';');
+		for (auto part : pathParts)
+		{
+			std::wstring pythonPath = part + L"\\python.exe";
+			if (PathFileExists(pythonPath.c_str()))
+			{
+				return pythonPath;
+			}
+		}
+	}
+	// No python found.
+	return L"";
+}

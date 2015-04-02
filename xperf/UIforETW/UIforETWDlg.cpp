@@ -1346,27 +1346,6 @@ void CUIforETWDlg::CompressTrace(const std::wstring& tracePath)
 }
 
 
-std::wstring CUIforETWDlg::FindPython()
-{
-#pragma warning(suppress:4996)
-	const wchar_t* path = _wgetenv(L"path");
-	if (path)
-	{
-		std::vector<std::wstring> pathParts = split(path, ';');
-		for (auto part : pathParts)
-		{
-			std::wstring pythonPath = part + L"\\python.exe";
-			if (PathFileExists(pythonPath.c_str()))
-			{
-				return pythonPath;
-			}
-		}
-	}
-	// No python found.
-	return L"";
-}
-
-
 void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
 {
 	// Some private symbols, particularly Chrome's, must be stripped and
