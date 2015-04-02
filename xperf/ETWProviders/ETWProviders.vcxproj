@@ -198,7 +198,6 @@ xcopy /y $(OutDir)ETWProviders64.lib $(ProjectDir)..\lib
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling ETW manifest file</Message>
       <SubType>Designer</SubType>
     </CustomBuild>
-    <None Include="etwregister.bat" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
