@@ -8,7 +8,7 @@ if len(sys.argv) < 2:
 
 # Find the space-terminated word after 'type='
 pidRe = re.compile(r".*\(([\d ]*)\),.*")
-processTypeRe = re.compile(r".* --type=([^ ]*) .*")
+processTypeRe = re.compile(r".*.exe\" --type=([^ ]*) .*")
 
 tracename = sys.argv[1]
 command = 'xperf -i "%s" -tle -tti -a process -withcmdline' % tracename

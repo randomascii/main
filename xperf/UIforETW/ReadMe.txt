@@ -63,6 +63,7 @@ Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?
 Move ETWEventDemo out of bin directory.
+Don't allow having two copies of UIforETW to run simultaneously.
 
 To-do eventually:
 Should have a Chrome developer checkbox.
