@@ -18,3 +18,6 @@ functional for non-Chrome developers as well.
 
 To use UIforETW you have to install the Windows Performance Toolkit
 (version 8.1 is currently the latest version) and then run UIforETW.exe.
+
+This is not an official Google project and is not supported by Google
+in any way.
