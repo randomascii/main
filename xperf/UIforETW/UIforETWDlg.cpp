@@ -210,6 +210,9 @@ BEGIN_MESSAGE_MAP(CUIforETWDlg, CDialogEx)
 	ON_BN_CLICKED(ID_ENDRENAME, &CUIforETWDlg::FinishTraceRename)
 	ON_BN_CLICKED(ID_ESCKEY, &CUIforETWDlg::OnEscKey)
 	ON_BN_CLICKED(IDC_DIRECTXTRACING, &CUIforETWDlg::OnBnClickedDirectxtracing)
+	ON_BN_CLICKED(ID_COPYTRACENAME, &CUIforETWDlg::CopyTraceName)
+	ON_BN_CLICKED(ID_DELETETRACE, &CUIforETWDlg::DeleteTrace)
+	ON_BN_CLICKED(ID_SELECTALL, &CUIforETWDlg::SelectAll)
 END_MESSAGE_MAP()
 
 
@@ -240,6 +243,12 @@ BOOL CUIforETWDlg::OnInitDialog()
 
 	// Load the F2 (rename) and ESC (silently swallow ESC) accelerators
 	hAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_ACCELERATORS));
+	// Load the Enter accelerator for exiting renaming.
+	hRenameAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_RENAMEACCELERATORS));
+	// Load the accelerators for when editing trace notes.
+	hNotesAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_NOTESACCELERATORS));
+	// Load the accelerators for when *not* editing trace notes.
+	hNonNotesAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_NONNOTESACCELERATORS));
 
 	CRect windowRect;
 	GetWindowRect(&windowRect);
@@ -1104,6 +1113,11 @@ void CUIforETWDlg::UpdateNotesState()
 	}
 }
 
+void CUIforETWDlg::SelectAll()
+{
+	btTraceNotes_.SetSel(0, -1, TRUE);
+}
+
 void CUIforETWDlg::OnLbnSelchangeTracelist()
 {
 	UpdateNotesState();
@@ -1136,20 +1150,25 @@ BOOL CUIforETWDlg::PreTranslateMessage(MSG* pMsg)
 {
 	toolTip_.RelayEvent(pMsg);
 	// Handle always-present keyboard shortcuts.
-	if (hAccelTable_)
+	if (::TranslateAccelerator(m_hWnd, hAccelTable_, pMsg))
+		return TRUE;
+	if (CWnd::GetFocus() == &btTraceNotes_)
 	{
-		if (::TranslateAccelerator(m_hWnd, hAccelTable_, pMsg))
-		{
+		// This accelerator table is only available when editing trace notes.
+		if (::TranslateAccelerator(m_hWnd, hNotesAccelTable_, pMsg))
 			return TRUE;
-		}
+	}
+	else
+	{
+		// This accelerator table is only available when not editing trace notes.
+		if (::TranslateAccelerator(m_hWnd, hNonNotesAccelTable_, pMsg))
+			return TRUE;
 	}
 	// This accelerator table is only available when renaming.
-	if (hRenameAccelTable_)
+	if (btTraceNameEdit_.IsWindowVisible())
 	{
 		if (::TranslateAccelerator(m_hWnd, hRenameAccelTable_, pMsg))
-		{
 			return TRUE;
-		}
 	}
 	return CDialog::PreTranslateMessage(pMsg);
 }
@@ -1265,16 +1284,7 @@ void CUIforETWDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				LaunchTraceViewer(tracePath, L"gpuview\\GPUView.exe");
 				break;
 			case ID_TRACES_DELETETRACE:
-				if (AfxMessageBox((L"Are you sure you want to delete " + traceFile + L"?").c_str(), MB_YESNO) == IDYES)
-				{
-					std::wstring pattern = GetTraceDir() + traceFile + L".*";
-					if (DeleteFiles(*this, GetFileList(pattern, true)))
-					{
-						outputPrintf(L"\nFile deletion failed.\n");
-					}
-					// Record that the trace notes don't need saving, even if they have changed.
-					traceNoteFilename_ = L"";
-				}
+				DeleteTrace();
 				break;
 			case ID_TRACES_RENAMETRACE:
 				StartRenameTrace();
@@ -1314,6 +1324,41 @@ void CUIforETWDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		CDialog::OnContextMenu(pWnd, point);
 	}
 }
+
+
+void CUIforETWDlg::DeleteTrace()
+{
+	int selIndex = btTraces_.GetCurSel();
+
+	if (selIndex >= 0)
+	{
+		std::wstring traceFile = traces_[selIndex];
+		std::wstring tracePath = GetTraceDir() + traceFile + L".etl";
+		if (AfxMessageBox((L"Are you sure you want to delete " + traceFile + L"?").c_str(), MB_YESNO) == IDYES)
+		{
+			std::wstring pattern = GetTraceDir() + traceFile + L".*";
+			if (DeleteFiles(*this, GetFileList(pattern, true)))
+			{
+				outputPrintf(L"\nFile deletion failed.\n");
+			}
+			// Record that the trace notes don't need saving, even if they have changed.
+			traceNoteFilename_ = L"";
+		}
+	}
+}
+
+
+void CUIforETWDlg::CopyTraceName()
+{
+	int selIndex = btTraces_.GetCurSel();
+
+	if (selIndex >= 0)
+	{
+		std::wstring tracePath = GetTraceDir() + traces_[selIndex] + L".etl";
+		SetClipboardText(L"\"" + tracePath + L"\"");
+	}
+}
+
 
 void CUIforETWDlg::OnOpenTraceWPA()
 {
@@ -1483,8 +1528,6 @@ void CUIforETWDlg::StartRenameTrace()
 			btTraceNameEdit_.SetFocus();
 			btTraceNameEdit_.SetWindowTextW(editablePart.c_str());
 			preRenameTraceName_ = traceName;
-			// Temporarily trap the ENTER key.
-			hRenameAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_RENAMEACCELERATORS));
 		}
 	}
 }
@@ -1501,7 +1544,6 @@ void CUIforETWDlg::FinishTraceRename()
 	// Make sure this doesn't get double-called.
 	if (!btTraceNameEdit_.IsWindowVisible())
 		return;
-	hRenameAccelTable_ = NULL;
 	std::wstring newText = GetEditControlText(btTraceNameEdit_);
 	std::wstring newTraceName = preRenameTraceName_.substr(0, kPrefixLength) + newText;
 	btTraceNameEdit_.ShowWindow(SW_HIDE);
@@ -1550,6 +1592,5 @@ void CUIforETWDlg::OnEscKey()
 		return;
 	// If the trace name edit window is visible then hide it.
 	// That's it.
-	hRenameAccelTable_ = NULL;
 	btTraceNameEdit_.ShowWindow(SW_HIDE);
 }

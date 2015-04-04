@@ -108,8 +108,14 @@ private:
 	std::wstring output_;
 	CEdit btOutput_;
 
+	// General purpose keyboard accelerators.
 	HACCEL hAccelTable_ = NULL;
+	// Keyboard accelerators that are active only when renaming a trace.
 	HACCEL hRenameAccelTable_ = NULL;
+	// Keyboard accelerators that are active only when editing trace.
+	HACCEL hNotesAccelTable_ = NULL;
+	// Keyboard accelerators that are active only when *not* editing trace notes.
+	HACCEL hNonNotesAccelTable_ = NULL;
 
 	void SetSamplingSpeed();
 
@@ -196,6 +202,9 @@ private:
 	afx_msg void OnEscKey();
 	afx_msg void OnOpenTraceWPA();
 	afx_msg void OnOpenTraceGPUView();
+	afx_msg void CopyTraceName();
+	afx_msg void DeleteTrace();
+	afx_msg void SelectAll();
 public:
 	afx_msg void OnBnClickedDirectxtracing();
 };
