@@ -682,9 +682,12 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 				userProviders += L"+Microsoft-Windows-MediaEngine";
 			}
 		}
-		// Necessary providers for a minimal GPU profiling setup.
-		// DirectX logger:
-		userProviders += L"+DX:0x2F";
+		else
+		{
+			// Necessary providers for a minimal GPU profiling setup.
+			// DirectX logger:
+			userProviders += L"+DX:0x2F";
+		}
 	}
 
 	std::wstring userBuffers = L" -buffersize 1024 -minbuffers 100 -maxbuffers 100";

@@ -58,12 +58,16 @@ Disable compress options (checkbox and menu) for Windows 7 and below.
 
 
 Most important tasks:
+Fix StripChromeSymbols.py so that it can find RetrieveSymbols.exe - copy Microsoft DLLs over?
+Figure out why .txt files keep getting left behind - race condition in renaming or deleting or???
+Ignore Ctrl+Win+C when tracing is halted.
+Need more keyboard accelerators, to delete traces, view them, copy names to the clipboard, select-all in the notes field, etc.
+Don't allow having two copies of UIforETW to run simultaneously.
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
 Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
 Detect and handle trace files that lack the date component -- synthesize?
 Move ETWEventDemo out of bin directory.
-Don't allow having two copies of UIforETW to run simultaneously.
 
 To-do eventually:
 Should have a Chrome developer checkbox.
