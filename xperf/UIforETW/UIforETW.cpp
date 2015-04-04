@@ -75,13 +75,22 @@ BOOL CUIforETWApp::InitInstance()
 
 	SetRegistryKey(L"RandomASCII");
 
-	CUIforETWDlg dlg;
-	m_pMainWnd = &dlg;
-	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == -1)
+	HWND prevWindow = FindWindow(NULL, L"UI for ETW");
+	if (prevWindow)
 	{
-		TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so application is terminating unexpectedly.\n");
-		TRACE(traceAppMsg, 0, "Warning: if you are using MFC controls on the dialog, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
+		// Only allow one copy to be running at a time.
+		SetForegroundWindow(prevWindow);
+	}
+	else
+	{
+		CUIforETWDlg dlg;
+		m_pMainWnd = &dlg;
+		INT_PTR nResponse = dlg.DoModal();
+		if (nResponse == -1)
+		{
+			TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so application is terminating unexpectedly.\n");
+			TRACE(traceAppMsg, 0, "Warning: if you are using MFC controls on the dialog, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
+		}
 	}
 
 	// Delete the shell manager created above.

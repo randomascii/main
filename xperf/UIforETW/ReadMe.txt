@@ -54,6 +54,7 @@ Add OS specific checks for what user providers to enable, compression options, e
 Increase the user-provider buffer counts when doing DX profiling.
 Disable compress options (checkbox and menu) for Windows 7 and below.
 - Move GetPython function to utility.cpp
+Don't allow having two copies of UIforETW to run simultaneously.
 
 
 
@@ -62,7 +63,6 @@ Fix StripChromeSymbols.py so that it can find RetrieveSymbols.exe - copy Microso
 Figure out why .txt files keep getting left behind - race condition in renaming or deleting or???
 Ignore Ctrl+Win+C when tracing is halted.
 Need more keyboard accelerators, to delete traces, view them, copy names to the clipboard, select-all in the notes field, etc.
-Don't allow having two copies of UIforETW to run simultaneously.
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
 Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
