@@ -118,7 +118,7 @@ void CUIforETWDlg::ShutdownTasks()
 	// Stop ETW tracing when we shut down.
 	if (bIsTracing_)
 	{
-		StopTracing(false);
+		StopTracingAndMaybeRecord(false);
 	}
 
 	// Forcibly clear the heap tracing registry keys.
@@ -743,7 +743,7 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 	UpdateEnabling();
 }
 
-void CUIforETWDlg::StopTracing(bool bSaveTrace)
+void CUIforETWDlg::StopTracingAndMaybeRecord(bool bSaveTrace)
 {
 	std::wstring traceFilename = GetResultFile();
 	if (bSaveTrace)
@@ -826,12 +826,12 @@ void CUIforETWDlg::StopTracing(bool bSaveTrace)
 
 void CUIforETWDlg::OnBnClickedSavetracebuffers()
 {
-	StopTracing(true);
+	StopTracingAndMaybeRecord(true);
 }
 
 void CUIforETWDlg::OnBnClickedStoptracing()
 {
-	StopTracing(false);
+	StopTracingAndMaybeRecord(false);
 }
 
 void CUIforETWDlg::LaunchTraceViewer(const std::wstring traceFilename, const std::wstring viewer)
@@ -1121,7 +1121,9 @@ LRESULT CUIforETWDlg::OnHotKey(WPARAM wParam, LPARAM lParam)
 	switch (wParam)
 	{
 	case kRecordTraceHotKey:
-		StopTracing(true);
+		// Don't record a trace if we haven't started tracing.
+		if (bIsTracing_)
+			StopTracingAndMaybeRecord(true);
 		break;
 	}
 

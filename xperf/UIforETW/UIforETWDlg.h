@@ -113,7 +113,9 @@ private:
 
 	void SetSamplingSpeed();
 
-	void StopTracing(bool bSaveTrace);
+	// Stop tracing (if tracing to a file or if bSaveTrace is
+	// false), saving the trace as well if bSaveTrace is true.
+	void StopTracingAndMaybeRecord(bool bSaveTrace);
 
 	std::wstring GetWPTDir() const { return wptDir_; }
 	std::wstring GetXperfPath() const { return GetWPTDir() + L"xperf.exe"; }
