@@ -1521,14 +1521,29 @@ void CUIforETWDlg::StartRenameTrace()
 	if (curSel >= 0 && curSel < (int)traces_.size())
 	{
 		std::wstring traceName = traces_[curSel];
+		// If the trace name starts with the default date/time pattern
+		// then just allow editing the suffix. Othewise allow editing
+		// the entire name.
+		validRenameDate_ = false;
 		if (traceName.size() >= kPrefixLength)
 		{
-			std::wstring editablePart = traceName.substr(kPrefixLength, traceName.size());
-			btTraceNameEdit_.ShowWindow(SW_SHOWNORMAL);
-			btTraceNameEdit_.SetFocus();
-			btTraceNameEdit_.SetWindowTextW(editablePart.c_str());
-			preRenameTraceName_ = traceName;
+			validRenameDate_ = true;
+			for (size_t i = 0; i < kPrefixLength; ++i)
+			{
+				wchar_t c = traceName[i];
+				if (c != '-' && c != '_' && c != '.' && !iswalnum(c))
+					validRenameDate_ = false;
+			}
 		}
+		std::wstring editablePart = traceName;
+		if (validRenameDate_)
+		{
+			editablePart = traceName.substr(kPrefixLength, traceName.size());
+		}
+		btTraceNameEdit_.ShowWindow(SW_SHOWNORMAL);
+		btTraceNameEdit_.SetFocus();
+		btTraceNameEdit_.SetWindowTextW(editablePart.c_str());
+		preRenameTraceName_ = traceName;
 	}
 }
 
@@ -1545,7 +1560,9 @@ void CUIforETWDlg::FinishTraceRename()
 	if (!btTraceNameEdit_.IsWindowVisible())
 		return;
 	std::wstring newText = GetEditControlText(btTraceNameEdit_);
-	std::wstring newTraceName = preRenameTraceName_.substr(0, kPrefixLength) + newText;
+	std::wstring newTraceName = newText;
+	if (validRenameDate_)
+		newTraceName = preRenameTraceName_.substr(0, kPrefixLength) + newText;
 	btTraceNameEdit_.ShowWindow(SW_HIDE);
 
 	if (newTraceName != preRenameTraceName_)
@@ -1556,7 +1573,7 @@ void CUIforETWDlg::FinishTraceRename()
 		for (auto oldName : oldNames)
 		{
 			std::wstring extension = GetFileExt(oldName);;
-			std::wstring newName = oldName.substr(0, kPrefixLength) + newText + extension;
+			std::wstring newName = newTraceName + extension;
 			BOOL result = MoveFile((GetTraceDir() + oldName).c_str(), (GetTraceDir() + newName).c_str());
 			if (!result)
 			{

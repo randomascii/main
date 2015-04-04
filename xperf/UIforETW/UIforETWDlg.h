@@ -68,6 +68,7 @@ private:
 
 	CEdit btTraceNameEdit_;
 	std::wstring preRenameTraceName_;
+	bool validRenameDate_ = false;
 	// Typical trace names look like this:
 	// 2015-03-21_08-52-11_Bruce
 	// The first 19 characters are the date and time.
