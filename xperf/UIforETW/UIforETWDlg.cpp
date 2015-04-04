@@ -247,7 +247,11 @@ BOOL CUIforETWDlg::OnInitDialog()
 	initialHeight_ = lastHeight_ = windowRect.Height();
 
 	// 0x41 is 'C', compatible with wprui
-	RegisterHotKey(*this, kRecordTraceHotKey, MOD_WIN + MOD_CONTROL, 0x43);
+	if (!RegisterHotKey(*this, kRecordTraceHotKey, MOD_WIN + MOD_CONTROL, 0x43))
+	{
+		AfxMessageBox(L"Couldn't register hot key.");
+		btSaveTraceBuffers_.SetWindowTextW(L"Sa&ve Trace Buffers");
+	}
 
 	// Add "About..." menu item to system menu.
 
