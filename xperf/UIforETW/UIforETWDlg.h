@@ -115,8 +115,8 @@ private:
 	HACCEL hRenameAccelTable_ = NULL;
 	// Keyboard accelerators that are active only when editing trace.
 	HACCEL hNotesAccelTable_ = NULL;
-	// Keyboard accelerators that are active only when *not* editing trace notes.
-	HACCEL hNonNotesAccelTable_ = NULL;
+	// Keyboard accelerators that are active only when the trace list is active.
+	HACCEL hTracesAccelTable_ = NULL;
 
 	void SetSamplingSpeed();
 

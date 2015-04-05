@@ -247,8 +247,8 @@ BOOL CUIforETWDlg::OnInitDialog()
 	hRenameAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_RENAMEACCELERATORS));
 	// Load the accelerators for when editing trace notes.
 	hNotesAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_NOTESACCELERATORS));
-	// Load the accelerators for when *not* editing trace notes.
-	hNonNotesAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_NONNOTESACCELERATORS));
+	// Load the accelerators for when the trace list is active.
+	hTracesAccelTable_ = LoadAccelerators(AfxGetInstanceHandle(), MAKEINTRESOURCE(IDR_TRACESACCELERATORS));
 
 	CRect windowRect;
 	GetWindowRect(&windowRect);
@@ -1158,10 +1158,10 @@ BOOL CUIforETWDlg::PreTranslateMessage(MSG* pMsg)
 		if (::TranslateAccelerator(m_hWnd, hNotesAccelTable_, pMsg))
 			return TRUE;
 	}
-	else
+	if (CWnd::GetFocus() == &btTraces_)
 	{
-		// This accelerator table is only available when not editing trace notes.
-		if (::TranslateAccelerator(m_hWnd, hNonNotesAccelTable_, pMsg))
+		// This accelerator table is only available when the trace list is active.
+		if (::TranslateAccelerator(m_hWnd, hTracesAccelTable_, pMsg))
 			return TRUE;
 	}
 	// This accelerator table is only available when renaming.
