@@ -208,7 +208,7 @@ BEGIN_MESSAGE_MAP(CUIforETWDlg, CDialogEx)
 	ON_BN_CLICKED(ID_RENAME, &CUIforETWDlg::OnRenameKey)
 	ON_EN_KILLFOCUS(IDC_TRACENAMEEDIT, &CUIforETWDlg::FinishTraceRename)
 	ON_BN_CLICKED(ID_ENDRENAME, &CUIforETWDlg::FinishTraceRename)
-	ON_BN_CLICKED(ID_ESCKEY, &CUIforETWDlg::OnEscKey)
+	ON_BN_CLICKED(ID_ESCKEY, &CUIforETWDlg::CancelTraceRename)
 	ON_BN_CLICKED(IDC_DIRECTXTRACING, &CUIforETWDlg::OnBnClickedDirectxtracing)
 	ON_BN_CLICKED(ID_COPYTRACENAME, &CUIforETWDlg::CopyTraceName)
 	ON_BN_CLICKED(ID_DELETETRACE, &CUIforETWDlg::DeleteTrace)
@@ -1605,13 +1605,15 @@ void CUIforETWDlg::FinishTraceRename()
 			AfxMessageBox((L"Error renaming file '" + failedSource + L"'.").c_str());
 		}
 	}
+	btTraces_.SetFocus();
 }
 
-void CUIforETWDlg::OnEscKey()
+void CUIforETWDlg::CancelTraceRename()
 {
 	if (!btTraceNameEdit_.IsWindowVisible())
 		return;
 	// If the trace name edit window is visible then hide it.
 	// That's it.
 	btTraceNameEdit_.ShowWindow(SW_HIDE);
+	btTraces_.SetFocus();
 }
