@@ -33,7 +33,8 @@ DWORD WINAPI DirectoryMonitor::DirectoryMonitorThreadStatic(LPVOID pVoidThis)
 
 DWORD DirectoryMonitor::DirectoryMonitorThread()
 {
-	HANDLE hChangeHandle = FindFirstChangeNotification(traceDir_->c_str(), FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
+	HANDLE hChangeHandle = FindFirstChangeNotification(traceDir_->c_str(), FALSE,
+				FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
 
 	if (hChangeHandle == INVALID_HANDLE_VALUE)
 	{

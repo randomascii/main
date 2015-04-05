@@ -58,14 +58,16 @@ Don't allow having two copies of UIforETW to run simultaneously.
 Ignore Ctrl+Win+C when tracing is halted.
 Need more keyboard accelerators, to delete traces, view them, copy names to the clipboard, select-all in the notes field, etc.
 Detect and handle trace files that lack the date component - still allow renaming.
+Only have the delete key active when the trace list is active - otherwise it interferes with renaming.
 
 
 
 Most important tasks:
-Only have the delete key active when the trace list is active - otherwise it interferes with renaming.
 Fix StripChromeSymbols.py so that it can find RetrieveSymbols.exe - copy Microsoft DLLs over?
 Figure out why .txt files keep getting left behind - race condition in renaming or deleting or???
+Make sure edits to notes files are loaded on directory change notifications.
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
+Set focus to the trace list after renaming a trace.
 Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
 Move ETWEventDemo out of bin directory.

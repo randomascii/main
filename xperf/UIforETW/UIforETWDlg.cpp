@@ -990,33 +990,37 @@ void CUIforETWDlg::UpdateTraceList()
 
 	// If nothing has changed, do nothing. This avoids redrawing when nothing
 	// important has happened.
-	if (tempTraces == traces_)
-		return;
-	traces_ = tempTraces;
-
-	// Avoid flicker by disabling redraws until the list has been rebuilt.
-	btTraces_.SetRedraw(FALSE);
-	// Erase all entries and replace them.
-	// Todo: retain the current selection index.
-	while (btTraces_.GetCount())
-		btTraces_.DeleteString(0);
-	for (int curIndex = 0; curIndex < (int)traces_.size(); ++curIndex)
+	if (tempTraces != traces_)
 	{
-		const auto& name = traces_[curIndex];
-		btTraces_.AddString(name.c_str());
-		if (name == selectedTraceName)
-		{
-			// We compare trimmed traceNames (thus ignoring extensions) so
-			// that if compressing traces changes the extension (from .etl
-			// to .zip) we won't lose our current selection.
-			curSel = curIndex;
-		}
-	}
-	if (curSel >= (int)traces_.size())
-		curSel = (int)traces_.size() - 1;
-	btTraces_.SetCurSel(curSel);
-	btTraces_.SetRedraw(TRUE);
+		traces_ = tempTraces;
 
+		// Avoid flicker by disabling redraws until the list has been rebuilt.
+		btTraces_.SetRedraw(FALSE);
+		// Erase all entries and replace them.
+		// Todo: retain the current selection index.
+		while (btTraces_.GetCount())
+			btTraces_.DeleteString(0);
+		for (int curIndex = 0; curIndex < (int)traces_.size(); ++curIndex)
+		{
+			const auto& name = traces_[curIndex];
+			btTraces_.AddString(name.c_str());
+			if (name == selectedTraceName)
+			{
+				// We compare trimmed traceNames (thus ignoring extensions) so
+				// that if compressing traces changes the extension (from .etl
+				// to .zip) we won't lose our current selection.
+				curSel = curIndex;
+			}
+		}
+		if (curSel >= (int)traces_.size())
+			curSel = (int)traces_.size() - 1;
+		btTraces_.SetCurSel(curSel);
+		btTraces_.SetRedraw(TRUE);
+	}
+
+	// The change may have been an edit to the current traces notes, so
+	// reload if necessary. If the trace notes have been edited in UIforETW
+	// as well as on disk, then, well, somebody will lose.
 	UpdateNotesState();
 }
 
