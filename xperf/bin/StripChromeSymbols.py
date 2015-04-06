@@ -50,31 +50,30 @@ if len(sys.argv) < 2:
   print "Usage: %s trace.etl" % sys.argv[0]
   sys.exit(0)
 
-# Add the third_party directory to the path so that we can call
-# pdbcopy.exe.
-scriptPath = os.path.split(sys.argv[0])[0]
-thirdParty = os.path.realpath(os.path.join(scriptPath, r"..\third_party"))
-os.environ["path"] += ";" + thirdParty
-
 symbolPath = os.environ.get("_NT_SYMBOL_PATH", "")
 if symbolPath.count("chromium-browser-symsrv") == 0:
   print "Chromium symbol server is not in _NT_SYMBOL_PATH. No symbol stripping needed."
   sys.exit(0)
 
-def FoundInPath(exeName):
-  """Simple check to see if a named executable is in the path or in the current
-  directory. Assumes the .exe suffix is provided."""
-  for dirName in (os.environ["PATH"]+";.").split(os.pathsep):
-    pathName = os.path.join(dirName, exeName)
-    if os.path.isfile(pathName):
-      return True
-  return False
+scriptDir = os.path.split(sys.argv[0])[0]
+retrievePath = os.path.join(scriptDir, "RetrieveSymbols.exe")
+pdbcopyPath = os.path.join(scriptDir, "pdbcopy.exe")
 
-if not FoundInPath("pdbcopy.exe"):
+# RetrieveSymbols.exe requires some support files. dbghelp.dll and symsrv.dll
+# have to be in the same directory as RetrieveSymbols.exe and pdbcopy.exe must
+# be in the path, so copy them all to the script directory.
+for third_party in ["pdbcopy.exe", "dbghelp.dll", "symsrv.dll"]:
+  if not os.path.exists(third_party):
+    source = os.path.normpath(os.path.join(scriptDir, r"..\third_party", \
+        third_party))
+    dest = os.path.normpath(os.path.join(scriptDir, third_party))
+    shutil.copy2(source, dest)
+
+if not os.path.exists(pdbcopyPath):
   print "pdbcopy.exe not found. No symbol stripping is possible."
   sys.exit(0)
 
-if not FoundInPath("RetrieveSymbols.exe"):
+if not os.path.exists(retrievePath):
   print "RetrieveSymbols.exe not found. No symbol retrieval is possible."
   sys.exit(0)
 
@@ -115,7 +114,7 @@ for line in os.popen(command).readlines():
       print "Found uncached reference to %s: %s - %s" % (filepart, guid, age, )
       symcacheFiles.append(symcacheFile)
       pdbCachePath = None
-      retrieveCommand = "RetrieveSymbols.exe %s %s %s" % (guid, age, filepart)
+      retrieveCommand = "%s %s %s %s" % (retrievePath, guid, age, filepart)
       print "> %s" % retrieveCommand
       for subline in os.popen(retrieveCommand):
         print subline.strip()
@@ -132,7 +131,7 @@ for line in os.popen(command).readlines():
         tempdirs.append(tempdir)
         destPath = os.path.join(tempdir, os.path.split(pdbCachePath)[1])
         print "Copying PDB to %s" % destPath
-        for copyline in os.popen("pdbcopy %s %s -p" % (pdbCachePath, destPath)):
+        for copyline in os.popen("%s %s %s -p" % (pdbcopyPath, pdbCachePath, destPath)):
           print copyline.strip()
       else:
         print "Failed to retrieve symbols. Check for RetrieveSymbols.exe and support files."
