@@ -599,7 +599,7 @@ std::wstring CUIforETWDlg::GetExeDir() const
 	exit(10);
 }
 
-std::wstring CUIforETWDlg::GetResultFile() const
+std::wstring CUIforETWDlg::GenerateResultFilename() const
 {
 	std::wstring traceDir = GetTraceDir();
 
@@ -754,7 +754,7 @@ void CUIforETWDlg::OnBnClickedStarttracing()
 
 void CUIforETWDlg::StopTracingAndMaybeRecord(bool bSaveTrace)
 {
-	std::wstring traceFilename = GetResultFile();
+	std::wstring traceFilename = GenerateResultFilename();
 	if (bSaveTrace)
 		outputPrintf(L"\nSaving trace to disk...\n");
 	else
@@ -827,6 +827,8 @@ void CUIforETWDlg::StopTracingAndMaybeRecord(bool bSaveTrace)
 		PreprocessTrace(traceFilename);
 
 		LaunchTraceViewer(traceFilename);
+		// Record the name so that it gets selected.
+		lastTraceFilename_ = CrackFilePart(traceFilename).first;
 	}
 	else
 		outputPrintf(L"Tracing stopped.\n");
@@ -962,9 +964,11 @@ void CUIforETWDlg::OnCbnSelchangeInputtracing()
 
 void CUIforETWDlg::UpdateTraceList()
 {
-	std::wstring selectedTraceName;
+	std::wstring selectedTraceName = lastTraceFilename_;
+	lastTraceFilename_.clear();
+
 	int curSel = btTraces_.GetCurSel();
-	if (curSel >= 0 && curSel < (int)traces_.size())
+	if (selectedTraceName.empty() && curSel >= 0 && curSel < (int)traces_.size())
 	{
 		selectedTraceName = traces_[curSel];
 	}
@@ -997,9 +1001,7 @@ void CUIforETWDlg::UpdateTraceList()
 		// Avoid flicker by disabling redraws until the list has been rebuilt.
 		btTraces_.SetRedraw(FALSE);
 		// Erase all entries and replace them.
-		// Todo: retain the current selection index.
-		while (btTraces_.GetCount())
-			btTraces_.DeleteString(0);
+		btTraces_.ResetContent();
 		for (int curIndex = 0; curIndex < (int)traces_.size(); ++curIndex)
 		{
 			const auto& name = traces_[curIndex];

@@ -100,6 +100,10 @@ private:
 	std::wstring traceNoteFilename_;
 	CEdit btTraceNotes_;
 
+	// After recording a trace put the name here so that the directory
+	// notification handler will no to select it.
+	std::wstring lastTraceFilename_;
+
 	// Note that the DirectoryMonitorThread has a pointer to the contents of
 	// this string object, so don't change it without adding synchronization.
 	std::wstring traceDir_;
@@ -128,9 +132,9 @@ private:
 	std::wstring GetXperfPath() const { return GetWPTDir() + L"xperf.exe"; }
 	std::wstring GetTraceDir() const { return traceDir_; }
 	std::wstring GetExeDir() const;
-	// Note that GetResultFile() gives a time-based name, so don't expect
+	// Note that GenerateResultFilename() gives a time-based name, so don't expect
 	// the same result across multiple calls!
-	std::wstring GetResultFile() const;
+	std::wstring GenerateResultFilename() const;
 	std::wstring GetTempTraceDir() const { return tempTraceDir_; }
 	std::wstring GetKernelFile() const { return CUIforETWDlg::GetTempTraceDir() + L"kernel.etl"; }
 	std::wstring GetUserFile() const { return GetTempTraceDir() + L"user.etl"; }

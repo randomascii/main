@@ -61,6 +61,7 @@ Detect and handle trace files that lack the date component - still allow renamin
 Only have the delete key active when the trace list is active - otherwise it interferes with renaming.
 Make sure edits to notes files are loaded on directory change notifications.
 Set focus to the trace list after renaming a trace.
+Select the newly added trace after recording a trace.
 
 
 
@@ -71,6 +72,8 @@ Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/e
 Implement more settings - configure trace directories, buffer sizes,
 option for stacks on user events.
 Move ETWEventDemo out of bin directory.
+Handle the duplicate copies of etwproviders.man.
+Add some unit tests.
 
 To-do eventually:
 Should have a Chrome developer checkbox.
@@ -92,6 +95,7 @@ Code cleanup:
 - ordering code sanely
 - moving more code to separate functions/files
 - Correct usage of bool as function parameters to choose behaviors
+Perhaps use LBS_WANTKEYBOARDINPUT and WM_VKEYTOITEM to implement the list box keyboard shortcuts?
 
 Unimportant:
 Allow configuring which symbols should be stripped.

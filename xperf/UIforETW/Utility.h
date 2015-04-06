@@ -48,6 +48,9 @@ void SmartEnableWindow(HWND Win, BOOL Enable);
 // an invalid pointer. 
 const wchar_t* GetFilePart(const std::wstring& path);
 const wchar_t* GetFileExt(const std::wstring& path);
+// Pass this a path and it returns the pre-and-post extension parts of
+// the file part of the path. Either part could be an empty string.
+const std::pair<std::wstring, std::wstring> CrackFilePart(const std::wstring& path);
 
 // Delete one or more files using the shell so that errors will bring up
 // a dialog and deleted files will go to the recycle bin.

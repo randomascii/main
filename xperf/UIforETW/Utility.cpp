@@ -250,6 +250,18 @@ const wchar_t* GetFileExt(const std::wstring& path)
 	return pFilePart + wcslen(pFilePart);
 }
 
+const std::pair<std::wstring, std::wstring> CrackFilePart(const std::wstring& path)
+{
+	std::wstring filePart = GetFilePart(path);
+	const std::wstring extension = GetFileExt(filePart);
+	if (!extension.empty())
+	{
+		filePart = filePart.substr(0, filePart.size() - extension.size());
+	}
+
+	return std::pair<std::wstring, std::wstring>(filePart, extension);
+}
+
 int DeleteOneFile(HWND hwnd, const std::wstring& path)
 {
 	std::vector<std::wstring> paths;
