@@ -1537,7 +1537,7 @@ void CUIforETWDlg::StartRenameTrace()
 			for (size_t i = 0; i < kPrefixLength; ++i)
 			{
 				wchar_t c = traceName[i];
-				if (c != '-' && c != '_' && c != '.' && !iswalnum(c))
+				if (c != '-' && c != '_' && c != '.' && !iswdigit(c))
 					validRenameDate_ = false;
 			}
 		}
