@@ -350,7 +350,10 @@ bool Is64BitWindows()
 WindowsVersion GetWindowsVersion()
 {
 	OSVERSIONINFO verInfo = { sizeof(OSVERSIONINFO) };
-#pragma warning(suppress : 4996)	// warning C4996: 'GetVersionExA': was declared deprecated
+	// warning C4996: 'GetVersionExA': was declared deprecated
+	// warning C28159: Consider using 'IsWindows*' instead of 'GetVersionExW'.Reason : Deprecated.Use VerifyVersionInfo* or IsWindows* macros from VersionHelpers.
+#pragma warning(suppress : 4996)
+#pragma warning(suppress : 28159)
 	GetVersionEx(&verInfo);
 
 	// Windows 10 preview has major version 10, if you have a compatibility
