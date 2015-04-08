@@ -39,18 +39,19 @@ std::wstring AnsiToUnicode(const std::string& text);
 // avoid breaking keyboard mnemonics.
 void SmartEnableWindow(HWND Win, BOOL Enable);
 
-// Return a pointer to the character after the final '\' or to the
-// final '.' in the file part of a path.
-// These return a pointer to the appropriate place in the passed in string,
-// so it must remain valid. If the last character is '\' then GetFilePart
-// will point at the NUL terminator. If there is no '.' after the last '\'
-// then GetFileExt will point at the NUL terminator. They won't ever return
-// an invalid pointer. 
-const wchar_t* GetFilePart(const std::wstring& path);
-const wchar_t* GetFileExt(const std::wstring& path);
-// Pass this a path and it returns the pre-and-post extension parts of
-// the file part of the path. Either part could be an empty string.
-const std::pair<std::wstring, std::wstring> CrackFilePart(const std::wstring& path);
+// Return the string after the final '\' or after the final '.' in
+// the file part of a path. If the last character is '\' then GetFilePart
+// will return an empty string. If there is no '.' after the last '\'
+// then GetFileExt will return an empty string.
+std::wstring GetFilePart(const std::wstring& path);
+std::wstring GetFileExt(const std::wstring& path);
+// Return the path part only, or an empty string if there is no '\'.
+// The '\' character is returned.
+std::wstring GetDirPart(const std::wstring& path);
+// Pass this a path and it returns the pre extension part of
+// the file part of the path (which could conceivably be an
+// empty string).
+std::wstring CrackFilePart(const std::wstring& path);
 
 // Delete one or more files using the shell so that errors will bring up
 // a dialog and deleted files will go to the recycle bin.

@@ -831,7 +831,7 @@ void CUIforETWDlg::StopTracingAndMaybeRecord(bool bSaveTrace)
 
 		LaunchTraceViewer(traceFilename);
 		// Record the name so that it gets selected.
-		lastTraceFilename_ = CrackFilePart(traceFilename).first;
+		lastTraceFilename_ = CrackFilePart(traceFilename);
 	}
 	else
 		outputPrintf(L"Tracing stopped.\n");

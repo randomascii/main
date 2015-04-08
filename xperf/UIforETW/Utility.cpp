@@ -41,13 +41,7 @@ std::vector<std::wstring> GetFileList(const std::wstring& pattern, bool fullPath
 {
 	std::wstring directory;
 	if (fullPaths)
-	{
-		const wchar_t* pFilePart = GetFilePart(pattern);
-		if (pFilePart > pattern.c_str())
-		{
-			directory = pattern.substr(0, pFilePart - pattern.c_str());
-		}
-	}
+		directory = GetDirPart(pattern);
 	WIN32_FIND_DATA findData;
 	HANDLE hFindFile = FindFirstFileEx(pattern.c_str(), FindExInfoStandard,
 				&findData, FindExSearchNameMatch, NULL, 0);
@@ -232,25 +226,34 @@ void SmartEnableWindow(HWND Win, BOOL Enable)
 	::EnableWindow(Win, Enable);
 }
 
-const wchar_t* GetFilePart(const std::wstring& path)
+std::wstring GetFilePart(const std::wstring& path)
 {
 	const wchar_t* pLastSlash = wcsrchr(path.c_str(), '\\');
 	if (pLastSlash)
 		return pLastSlash + 1;
 	// If there's no slash then the file part is the entire string.
-	return path.c_str();
+	return path;
 }
 
-const wchar_t* GetFileExt(const std::wstring& path)
+std::wstring GetFileExt(const std::wstring& path)
 {
-	const wchar_t* pFilePart = GetFilePart(path);
-	const wchar_t* pLastPeriod = wcsrchr(pFilePart, '.');
+	std::wstring filePart = GetFilePart(path);
+	const wchar_t* pLastPeriod = wcsrchr(filePart.c_str(), '.');
 	if (pLastPeriod)
 		return pLastPeriod;
-	return pFilePart + wcslen(pFilePart);
+	return L"";
 }
 
-const std::pair<std::wstring, std::wstring> CrackFilePart(const std::wstring& path)
+std::wstring GetDirPart(const std::wstring& path)
+{
+	const wchar_t* pLastSlash = wcsrchr(path.c_str(), '\\');
+	if (pLastSlash)
+		return path.substr(0, pLastSlash + 1 - path.c_str());
+	// If there's no slash then there is no directory.
+	return L"";
+}
+
+std::wstring CrackFilePart(const std::wstring& path)
 {
 	std::wstring filePart = GetFilePart(path);
 	const std::wstring extension = GetFileExt(filePart);
@@ -259,7 +262,7 @@ const std::pair<std::wstring, std::wstring> CrackFilePart(const std::wstring& pa
 		filePart = filePart.substr(0, filePart.size() - extension.size());
 	}
 
-	return std::pair<std::wstring, std::wstring>(filePart, extension);
+	return filePart;
 }
 
 int DeleteOneFile(HWND hwnd, const std::wstring& path)

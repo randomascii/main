@@ -63,6 +63,7 @@ Make sure edits to notes files are loaded on directory change notifications.
 Set focus to the trace list after renaming a trace.
 Select the newly added trace after recording a trace.
 Place the trace-name editing box appropriately.
+Change path splitting functions to return wstring instead of wchar_t pointers.
 
 
 
@@ -70,8 +71,7 @@ Most important tasks:
 Fix StripChromeSymbols.py so that it can find RetrieveSymbols.exe - copy Microsoft DLLs over?
 Figure out why .txt files keep getting left behind - race condition in renaming or deleting or???
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
-Implement more settings - configure trace directories, buffer sizes,
-option for stacks on user events.
+Implement more settings - configure trace directories, buffer sizes, option for stacks on user events.
 Move ETWEventDemo out of bin directory.
 Handle the duplicate copies of etwproviders.man.
 Add some unit tests.
@@ -91,16 +91,14 @@ ChildProcess or PreprocessTrace should convert from LF to CRLF for the edit cont
 Try using the -cancel option for more efficient stopping of traces without recording. See xperf -help stop
 Give the user a chance to rename trace before launching viewer
 Transparent compression/decompression into .zip files. Note that if a trace is
-compressed and then renamed that the trace inside the .zip file will be wrong - it
-should be fixed up when the renaming happens.
-Have a button to copy the recommended (or one of several recommended) startup profiles. Perhaps
-a first-run configuration dialog?
+compressed and then renamed that the trace inside the .zip file will be wrong - it should be fixed up when the renaming happens.
+Have a button to copy the recommended (or one of several recommended) startup profiles. Perhaps a first-run configuration dialog?
 Resize output window as well when sizing the window, just a bit.
 Code cleanup:
 - getenv wrapper
 - ordering code sanely
 - moving more code to separate functions/files
-- Correct usage of bool as function parameters to choose behaviors
+- Remove usage of bool as function parameters to choose behaviors
 Perhaps use LBS_WANTKEYBOARDINPUT and WM_VKEYTOITEM to implement the list box keyboard shortcuts?
 
 Unimportant:
