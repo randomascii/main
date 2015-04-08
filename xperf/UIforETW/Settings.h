@@ -31,7 +31,10 @@ public:
 // Dialog Data
 	enum { IDD = IDD_SETTINGS };
 
+	// These settings are written and read by the creator of this object.
 	std::wstring heapTracingExe_;
+	bool bChromeDeveloper_ = false;
+	bool bAutoViewTraces_ = false;
 
 protected:
 	CEdit btHeapTracingExe_;
@@ -41,6 +44,9 @@ protected:
 
 	CButton btCopyStartupProfile_;
 	CButton btCopySymbolDLLs_;
+
+	CButton btChromeDeveloper_;
+	CButton btAutoViewTraces_;
 
 	CToolTipCtrl toolTip_;
 
@@ -56,4 +62,6 @@ public:
 	afx_msg void OnBnClickedCopystartupprofile();
 	afx_msg void OnBnClickedCopysymboldlls();
 	afx_msg BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnBnClickedChromedeveloper();
+	afx_msg void OnBnClickedAutoviewtraces();
 };

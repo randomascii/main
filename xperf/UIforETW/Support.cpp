@@ -57,6 +57,8 @@ void CUIforETWDlg::TransferSettings(bool saving)
 		{ L"FastSampling", &bFastSampling_ },
 		{ L"DirectXTracing", &bDirectXTracing_ },
 		{ L"ShowCommands", &bShowCommands_ },
+		{ L"ChromeDeveloper", &bChromeDeveloper_ },
+		{ L"AutoViewTraces", &bAutoViewTraces_ },
 	};
 
 	for (auto& m : bools)

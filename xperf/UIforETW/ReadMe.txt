@@ -64,17 +64,22 @@ Set focus to the trace list after renaming a trace.
 Select the newly added trace after recording a trace.
 Place the trace-name editing box appropriately.
 Change path splitting functions to return wstring instead of wchar_t pointers.
+Fix StripChromeSymbols.py so that it can find RetrieveSymbols.exe - copy Microsoft DLLs over?
+Should have a Chrome developer checkbox.
+Have an option to not auto-view traces immediately after they are recorded.
 
 
 
 Most important tasks:
-Fix StripChromeSymbols.py so that it can find RetrieveSymbols.exe - copy Microsoft DLLs over?
 Figure out why .txt files keep getting left behind - race condition in renaming or deleting or???
 Create an installer that will install the MFC DLLs: https://msdn.microsoft.com/en-us/library/dd293568.aspx
 Implement more settings - configure trace directories, buffer sizes, option for stacks on user events.
 Move ETWEventDemo out of bin directory.
 Handle the duplicate copies of etwproviders.man.
 Add some unit tests.
+Translate the error codes on starting tracing into English, and give advice.
+Detect slowdowns in the trace recording (circular-buffer) step and suggest diagnosis (supply profilerprofiler.bat).
+Display how long a trace took to be recorded, save versus merge?
 
 Support Ctrl+Shift+C to copy just the trace file name.
 Remove deprecated file/extension usage, and have functions to return file part, extension, or stripped file part.
@@ -83,7 +88,6 @@ Have an option (Shift+F2?) to allow renaming of the entire trace name
 Remove this line from RetrieveSymbols: Parsing symbol data for a PDB file.
 
 To-do eventually:
-Should have a Chrome developer checkbox.
 Should have the option to run arbitrary scripts after each trace is recorded.
 PreprocessTrace should append to the trace text file.
 Should have an option to put an entire process tree in the trace text file.

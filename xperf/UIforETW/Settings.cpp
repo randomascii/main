@@ -45,6 +45,8 @@ void CSettings::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUFFERSIZES, btBufferSizes_);
 	DDX_Control(pDX, IDC_COPYSTARTUPPROFILE, btCopyStartupProfile_);
 	DDX_Control(pDX, IDC_COPYSYMBOLDLLS, btCopySymbolDLLs_);
+	DDX_Control(pDX, IDC_CHROMEDEVELOPER, btChromeDeveloper_);
+	DDX_Control(pDX, IDC_AUTOVIEWTRACES, btAutoViewTraces_);
 
 	CDialogEx::DoDataExchange(pDX);
 }
@@ -53,6 +55,8 @@ void CSettings::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CSettings, CDialogEx)
 	ON_BN_CLICKED(IDC_COPYSTARTUPPROFILE, &CSettings::OnBnClickedCopystartupprofile)
 	ON_BN_CLICKED(IDC_COPYSYMBOLDLLS, &CSettings::OnBnClickedCopysymboldlls)
+	ON_BN_CLICKED(IDC_CHROMEDEVELOPER, &CSettings::OnBnClickedChromedeveloper)
+	ON_BN_CLICKED(IDC_AUTOVIEWTRACES, &CSettings::OnBnClickedAutoviewtraces)
 END_MESSAGE_MAP()
 
 BOOL CSettings::OnInitDialog()
@@ -60,6 +64,9 @@ BOOL CSettings::OnInitDialog()
 	CDialogEx::OnInitDialog();
 
 	SetDlgItemText(IDC_HEAPEXE, heapTracingExe_.c_str());
+	CheckDlgButton(IDC_CHROMEDEVELOPER, bChromeDeveloper_);
+	CheckDlgButton(IDC_AUTOVIEWTRACES, bAutoViewTraces_);
+
 	btExtraProviders_.EnableWindow(FALSE);
 	btExtraStackwalks_.EnableWindow(FALSE);
 	btBufferSizes_.EnableWindow(FALSE);
@@ -78,6 +85,11 @@ BOOL CSettings::OnInitDialog()
 					L"try to resolve slow or failed symbol loading in WPA. See "
 					L"https://randomascii.wordpress.com/2012/10/04/xperf-symbol-loading-pitfalls/ "
 					L"for details.");
+		toolTip_.AddTool(&btChromeDeveloper_, L"Check this to enable Chrome specific behavior such as "
+					L"setting the Chrome symbol server path, and preprocessing of Chrome symbols and "
+					L"traces.");
+		toolTip_.AddTool(&btAutoViewTraces_, L"Check this to have UIforETW launch the trace viewer "
+					L"immediately after a trace is recorded.");
 	}
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -155,4 +167,16 @@ void CSettings::OnBnClickedCopysymboldlls()
 	else
 		AfxMessageBox(L"Copied dbghelp.dll and symsrv.dll to the WPT directory. If this doesn't help "
 				L"with symbol loading then consider deleting them to restore the previous state.");
+}
+
+
+void CSettings::OnBnClickedChromedeveloper()
+{
+	bChromeDeveloper_ = !bChromeDeveloper_;
+}
+
+
+void CSettings::OnBnClickedAutoviewtraces()
+{
+	bAutoViewTraces_ = !bAutoViewTraces_;
 }

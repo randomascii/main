@@ -161,7 +161,9 @@ private:
 
 	CToolTipCtrl toolTip_;
 
-	bool chromeDeveloper_ = true;
+	// Editable only by the settings dialog.
+	bool bChromeDeveloper_ = true;
+	bool bAutoViewTraces_ = false;
 
 	void CompressTrace(const std::wstring& tracePath);
 	// Update the enabled/disabled states of buttons.

@@ -224,11 +224,13 @@ void CUIforETWDlg::SetSymbolPath()
 	const char* symPath = getenv("_NT_SYMBOL_PATH");
 	if (!symPath)
 	{
-		const std::string symbolPath = "SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols;SRV*c:\\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com";
+		std::string symbolPath = "SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols";
+		if (bChromeDeveloper_)
+			symbolPath = "SRV*c:\\symbols*http://msdl.microsoft.com/download/symbols;SRV*c:\\symbols*https://chromium-browser-symsrv.commondatastorage.googleapis.com";
 		(void)_putenv(("_NT_SYMBOL_PATH=" + symbolPath).c_str());
-		outputPrintf(L"Setting _NT_SYMBOL_PATH to %s (Microsoft plus Chrome). "
+		outputPrintf(L"Setting _NT_SYMBOL_PATH to %s (Microsoft%s). "
 			L"Set _NT_SYMBOL_PATH yourself if you want different defaults.\n",
-			AnsiToUnicode(symbolPath).c_str());
+			AnsiToUnicode(symbolPath).c_str(), bChromeDeveloper_ ? L" plus Chrome" : L"");
 	}
 #pragma warning(suppress : 4996)
 	const char* symCachePath = getenv("_NT_SYMCACHE_PATH");
@@ -826,10 +828,12 @@ void CUIforETWDlg::StopTracingAndMaybeRecord(bool bSaveTrace)
 
 	if (bSaveTrace)
 	{
-		StripChromeSymbols(traceFilename);
+		if (bChromeDeveloper_)
+			StripChromeSymbols(traceFilename);
 		PreprocessTrace(traceFilename);
 
-		LaunchTraceViewer(traceFilename);
+		if (bAutoViewTraces_)
+			LaunchTraceViewer(traceFilename);
 		// Record the name so that it gets selected.
 		lastTraceFilename_ = CrackFilePart(traceFilename);
 	}
@@ -1224,9 +1228,13 @@ void CUIforETWDlg::OnBnClickedSettings()
 {
 	CSettings dlgAbout(nullptr, GetExeDir(), GetWPTDir());
 	dlgAbout.heapTracingExe_ = heapTracingExe_;
+	dlgAbout.bChromeDeveloper_ = bChromeDeveloper_;
+	dlgAbout.bAutoViewTraces_ = bAutoViewTraces_;
 	if (dlgAbout.DoModal() == IDOK)
 	{
 		heapTracingExe_ = dlgAbout.heapTracingExe_;
+		bChromeDeveloper_ = dlgAbout.bChromeDeveloper_;
+		bAutoViewTraces_ = dlgAbout.bAutoViewTraces_;
 	}
 }
 
@@ -1444,12 +1452,16 @@ void CUIforETWDlg::StripChromeSymbols(const std::wstring& traceFilename)
 		std::wstring args = L" -u \"" + GetExeDir() + L"StripChromeSymbols.py\" \"" + traceFilename + L"\"";
 		child.Run(bShowCommands_, L"python.exe" + args);
 	}
+	else
+	{
+		outputPrintf(L"Can't find Python. Chrome symbol stripping disabled.");
+	}
 }
 
 
 void CUIforETWDlg::PreprocessTrace(const std::wstring& traceFilename)
 {
-	if (chromeDeveloper_)
+	if (bChromeDeveloper_)
 	{
 		outputPrintf(L"Preprocessing trace to identify Chrome processes...\n");
 #ifdef IDENTIFY_CHROME_PROCESSES_IN_PYTHON
