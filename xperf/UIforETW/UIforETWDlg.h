@@ -67,6 +67,7 @@ private:
 	CButton btShowCommands_;
 
 	CEdit btTraceNameEdit_;
+	CRect traceNameEditRect_;
 	std::wstring preRenameTraceName_;
 	bool validRenameDate_ = false;
 	// Typical trace names look like this:

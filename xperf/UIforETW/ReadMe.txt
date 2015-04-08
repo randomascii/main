@@ -62,6 +62,7 @@ Only have the delete key active when the trace list is active - otherwise it int
 Make sure edits to notes files are loaded on directory change notifications.
 Set focus to the trace list after renaming a trace.
 Select the newly added trace after recording a trace.
+Place the trace-name editing box appropriately.
 
 
 
@@ -75,6 +76,12 @@ Move ETWEventDemo out of bin directory.
 Handle the duplicate copies of etwproviders.man.
 Add some unit tests.
 
+Support Ctrl+Shift+C to copy just the trace file name.
+Remove deprecated file/extension usage, and have functions to return file part, extension, or stripped file part.
+Fix IdentifyChromeProcesses.py to print the heading after processing the trace, and copy the results to the clipboard.
+Have an option (Shift+F2?) to allow renaming of the entire trace name
+Remove this line from RetrieveSymbols: Parsing symbol data for a PDB file.
+
 To-do eventually:
 Should have a Chrome developer checkbox.
 Should have the option to run arbitrary scripts after each trace is recorded.
@@ -82,7 +89,6 @@ PreprocessTrace should append to the trace text file.
 Should have an option to put an entire process tree in the trace text file.
 ChildProcess or PreprocessTrace should convert from LF to CRLF for the edit control.
 Try using the -cancel option for more efficient stopping of traces without recording. See xperf -help stop
-Place the trace-name editing box appropriately.
 Give the user a chance to rename trace before launching viewer
 Transparent compression/decompression into .zip files. Note that if a trace is
 compressed and then renamed that the trace inside the .zip file will be wrong - it

@@ -320,6 +320,9 @@ BOOL CUIforETWDlg::OnInitDialog()
 
 	SetSymbolPath();
 
+	btTraceNameEdit_.GetWindowRect(&traceNameEditRect_);
+	ScreenToClient(&traceNameEditRect_);
+
 	// Set the icon for this dialog. The framework does this automatically
 	// when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
@@ -1059,6 +1062,7 @@ void CUIforETWDlg::OnSize(UINT nType, int cx, int cy)
 {
 	if (nType == SIZE_RESTORED && initialWidth_)
 	{
+		FinishTraceRename();
 		// Calculate xDelta and yDelta -- the change in the window's size.
 		CRect windowRect;
 		GetWindowRect(&windowRect);
@@ -1546,6 +1550,21 @@ void CUIforETWDlg::StartRenameTrace()
 		{
 			editablePart = traceName.substr(kPrefixLength, traceName.size());
 		}
+		// This gets the location of the selected item relative to the
+		// list box.
+		CRect itemRect;
+		btTraces_.GetItemRect(curSel, &itemRect);
+		CRect newEditRect = traceNameEditRect_;
+		newEditRect.MoveToY(traceNameEditRect_.top + itemRect.top);
+		if (!validRenameDate_)
+		{
+			// Extend the edit box to the full list box width.
+			CRect listBoxRect;
+			btTraces_.GetWindowRect(&listBoxRect);
+			ScreenToClient(&listBoxRect);
+			newEditRect.left = listBoxRect.left;
+		}
+		btTraceNameEdit_.MoveWindow(newEditRect, TRUE);
 		btTraceNameEdit_.ShowWindow(SW_SHOWNORMAL);
 		btTraceNameEdit_.SetFocus();
 		btTraceNameEdit_.SetWindowTextW(editablePart.c_str());
