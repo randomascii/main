@@ -608,9 +608,9 @@ std::wstring CUIforETWDlg::GenerateResultFilename() const
 {
 	std::wstring traceDir = GetTraceDir();
 
-	char time[9];
+	char time[10];
 	_strtime_s(time);
-	char date[9];
+	char date[10];
 	_strdate_s(date);
 	int hour, min, sec;
 	int year, month, day;
